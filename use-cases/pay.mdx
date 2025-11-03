@@ -5,30 +5,27 @@ icon: 'bolt'
 ---
 
 ## Pay with Trails
-can
-Trails revolutionizes crypto purchases by enabling users to buy NFTs, RWAs, or any other asset using any token a user holds from any supported chain. The payee specifies the settlement asset that they would like the payment to be reconciled in or to successfully complete the purchase, for example USDC, ETH, or any other token and the payer can select how they'd like to pay from their aggregated balance.
+Trails revolutionizes crypto purchases by enabling users to buy NFTs, RWAs, or any other asset using any token a user holds from any supported chain. The payee simply specifies the settlement asset that they would like the payment to be reconciled in or to successfully complete the purchase, for example USDC, ETH, or any other token and the payer can select how they'd like to pay from their aggregated balance.
 
-For example, if a user wants to purchase an NFT that is listed in USDC on Arbitrum, trails will automatically detect the funds the user currently holds in their wallet across all chains, presents those as options to fulfill the payment, and automatically handles any bridging, swapping, or execution logic if necessary to complete the transaction.
+For example, if a user wants to purchase an NFT that is listed in USDC on Arbitrum, Trails will automatically detect the funds the user currently holds in their wallet across all chains, presents those as options to fulfill the payment, and automatically handles any bridging, swapping, or execution logic if necessary to complete the transaction.
 
 ## Use Cases
 
-Payment flows in Trails are modeled as exact output by default.
-
-- "I want to receive exactly 10 USDC tokens on the destination, and I'll send out 1.01 USDC on the origin chain."
+**Pay** flows in Trails are modeled as exact output by default. This means the developer simply defines the total amount the payee should receive for the payment and Trails will automatically include any additional fees to successfully fulfill the payment. For example, "I want to receive exactly 1 USDC tokens on the destination chain, so the user will send 1.01 USDC on the origin chain."
 
 Ideal for use cases such as the following:
 
 - Purchase and/or mint an NFT directly from a marketplace on any chain
 - Use crypto to make a purchase at an ecommerce platform
-- Buy an onchain token representing a real-world asset (RWA)
+- Transfer a specific amount of funds to a user
 - Make an [x402 payment](/examples/x402) in any token from any chain
-- Execute smart contract calls with payment
+- Execute smart contract calls with an attached payment
 
 ## Examples
 
 ### Simple Payment
 
-The most basic payment setup - pay exactly 1 USDC to a recipient:
+Basic payment setup - pay exactly 1 USDC to a recipient:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
