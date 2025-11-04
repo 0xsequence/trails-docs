@@ -137,14 +137,6 @@ Handle payment lifecycle events:
 - **Contract Execution**: Call smart contract functions with attached payment
 - **x402 Payments**: HTTP 402 payment flows with any token from any chain
 
-## Technical Notes
-
-- Pay mode uses `TradeType.EXACT_OUTPUT` internally
-- The widget automatically calculates required input amount including fees
-- All bridging and swapping is handled automatically
-- Native token payments (ETH, MATIC, etc.) are fully supported
-- Calldata execution happens atomically with payment on destination chain
-
 ## See Also
 
 - [Use Case Examples](/use-cases/pay) - Detailed implementation patterns

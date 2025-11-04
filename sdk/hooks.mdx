@@ -6,63 +6,6 @@ sidebarTitle: "Hooks"
 
 All hooks and utilities are available from the `0xtrails` package unless stated otherwise.
 
-## Error Handling
-
-```ts
-import {
-  InsufficientBalanceError,
-  UserRejectionError,
-  getIsUserRejectionError,
-} from '0xtrails'
-```
-
-### InsufficientBalanceError
-
-Error thrown when a user has insufficient balance to complete a transaction.
-
-**Usage**:
-```ts
-try {
-  await swap()
-} catch (error) {
-  if (error instanceof InsufficientBalanceError) {
-    console.error('Insufficient balance for this transaction')
-  }
-}
-```
-
-### UserRejectionError
-
-Error thrown when a user rejects a transaction in their wallet.
-
-**Usage**:
-```ts
-try {
-  await swap()
-} catch (error) {
-  if (error instanceof UserRejectionError) {
-    console.log('User rejected the transaction')
-  }
-}
-```
-
-### getIsUserRejectionError
-
-Utility function to check if an error is a user rejection error.
-
-**Signature**: `(error: unknown) => boolean`
-
-**Usage**:
-```ts
-try {
-  await swap()
-} catch (error) {
-  if (getIsUserRejectionError(error)) {
-    console.log('User rejected the transaction')
-  }
-}
-```
-
 ## Chains
 
 ```ts
@@ -102,38 +45,6 @@ const chain = getChainInfo(8453) // Base chain info
 const allChains = getAllChains()
 ```
 
-## Indexer Client
-
-```ts
-import {
-  getIndexerGatewayClient,
-  useIndexerGatewayClient,
-} from '0xtrails'
-```
-
-### getIndexerGatewayClient
-
-Gets the indexer gateway client instance for querying blockchain data.
-
-**Signature**: `() => IndexerGatewayClient`
-
-**Usage**:
-```ts
-const client = getIndexerGatewayClient()
-// Use client to query blockchain data
-```
-
-### useIndexerGatewayClient
-
-React hook for accessing the indexer gateway client.
-
-**Signature**: `() => IndexerGatewayClient`
-
-**Usage**:
-```tsx
-const client = useIndexerGatewayClient()
-// Use client in your component
-```
 
 ## Tokens
 
@@ -436,65 +347,6 @@ const calldata = encodeFunctionData({
 
 This pattern is essential for fund mode transactions where users choose their input amount, but the contract needs to receive the exact output amount after any swaps or bridging operations. 
 
-## Meta Transactions
-
-```ts
-import {
-  useMetaTxnsMonitor,
-  getMetaTxnReceipt,
-  type MetaTxn,
-  type MetaTxnStatus,
-} from '0xtrails'
-```
-
-### useMetaTxnsMonitor
-
-React hook for monitoring meta transaction status.
-
-**Signature**:
-```ts
-function useMetaTxnsMonitor(params: {
-  metaTxnIds?: string[]
-  accountAddress?: string
-  enabled?: boolean
-}): {
-  metaTxns: MetaTxn[]
-  isLoading: boolean
-}
-```
-
-**Usage**:
-```tsx
-const { metaTxns, isLoading } = useMetaTxnsMonitor({
-  metaTxnIds: ['meta-txn-123'],
-  enabled: true,
-})
-```
-
-### getMetaTxnReceipt
-
-Gets the receipt for a meta transaction.
-
-**Signature**: `(metaTxnId: string) => Promise<MetaTxnReceipt>`
-
-**Usage**:
-```ts
-const receipt = await getMetaTxnReceipt('meta-txn-123')
-```
-
-### MetaTxn Type
-
-```ts
-type MetaTxn = {
-  id: string
-  status: 'pending' | 'submitted' | 'confirmed' | 'failed'
-  txHash?: string
-  chainId: number
-  blockNumber?: number
-  timestamp: number
-}
-```
-
 ## Transaction History
 
 ```ts
@@ -663,54 +515,6 @@ function TransactionList() {
 }
 ```
 
-## Trails Hook
-
-```ts
-import {
-  useTrails,
-  type WagmiAccount,
-} from '0xtrails'
-```
-
-### useTrails
-
-Main React hook for Trails functionality. Provides access to all core Trails features including account info, chains, tokens, and balances.
-
-**Signature**:
-```ts
-function useTrails(): {
-  account: WagmiAccount | undefined
-  supportedChains: Chain[]
-  supportedTokens: SupportedToken[]
-  tokenBalances: TokenBalanceExtended[]
-  totalBalanceUsd: number
-  isLoading: boolean
-}
-```
-
-### WagmiAccount Type
-
-```ts
-type WagmiAccount = {
-  address: string
-  chainId: number
-  connector: Connector
-}
-```
-
-### Usage
-
-```tsx
-const {
-  account,
-  supportedChains,
-  supportedTokens,
-  tokenBalances,
-  totalBalanceUsd,
-  isLoading
-} = useTrails()
-```
-
 ## Encoders
 
 ```ts
@@ -731,104 +535,61 @@ const transferData = getERC20TransferData(
 )
 ```
 
-## Relayer
+## Error Handling
 
 ```ts
 import {
-  getRelayer,
-  useRelayers,
+  InsufficientBalanceError,
+  UserRejectionError,
+  getIsUserRejectionError,
 } from '0xtrails'
 ```
 
-### getRelayer
+### InsufficientBalanceError
 
-Gets relayer information for a specific chain.
-
-**Signature**: `(chainId: number) => Promise<Relayer>`
+Error thrown when a user has insufficient balance to complete a transaction.
 
 **Usage**:
 ```ts
-const relayer = await getRelayer(1)
-console.log(relayer.url)
-```
-
-### useRelayers
-
-React hook for accessing relayer information across all chains.
-
-**Signature**:
-```ts
-function useRelayers(): {
-  relayers: Map<number, Relayer>
-  isLoading: boolean
+try {
+  await swap()
+} catch (error) {
+  if (error instanceof InsufficientBalanceError) {
+    console.error('Insufficient balance for this transaction')
+  }
 }
 ```
 
-**Usage**:
-```tsx
-const { relayers, isLoading } = useRelayers()
-const ethereumRelayer = relayers.get(1)
-```
+### UserRejectionError
 
-## Logger
-
-```ts
-import { logger, getMinLogLevel } from '0xtrails'
-```
-
-### logger
-
-Logger instance for debugging and monitoring.
-
-**Methods**:
-- `logger.debug(message: string, ...args: any[]): void`
-- `logger.info(message: string, ...args: any[]): void`
-- `logger.warn(message: string, ...args: any[]): void`
-- `logger.error(message: string, ...args: any[]): void`
+Error thrown when a user rejects a transaction in their wallet.
 
 **Usage**:
 ```ts
-logger.info('Swap initiated', { fromToken, toToken })
-logger.error('Swap failed', error)
+try {
+  await swap()
+} catch (error) {
+  if (error instanceof UserRejectionError) {
+    console.log('User rejected the transaction')
+  }
+}
 ```
 
-### getMinLogLevel
+### getIsUserRejectionError
 
-Gets the minimum log level for the logger.
+Utility function to check if an error is a user rejection error.
 
-**Signature**: `() => 'debug' | 'info' | 'warn' | 'error'`
+**Signature**: `(error: unknown) => boolean`
 
 **Usage**:
 ```ts
-const logLevel = getMinLogLevel()
-```
-
-## TrailsClient
-
-```ts
-import { getTrailsClient, useTrailsClient } from '0xtrails'
-```
-
-### getTrailsClient
-
-Gets the Trails client instance for interacting with the Trails protocol.
-
-**Signature**: `() => TrailsClient`
-
-**Usage**:
-```ts
-const client = getTrailsClient()
-```
-
-### useTrailsClient
-
-React hook for accessing the Trails client.
-
-**Signature**: `() => TrailsClient`
-
-**Usage**:
-```tsx
-const client = useTrailsClient()
+try {
+  await swap()
+} catch (error) {
+  if (getIsUserRejectionError(error)) {
+    console.log('User rejected the transaction')
+  }
+}
 ```
 
 ## Advanced: Intent Functions

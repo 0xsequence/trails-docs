@@ -80,14 +80,14 @@
             "pages": [
               "sdk/get-started",
               "sdk/configuration",
+              "sdk/hooks",
               {
                 "group": "Modes",
                 "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/earn"]
               },
               "sdk/theming",
               "sdk/quote-providers",
-              "sdk/tokens-and-chains",
-              "sdk/hooks"
+              "sdk/tokens-and-chains"
             ]
           }
         ]
