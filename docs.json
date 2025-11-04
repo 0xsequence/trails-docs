@@ -52,7 +52,6 @@
             "group": "Examples",
             "pages": [
               "examples/receive",
-              "examples/gasless",
               "examples/alt-fee-tokens",
               "examples/wallet-compatibility",
               "examples/transaction-history",
@@ -86,7 +85,6 @@
                 "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/earn"]
               },
               "sdk/theming",
-              "sdk/gasless",
               "sdk/quote-providers",
               "sdk/tokens-and-chains",
               "sdk/hooks"
