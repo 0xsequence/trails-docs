@@ -1,53 +1,206 @@
 ---
-title: Fund
-description: Deposit flow optimized for funding chains, vaults, and protocols
+title: Fund Mode
+description: "Technical reference for implementing deposit and funding flows"
+sidebarTitle: "Fund"
 ---
 
-Fund mode is optimized for deposit actions into chains, vaults, LPs, and protocols. It provides an enhanced funding experience by allowing users to deposit from any token on any supported chain. Fund is preferred when deposited to a chain, perpetual exchange, protocol, or use cases needing fiat on-ramps. 
+## Overview
 
-**At a glance**: Fund is a deposit/top-up flow (input-driven). The user typically chooses how much and what token to spend.
+Fund mode implements input-driven deposit flows where users select the amount they want to send. The widget automatically routes funds from any supported chain/token to the destination.
 
-## Trade Type: Input Amount
-
-Fund mode uses an **input** trade type, meaning:
-- The user selects a input amount and token they would like to use for funding after calling the widget.
-- The destination receives the specified amount after swapping / bridging that the integrator specifies.
-- Perfect for scenarios where users want to choose a variable amount of funds for a token to deposit.
-
-## Use Cases
-
-Fund mode is ideal for:
-- **Chain Funding**: Deposit funds to get started on a new chain
-- **Protocol Deposits**: Fund lending protocols, perpetual exchanges, or DeFi apps
-- **Vault Deposits**: Add liquidity to yield farming vaults
-- **Staking Contracts**: Fund staking positions
-- **Increasing TVL**: Increase Total Value Locked by enabling deposits from any chain with any token
+**Trade Type**: `EXACT_INPUT` - User specifies input amount, variable output amount after fees.
 
 ## Configuration
 
-Fund mode requires the following parameters:
-- `toAddress`: The destination address (required)
-- `toChainId`: The destination chain ID (required)
-- `toToken`: The destination token (required)
+### Required Props
 
-## Basic Example
+| Prop | Type | Description |
+|------|------|-------------|
+| `mode` | `"fund"` | Sets the widget to fund mode |
+
+### Optional Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `toAmount` | `string` | Pre-set deposit amount (user can still modify) |
+| `toAddress` | `string` | Destination address or contract |
+| `toChainId` | `number` | Destination chain ID |
+| `toToken` | `string` | Destination token symbol or address |
+| `toCalldata` | `string` | Calldata to execute on destination |
+| `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
+| `quoteProvider` | `QuoteProvider` | Specific quote provider |
+
+## Implementation
+
+### Basic Chain Funding
+
+Simple deposit to a chain:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
 
-export function FundExample() {
-  return (
-    <TrailsWidget
-      mode="fund"
-      toAddress="0x1234567890123456789012345678901234567890"
-      toChainId={8453}
-      toToken="USDC"
-      renderInline
-    />
-  )
-}
+<TrailsWidget
+  mode="fund"
+  toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
+  toChainId={8453} // Base
+  toToken="USDC"
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Deposit completed:', sessionId)
+  }}
+>
+  <button>Deposit to Base</button>
+</TrailsWidget>
 ```
 
-## Detailed Examples
+### Fixed Amount Deposit
 
-For comprehensive implementation examples including specific protocol deposits, chain funding, etc., see our [Fund Examples](/use-cases/fund) page.
+Pre-populate a specific amount:
+
+```tsx
+<TrailsWidget
+  mode="fund"
+  toAddress="0x..."
+  toAmount="100" // Pre-filled, user can change
+  toChainId={8453}
+  toToken="USDC"
+>
+  <button>Deposit 100 USDC</button>
+</TrailsWidget>
+```
+
+### Protocol Deposit with Static Calldata
+
+Deposit into a DeFi protocol with predefined parameters:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+import { encodeFunctionData } from 'viem'
+
+const aaveDepositCalldata = encodeFunctionData({
+  abi: [{
+    name: 'depositETH',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'pool', type: 'address' },
+      { name: 'onBehalfOf', type: 'address' },
+      { name: 'referralCode', type: 'uint16' },
+    ],
+    outputs: [],
+  }],
+  functionName: 'depositETH',
+  args: [
+    '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5', // Aave pool
+    '0x97c4A952b46bEcaD0663f76357d3776ba11566E1', // User address
+    0, // No referral code
+  ],
+})
+
+<TrailsWidget
+  mode="fund"
+  toAddress="0xa0d9C1E9E48Ca30c8d8C3B5D69FF5dc1f6DFfC24" // Aave Pool on Base
+  toAmount="100"
+  toChainId={8453}
+  toToken="USDC"
+  toCalldata={aaveDepositCalldata}
+/>
+```
+
+### Dynamic Amount Protocol Deposit
+
+Use placeholder amount for user-selected deposit amounts in calldata:
+
+```tsx
+import { TrailsWidget, TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { encodeFunctionData } from 'viem'
+
+// Encode vault deposit with placeholder that gets replaced at execution
+const vaultDepositCalldata = encodeFunctionData({
+  abi: [{
+    name: 'deposit',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'amount', type: 'uint256' },
+      { name: 'receiver', type: 'address' },
+    ],
+    outputs: [{ name: 'shares', type: 'uint256' }],
+  }],
+  functionName: 'deposit',
+  args: [
+    TRAILS_CONTRACT_PLACEHOLDER_AMOUNT, // Replaced with actual bridged amount
+    '0x97c4A952b46bEcaD0663f76357d3776ba11566E1', // Receiver
+  ],
+})
+
+<TrailsWidget
+  mode="fund"
+  toAddress="0x80c34BD3A3569E126e7055831036aa7b212cB159" // Yearn Vault
+  toChainId={747474} // Katana
+  toToken="USDC"
+  toCalldata={vaultDepositCalldata}
+>
+  <button>Deposit to Yearn Vault</button>
+</TrailsWidget>
+```
+
+## Dynamic Calldata Pattern
+
+When the deposit amount is part of the calldata and user-selected, use `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT`:
+
+**Why it's needed**: In fund mode, the final output amount after swaps/bridging isn't known until execution. The placeholder gets replaced with the actual output amount.
+
+**When to use**:
+- ERC-4626 vault deposits with dynamic amounts
+- Staking contracts that require amount parameter
+- Any function where amount is a parameter and user-selectable
+
+**When not needed**:
+- Simple transfers to addresses
+- Static calldata where amount isn't a parameter
+- Functions that read balance directly (e.g., `depositAll()`)
+
+## Event Handlers
+
+```tsx
+<TrailsWidget
+  mode="fund"
+  toAddress="0x..."
+  toChainId={8453}
+  toToken="USDC"
+  onCheckoutStart={({ sessionId }) => {
+    console.log('Deposit started:', sessionId)
+  }}
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Deposit completed:', sessionId)
+    // Update TVL, refresh balances, etc.
+  }}
+  onCheckoutError={({ sessionId, error }) => {
+    console.error('Deposit failed:', error)
+    // Handle error appropriately
+  }}
+/>
+```
+
+## Use Cases
+
+- **Chain Onboarding**: Help users get started on new chains
+- **Protocol Deposits**: Deposit into lending protocols (Aave, Compound, Morpho)
+- **Vault Deposits**: Fund yield aggregators and vaults
+- **Perp Exchange Funding**: Deposit into perpetual exchanges
+- **Liquidity Provision**: Add liquidity to AMMs and pools
+- **Staking**: Fund staking contracts
+
+## Technical Notes
+
+- Fund mode uses `TradeType.EXACT_INPUT` internally
+- User selects input amount; output amount varies based on routes and fees
+- `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT` = `uint256.max` internally
+- Supports both EOA addresses and smart contract destinations
+- Calldata execution is atomic with the transfer
+
+## See Also
+
+- [Use Case Examples](/use-cases/fund) - Detailed implementation patterns
+- [Configuration Reference](/sdk/configuration) - Full configuration options
+- [Hooks Reference](/sdk/hooks) - `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT` constant

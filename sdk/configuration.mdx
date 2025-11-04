@@ -9,180 +9,52 @@ Trails is easy to get started, however we have deep configuration options to add
 
 ### Core Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `projectAccessKey` | `string` | No | — | Your project access key provided by Sequence |
-| `mode` | `"pay" \| "fund" \| "earn" \| "swap" \| "receive"` | No | `"pay"` | Widget operation mode |
-| `toAddress` | `string` | No | — | Destination address for payments |
-| `toAmount` | `string` | No | — | Exact amount for payments (used in pay mode) |
-| `toChainId` | `number \| string` | No | — | Destination chain ID |
-| `toToken` | `string` | No | — | Destination token symbol or contract address |
-| `toCalldata` | `string` | No | — | Custom calldata for contract interactions |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectAccessKey` | `string` | No | Your project access key provided by Trails |
+| `mode` | `"pay" \| "fund" \| "earn" \| "swap" \| "receive"` | Yes | Widget operation mode |
+| `toAddress` | `string` | No | Destination address for payments |
+| `toAmount` | `string` | No | Exact amount for payments (used in pay mode) |
+| `toChainId` | `number \| string` | No | Destination chain ID |
+| `toToken` | `string` | No | Destination token symbol or contract address |
+| `toCalldata` | `string` | No | Custom calldata for contract interactions |
 
 ### UI & Rendering Options
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `renderInline` | `boolean` | No | `false` | Render widget inline instead of as a modal |
-| `children` | `React.ReactNode` | No | — | Custom button content (when not renderInline) |
-| `buttonText` | `string` | No | Auto-generated | Custom text for the trigger button |
-| `theme` | `"light" \| "dark" \| "auto"` | No | `"auto"` | Color theme; `auto` follows system preference |
-| `customCss` | `string \| Record<string, string>` | No | — | Custom CSS styles to apply to the component |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `renderInline` | `boolean` | No | Render widget inline instead of as a modal (default: `false`) |
+| `children` | `React.ReactNode` | No | Custom button content (when not renderInline) |
+| `buttonText` | `string` | No | Custom text for the trigger button (auto-generated if not provided) |
+| `theme` | `"light" \| "dark" \| "auto"` | No | Color theme; `auto` follows system preference (default: `"auto"`) |
+| `customCss` | `string \| Record<string, string>` | No | Custom CSS styles to apply to the component |
 
 ### Wallet & Connection Options
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `walletConnectProjectId` | `string` | No | — | WalletConnect project ID for WalletConnect integration |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `walletConnectProjectId` | `string` | No | WalletConnect project ID for WalletConnect integration |
 
 ### Transaction Options
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `gasless` | `boolean` | No | `false` | Enable gasless transactions |
-| `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | — | Configure per-chain paymaster endpoints for gasless transactions |
-| `quoteProvider` | `string` | No | `"auto"` | Preferred quote provider ("lifi", "auto", etc.) |
-| `slippageTolerance` | `number \| string` | No | — | Slippage tolerance for swaps |
-
-### Sequence Configuration
-
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `sequenceUseV3Relayers` | `boolean` | No | — | Use Sequence v3 relayers |
-| `sequenceIndexerUrl` | `string` | No | — | Custom Sequence indexer URL |
-| `sequenceApiUrl` | `string` | No | — | Custom Sequence API URL |
-| `sequenceEnv` | `"local" \| "cors-anywhere" \| "dev" \| "prod"` | No | — | Sequence environment configuration |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `gasless` | `boolean` | No | Enable alternative fee tokens that support permit() for transactions (default: `false`) |
+| `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
+| `quoteProvider` | `"auto" \| "lifi" \| "relay" \| "cctp"` | No | Preferred quote provider (default: `"auto"`). `"auto"` automatically selects best provider, `"lifi"` uses LiFi aggregator for multi-source routing, `"relay"` uses Relay for fast direct transfers, `"cctp"` uses Circle's CCTP for native USDC transfers |
+| `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |
 
 ### Event Handlers
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `onOriginConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | — | Called when origin transaction is confirmed |
-| `onDestinationConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | — | Called when destination transaction is confirmed |
-| `onCheckoutStart` | `(data: { sessionId: string }) => void` | No | — | Called when checkout process starts |
-| `onCheckoutQuote` | `(data: { sessionId: string; quote: any }) => void` | No | — | Called when quote is received |
-| `onCheckoutComplete` | `(data: { sessionId: string }) => void` | No | — | Called when checkout completes successfully |
-| `onCheckoutError` | `(data: { sessionId: string; error: string }) => void` | No | — | Called when checkout encounters an error |
-| `onCheckoutStatusUpdate` | `(data: { sessionId: string; transactionStates: TransactionState[] }) => void` | No | — | Called when transaction status updates |
-
-## Mode Configurations
-
-### Pay Mode
-Used for exact output payments (e.g., NFT purchases, bills):
-
-```tsx
-<TrailsWidget
-  mode="pay"
-  toAddress="0x..."
-  toAmount="1"
-  toChainId={8453}
-  toToken="USDC"
-  onCheckoutComplete={(result) => console.log('Payment completed')}
-/>
-```
-
-### Fund Mode  
-Used for deposits where user chooses amount:
-
-```tsx
-<TrailsWidget
-  mode="fund"
-  toAddress="0x..."
-  toChainId={8453}
-  toToken="USDC"
-  onCheckoutComplete={(result) => console.log('Funding completed')}
-/>
-```
-
-### Swap Mode
-Used for open-ended token swapping:
-
-```tsx
-<TrailsWidget
-  mode="swap"
-  onCheckoutComplete={(result) => console.log('Swap completed')}
-/>
-```
-
-### Earn Mode
-Used for yield farming and staking:
-
-```tsx
-<TrailsWidget
-  mode="earn"
-  toAddress="0x..." // Staking contract
-  toChainId={1}
-  toToken="ETH"
-  onCheckoutComplete={(result) => console.log('Staking completed')}
-/>
-```
-
-### Receive Mode
-Used for requesting payments:
-
-```tsx
-<TrailsWidget
-  mode="receive"
-  toAddress="0x..." // Your address
-  toAmount="10"
-  toChainId={8453}
-  toToken="USDC"
-/>
-```
-
-## Gasless Configuration
-
-Enable gasless transactions by providing paymaster URLs:
-
-```tsx
-<TrailsWidget
-  mode="pay"
-  gasless={true}
-  paymasterUrls={[
-    { chainId: 8453, url: "https://paymaster.base.org" },
-    { chainId: 42161, url: "https://paymaster.arbitrum.org" }
-  ]}
-  // ... other props
-/>
-```
-
-## Custom Theming
-
-### Theme Selection
-```tsx
-<TrailsWidget
-  theme="dark" // or "light" or "auto"
-  // ... other props
-/>
-```
-
-### Custom CSS
-```tsx
-<TrailsWidget
-  customCss={`
-    .trails-widget {
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .trails-button {
-      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-    }
-  `}
-  // ... other props
-/>
-```
-
-### Custom CSS as Object
-```tsx
-<TrailsWidget
-  customCss={{
-    '--trails-primary-color': '#ff6b6b',
-    '--trails-secondary-color': '#4ecdc4',
-    '--trails-border-radius': '12px'
-  }}
-  // ... other props
-/>
-```
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `onOriginConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | Called when origin transaction is confirmed |
+| `onDestinationConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | Called when destination transaction is confirmed |
+| `onCheckoutStart` | `(data: { sessionId: string }) => void` | No | Called when checkout process starts |
+| `onCheckoutQuote` | `(data: { sessionId: string; quote: any }) => void` | No | Called when quote is received |
+| `onCheckoutComplete` | `(data: { sessionId: string }) => void` | No | Called when checkout completes successfully |
+| `onCheckoutError` | `(data: { sessionId: string; error: string }) => void` | No | Called when checkout encounters an error (including user rejection) |
+| `onCheckoutStatusUpdate` | `(data: { sessionId: string; transactionStates: TransactionState[] }) => void` | No | Called when transaction status updates |
 
 ## Smart Contract Interactions
 
@@ -214,6 +86,8 @@ const calldata = encodeFunctionData({
 
 ### Complete Event Handling
 ```tsx
+import { getIsUserRejectionError } from '0xtrails'
+
 <TrailsWidget
   mode="pay"
   toAddress="0x..."
@@ -239,92 +113,39 @@ const calldata = encodeFunctionData({
   }}
   onCheckoutError={({ sessionId, error }) => {
     console.error('Transaction failed:', sessionId, error)
-    // Handle error (show notification, retry logic, etc.)
+    
+    // Check if user rejected the transaction
+    if (getIsUserRejectionError(error)) {
+      console.log('User rejected the transaction')
+      // Handle user rejection (e.g., show "Transaction cancelled" message)
+    } else {
+      // Handle other errors (show error notification, retry logic, etc.)
+    }
   }}
 />
 ```
 
-## Quote Provider Configuration
+### Handling User Rejection
 
-### Auto Selection (Recommended)
+User rejection occurs when a user declines to sign a transaction in their wallet. This is handled through the `onCheckoutError` callback:
+
 ```tsx
+import { getIsUserRejectionError, TrailsWidget } from '0xtrails'
+
 <TrailsWidget
-  quoteProvider="auto" // Automatically selects best provider
-  // ... other props
+  mode="pay"
+  toAddress="0x..."
+  onCheckoutError={({ sessionId, error }) => {
+    if (getIsUserRejectionError(error)) {
+      // User cancelled the transaction
+      showNotification('Transaction cancelled by user')
+    } else {
+      // Other error occurred
+      showNotification('Transaction failed: ' + error)
+    }
+  }}
 />
 ```
 
-### Specific Provider
-```tsx
-<TrailsWidget
-  quoteProvider="lifi" // Use LiFi for cross-chain swaps
-  // ... other props
-/>
-```
 
-## Advanced Configuration
 
-### Slippage Configuration
-```tsx
-<TrailsWidget
-  mode="swap"
-  slippageTolerance={0.5} // 0.5% slippage tolerance
-  // ... other props
-/>
-```
-
-## Rendering Options
-
-### Modal (Default)
-```tsx
-<TrailsWidget
-  renderInline={false} // Default - shows as modal
-  buttonText="Pay with Trails"
-  // ... other props
-/>
-```
-
-### Inline
-```tsx
-<TrailsWidget
-  renderInline={true} // Renders directly in page
-  // ... other props
-/>
-```
-
-### Custom Button
-```tsx
-<TrailsWidget
-  renderInline={false}
-  // ... other props
->
-  <button className="custom-pay-button">
-    💳 Pay with Crypto
-  </button>
-</TrailsWidget>
-```
-
-## Type Definitions
-
-```tsx
-export type TransactionState = {
-  chainId: number
-  transactionHash: string
-  state: 'pending' | 'confirmed' | 'failed'
-  explorerUrl: string
-  label: string
-  blockNumber?: number
-}
-
-export type Mode = "pay" | "fund" | "earn" | "swap" | "receive"
-
-export type Theme = "light" | "dark" | "auto"
-
-export type RelayerEnv = "local" | "cors-anywhere" | "dev" | "prod"
-
-export interface TrailsWidgetRef {
-  openModal: () => void
-  closeModal: () => void
-  isModalOpen: boolean
-}
-```

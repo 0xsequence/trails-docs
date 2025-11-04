@@ -29,7 +29,7 @@ Trails enables 1-click payments through an intent-based architecture that is abl
    A unique intent contract address is computed based on the full transaction orchestration across multiple chains. The intent address encodes the details of both transactions on both the origin and destination
    chains.
 
-3. **Origin Deposit**  
+3. **Origin Transfer**  
    The user sends a single transaction to deposit their tokens (from any chain they hold funds on) into the intent address on the origin chain. Importantly, the user's wallet has full control over this intent address.
 
 4. **Origin Chain Execution**  
@@ -55,7 +55,7 @@ import { TrailsWidget } from '0xtrails/widget'
 export const CrossChainPayment = () => {
   return (
     <TrailsWidget
-      toAddress="0x..." // recipient wallt address
+      toAddress="0x..." // recipient address
       toAmount="0.1"
       toChainId={8453} // Base
       toToken="USDC"

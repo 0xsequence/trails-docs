@@ -4,9 +4,9 @@ description: 'Leverage trails to swap & bridge tokens cross-chain seamlessly for
 icon: 'arrows-rotate'
 ---
 
-## Swap Tokens with Trails
+## Swap with Trails
 
-Trails enables seamless token swapping across multiple blockchain networks, allowing users to exchange tokens without manually bridging assets or dealing with multiple DEXs.
+Trails enables seamless token swapping across multiple blockchain networks in 1-click, allowing users to exchange tokens without manually bridging assets or dealing with multiple DEXs available via an integrated widget or API.
 
 ## Enhanced Swapping Experience
 
@@ -17,13 +17,13 @@ Traditional cross-chain swapping requires users to:
 - Pay gas fees on each chain
 - Wait for bridge confirmations
 
-We optimize the UX flow, integrated as a simple widget for your application to enable swaps across multiple liquidity sources with any token in the user's wallet. All interactions executed in a single confirmation for the user. Notably, this works across any wallet or application, ERC-7702 or 4337 is not required for batching transactions.
+We optimize the UX flow from any wallet to enable swaps across multiple liquidity sources & chains. All interactions are executed in a single confirmation for the user. Notably, this works across any wallet or application, ERC-7702 or 4337 is not required for batching transactions.
 
 ## Examples
 
 ### Simple Cross-Chain Token Swap
 
-Basic  using the dedicated swap mode:
+Basic cross-chain swap implementation using the Trails widget with callbacks:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
@@ -74,7 +74,7 @@ export const ThemedSwap = () => {
 
 ### Advanced Swap with Custom Quote Provider
 
-Use a specific quote provider for swaps:
+While Trails automatically optimizes the selected route by the user, you may opt to specify a quote or bridge provider to optimize for your use case. For example, using Circle's CCTPv2 for bridging:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
@@ -88,19 +88,13 @@ export const AdvancedSwap = () => {
         console.log('Advanced swap completed:', sessionId)
         // Handle post-swap logic
       }}
-      onCheckoutStatusUpdate={({ sessionId, transactionStates }) => {
-        // Track each step of the swap
-        transactionStates.forEach((state, index) => {
-          console.log(`Step ${index + 1}: ${state.label} - ${state.state}`)
-        })
-      }}
       onCheckoutError={({ sessionId, error }) => {
         console.error('Swap error:', sessionId, error)
         // Handle error state
       }}
     >
       <button className="advanced-swap-button">
-        Advanced Swap
+        Swap with a Custom Provider
       </button>
     </TrailsWidget>
   )
@@ -181,7 +175,7 @@ export const CustomSwapComponent = () => {
 
 ## Integration Benefits for Swaps with Trails
 
-- **Unified Liquidity**: Access tokens across all supported chains in one transaction
+- **Unified Liquidity**: Access tokens from the user's wallet across all supported chains in one transaction
 - **High Performance Balance Retrieval**: A high-performant indexer is natively integrated to query the entirety of a user's balance for smooth UX and price retrieval
 - **Reduced Complexity**: Eliminate manual bridging and multi-step swaps (Approval and Transfer)
 - **Customized Branding**: Brand or theme the widget however you'd like to be native to your protocol or application

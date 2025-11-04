@@ -17,7 +17,7 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Playground",
+          "anchor": "Demo Playground",
           "icon": "square-terminal",
           "href": "https://demo.trails.build/widget"
         }
@@ -52,7 +52,6 @@
             "group": "Examples",
             "pages": [
               "examples/receive",
-              "examples/gasless",
               "examples/alt-fee-tokens",
               "examples/wallet-compatibility",
               "examples/transaction-history",
@@ -81,13 +80,14 @@
             "pages": [
               "sdk/get-started",
               "sdk/configuration",
+              "sdk/hooks",
               {
                 "group": "Modes",
-                "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/receive"]
+                "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/earn"]
               },
               "sdk/theming",
-              "sdk/gasless",
-              "sdk/hooks"
+              "sdk/quote-providers",
+              "sdk/tokens-and-chains"
             ]
           }
         ]

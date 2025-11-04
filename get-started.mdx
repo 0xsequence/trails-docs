@@ -10,7 +10,11 @@ sidebarTitle: "Getting Started"
   </Card>
 
   <Card title="React Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-starter">
-    Minimal template for Trails with Earn, Swap, Pay, and Fund modes integrated.
+    Minimal React template for Trails with Earn, Swap, Pay, and Fund modes integrated.
+  </Card>
+
+  <Card title="NextJS Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-nextjs-starter">
+    Minimal NextJS template for Trails with Earn, Swap, Pay, and Fund modes integrated.
   </Card>
 </div>
 
@@ -18,19 +22,19 @@ sidebarTitle: "Getting Started"
 
 To install on your own application:
 <Steps>
-  <Step title="Install the SDK">
+  <Step title="Install the SDK and dependencies">
     <CodeGroup>
     ```shell pnpm
-    pnpm i 0xtrails
+    pnpm i 0xtrails wagmi viem
     ```
     ```shell npm
-    npm install --save 0xtrails
+    npm install --save 0xtrails wagmi viem
     ```
     ```shell yarn
-    yarn add 0xtrails
+    yarn add 0xtrails wagmi viem
     ```
     ```shell bun
-    bun add 0xtrails
+    bun add 0xtrails wagmi viem
     ```
     </CodeGroup>
   </Step>
@@ -44,7 +48,8 @@ To install on your own application:
     export const App = () => {
       return (
         <TrailsWidget
-          toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
+          mode="fund"
+          toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1" // contract or wallet address of recipient
           toAmount="1" 
           toChainId={8453}
           toToken="USDC"
@@ -57,35 +62,13 @@ To install on your own application:
 
 
 ## Next steps
+Trails is optimized for a variety of common use cases or flows for your application:
 
-- [Pay](/use-cases/pay): Buy NFTs, RWAs, or any asset using any token from any chain; Trails aggregates balances and handles bridging, swapping, and execution.
-- [Swap](/use-cases/swap): Cross-chain token swaps in a single confirmation with unified liquidity and optimal routing—no manual bridging or DEX hopping.
-- [Fund](/use-cases/fund): Deposit into a chain, app, or protocol from any token on any chain in one flow; Trails optimizes routes and handles swaps/bridges.
-- [Earn](/use-cases/earn): Deposit into vaults/pools (e.g., Aave) with automatic swap/bridge to the required asset; confirm once and start earning.
+- **[Pay](/use-cases/pay)**: Enable cross-chain, 1-click payments with any token for ecommerce platforms, NFT marketplaces, real-world asset purchases, and minimal-slippage stablecoin transactions.
+- **[Swap](/use-cases/swap)**: Embed low-latency, highly liquid cross-chain token swaps for your applications.
+- **[Fund](/use-cases/fund)**: Maximize TVL and transaction velocity through fully brandable funding widgets for protocol deposits such as perpetual exchanges, chain deposits, and liquidity provisioning. 
+- **[Earn](/use-cases/earn)**: Streamline DeFi yield opportunities by enabling deposits from your app into already integrated tokenized vaults, lending pools, and yield strategies from any token on any chain.
+- [Configuration](/sdk/configuration): Full list of variables & hooks to customize Trails including different modes, theming, enabling gasless transactions, events, and quote providers.
 
-- [Configuration](/sdk/configuration): Full list of variables to customize Trails including different modes, theming, enabling gasless transactions, events, and quote providers.
-
-
-## Script Import
-
-While we recommend using the React component, you can also embed via a script tag in a non-React site.
-
-```html
-<div id="trails"></div>
-<script src="https://cdn.jsdelivr.net/npm/0xtrails@latest/dist/umd/trails.min.js"></script>
-<script>
-  TrailsWidget.render(document.getElementById('trails'), {
-    toAddress: '0x...',
-    toAmount: '0.1',
-    toChainId: 8453,
-    toToken: '0xUSDC...'
-  })
-</script>
-```
-
-### Available CDNs
-
-- **unpkg**: `https://unpkg.com/0xtrails@latest/dist/umd/trails.min.js`
-- **jsDelivr**: `https://cdn.jsdelivr.net/npm/0xtrails@latest/dist/umd/trails.min.js`
 
 For production use, pin to a specific version by replacing `@latest` with `@1.0.0` or your desired version. 
