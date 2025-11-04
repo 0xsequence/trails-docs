@@ -1,40 +1,152 @@
 ---
-title: Pay
-description: Send & swap flow to a recipient
+title: Pay Mode
+description: "Technical reference for implementing exact-output payment flows"
+sidebarTitle: "Pay"
 ---
 
-Pay mode is optimized for payment use cases such as cross-chain swaps, stablecoin trades, NFT & ecommerce purchases, and general transactions. It enables users to pay using any token from any supported chain, and is ideal when you know the exact amount the recipient should receive.
+## Overview
 
-**At a glance**: Pay fixes the destination amount (exact-output). You set `toAmount`; the widget figures out what the user spends.
+Pay mode implements exact-output trade flows where you specify the precise amount the recipient receives. The widget calculates the required input amount from the user's available tokens across all chains.
 
-## Trade Type: Output
+**Trade Type**: `EXACT_OUTPUT` - Fixed destination amount, variable input amount.
 
-Pay mode lets you specify an **exact_output** trade, meaning:
-- You specify the exact amount the recipient will receive (`toAmount`)
-- The user pays whatever amount is needed from their available tokens
-- Perfect for fixed-price purchases (NFTs, swaps, functions with specific token amounts)
+## Configuration
 
-This is also ideal when you want to execute functions on the destination side that have dynamic calldata 
+### Required Props
 
-## Basic Example
+| Prop | Type | Description |
+|------|------|-------------|
+| `mode` | `"pay"` | Sets the widget to pay mode |
+| `toAddress` | `string` | Recipient address |
+| `toAmount` | `string` | Exact amount recipient receives |
+| `toChainId` | `number` | Destination chain ID |
+| `toToken` | `string` | Destination token symbol or address |
+
+### Optional Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `toCalldata` | `string` | Calldata to execute on destination |
+| `slippageTolerance` | `string \| number` | Slippage tolerance (e.g., `"0.005"` for 0.5%) |
+| `quoteProvider` | `QuoteProvider` | Specific quote provider: `"auto"` \| `"lifi"` \| `"relay"` \| `"cctp"` |
+
+## Implementation
+
+### Basic Payment
+
+Simple payment to a recipient address:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
 
-export function PayExample() {
-  return (
-    <TrailsWidget
-      mode="pay"
-      toAddress="0x1234567890123456789012345678901234567890"
-      toAmount="10" 
-      toChainId={8453}
-      toToken="USDC"
-      renderInline
-    />
-  )
-}
+<TrailsWidget
+  mode="pay"
+  toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
+  toAmount="10"
+  toChainId={8453} // Base
+  toToken="USDC"
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Payment completed:', sessionId)
+  }}
+>
+  <button>Pay 10 USDC</button>
+</TrailsWidget>
 ```
 
-## Advanced Examples
+### Payment with Contract Call
 
-For detailed implementation examples including NFT purchases, complex payment flows, see our [Pay Examples](/use-cases/pay) page.
+Execute a function call on the destination chain with the payment:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+import { encodeFunctionData } from 'viem'
+
+const nftMintCalldata = encodeFunctionData({
+  abi: [{
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [{ name: 'to', type: 'address' }],
+    outputs: [],
+  }],
+  functionName: 'mint',
+  args: ['0x97c4A952b46bEcaD0663f76357d3776ba11566E1'],
+})
+
+<TrailsWidget
+  mode="pay"
+  toAddress="0xNFT_CONTRACT_ADDRESS"
+  toAmount="0.00002"
+  toChainId={42161} // Arbitrum
+  toToken="ETH"
+  toCalldata={nftMintCalldata}
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('NFT minted:', sessionId)
+  }}
+>
+  <button>Mint NFT (0.00002 ETH)</button>
+</TrailsWidget>
+```
+
+### Payment with Custom Quote Provider
+
+Specify a particular quote provider for routing:
+
+```tsx
+<TrailsWidget
+  mode="pay"
+  toAddress="0x..."
+  toAmount="100"
+  toChainId={8453}
+  toToken="USDC"
+  quoteProvider="cctp" // Use Circle's CCTP
+  slippageTolerance="0.01" // 1% slippage
+/>
+```
+
+## Event Handlers
+
+Handle payment lifecycle events:
+
+```tsx
+<TrailsWidget
+  mode="pay"
+  toAddress="0x..."
+  toAmount="10"
+  toChainId={8453}
+  toToken="USDC"
+  onCheckoutStart={({ sessionId }) => {
+    console.log('Payment started:', sessionId)
+  }}
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Payment completed:', sessionId)
+    // Update order status, trigger UI update, etc.
+  }}
+  onCheckoutError={({ sessionId, error }) => {
+    console.error('Payment failed:', error)
+    // Handle error state
+  }}
+/>
+```
+
+## Use Cases
+
+- **NFT Purchases**: Mint or purchase NFTs with payment in one transaction
+- **eCommerce Payments**: Accept crypto payments for products/services
+- **Fixed-price Swaps**: Cross-chain token purchases with exact output amounts
+- **Contract Execution**: Call smart contract functions with attached payment
+- **x402 Payments**: HTTP 402 payment flows with any token from any chain
+
+## Technical Notes
+
+- Pay mode uses `TradeType.EXACT_OUTPUT` internally
+- The widget automatically calculates required input amount including fees
+- All bridging and swapping is handled automatically
+- Native token payments (ETH, MATIC, etc.) are fully supported
+- Calldata execution happens atomically with payment on destination chain
+
+## See Also
+
+- [Use Case Examples](/use-cases/pay) - Detailed implementation patterns
+- [Configuration Reference](/sdk/configuration) - Full configuration options
+- [Quote Providers](/sdk/quote-providers) - Quote provider details

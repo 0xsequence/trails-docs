@@ -1,5 +1,243 @@
 ---
 title: Tokens & Chains
+description: "Working with supported tokens and chains in the Trails SDK"
 ---
 
-![Trails end-to-end flow](/images/trails-flow.svg)
+## Overview
+
+The Trails SDK provides utilities to query supported chains and tokens across the network. These functions help you build dynamic UIs that adapt to available options.
+
+## Chain Utilities
+
+```ts
+import {
+  getSupportedChains,
+  useSupportedChains,
+  getChainInfo,
+  getAllChains,
+  type Chain,
+} from '0xtrails'
+```
+
+### Fetching Supported Chains
+
+**As a hook (React):**
+```tsx
+import { useSupportedChains } from '0xtrails'
+
+function ChainSelector() {
+  const { supportedChains, isLoadingChains } = useSupportedChains()
+  
+  if (isLoadingChains) return <div>Loading chains...</div>
+  
+  return (
+    <select>
+      {supportedChains.map(chain => (
+        <option key={chain.id} value={chain.id}>
+          {chain.name} (ID: {chain.chainId})
+        </option>
+      ))}
+    </select>
+  )
+}
+```
+
+**As a function (async):**
+```ts
+import { getSupportedChains } from '0xtrails'
+
+const chains = await getSupportedChains()
+console.log('Available chains:', chains)
+```
+
+### Getting Chain Information
+
+```ts
+import { getChainInfo } from '0xtrails'
+
+// Get specific chain info
+const baseChain = getChainInfo(8453)
+console.log(baseChain?.name) // "Base"
+console.log(baseChain?.nativeCurrency.symbol) // "ETH"
+```
+
+### Chain Type
+
+```ts
+type Chain = {
+  id: number
+  name: string
+  chainId: number
+  rpcUrls: string[]
+  nativeCurrency: {
+    name: string
+    symbol: string
+    decimals: number
+  }
+  blockExplorerUrls?: string[]
+  imageUrl?: string
+}
+```
+
+## Token Utilities
+
+```ts
+import {
+  getSupportedTokens,
+  useSupportedTokens,
+  useTokenList,
+  type SupportedToken,
+} from '0xtrails'
+```
+
+### Fetching Supported Tokens
+
+**All tokens (hook):**
+```tsx
+import { useTokenList } from '0xtrails'
+
+function TokenList() {
+  const { tokens, isLoadingTokens } = useTokenList()
+  
+  if (isLoadingTokens) return <div>Loading tokens...</div>
+  
+  return (
+    <ul>
+      {tokens?.map(token => (
+        <li key={token.id}>
+          {token.symbol} on {token.chainName}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+**Filtered by chain (hook):**
+```tsx
+import { useSupportedTokens } from '0xtrails'
+
+function BaseTokens() {
+  const { supportedTokens, isLoadingTokens } = useSupportedTokens({
+    chainId: 8453 // Base chain
+  })
+  
+  return (
+    <select>
+      {supportedTokens.map(token => (
+        <option key={token.id} value={token.contractAddress}>
+          {token.symbol} - {token.name}
+        </option>
+      ))}
+    </select>
+  )
+}
+```
+
+**As a function (async):**
+```ts
+import { getSupportedTokens } from '0xtrails'
+
+const tokens = await getSupportedTokens()
+const usdcTokens = tokens.filter(t => t.symbol === 'USDC')
+console.log('USDC available on:', usdcTokens.map(t => t.chainName))
+```
+
+### Token Type
+
+```ts
+type SupportedToken = {
+  id: string
+  symbol: string
+  name: string
+  contractAddress: string
+  decimals: number
+  chainId: number
+  chainName: string
+  imageUrl: string
+}
+```
+
+## Practical Examples
+
+### Dynamic Chain and Token Selectors
+
+```tsx
+import { useSupportedChains, useSupportedTokens } from '0xtrails'
+import { useState } from 'react'
+
+function CrossChainSelector() {
+  const [selectedChain, setSelectedChain] = useState<number>()
+  
+  const { supportedChains } = useSupportedChains()
+  const { supportedTokens } = useSupportedTokens({
+    chainId: selectedChain
+  })
+  
+  return (
+    <div>
+      <select onChange={(e) => setSelectedChain(Number(e.target.value))}>
+        <option value="">Select chain</option>
+        {supportedChains.map(chain => (
+          <option key={chain.id} value={chain.chainId}>
+            {chain.name}
+          </option>
+        ))}
+      </select>
+      
+      {selectedChain && (
+        <select>
+          <option value="">Select token</option>
+          {supportedTokens.map(token => (
+            <option key={token.id} value={token.contractAddress}>
+              {token.symbol} - {token.name}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  )
+}
+```
+
+### Finding Token Address by Symbol
+
+```ts
+import { getSupportedTokens } from '0xtrails'
+
+async function getTokenAddress(symbol: string, chainId: number) {
+  const tokens = await getSupportedTokens()
+  const token = tokens.find(
+    t => t.symbol === symbol && t.chainId === chainId
+  )
+  return token?.contractAddress
+}
+
+// Usage
+const usdcOnBase = await getTokenAddress('USDC', 8453)
+console.log('USDC on Base:', usdcOnBase)
+```
+
+### Checking Token Availability
+
+```tsx
+import { useSupportedTokens } from '0xtrails'
+
+function TokenAvailability({ symbol, chainId }: { symbol: string, chainId: number }) {
+  const { supportedTokens } = useSupportedTokens({ chainId })
+  
+  const isAvailable = supportedTokens.some(t => t.symbol === symbol)
+  
+  return (
+    <div>
+      {symbol} is {isAvailable ? 'available' : 'not available'} on this chain
+    </div>
+  )
+}
+```
+
+## See Also
+
+- [Supported Chains](/resources/supported-chains) - Complete list of supported networks
+- [Hooks](/sdk/hooks) - Complete SDK hooks reference
+- [Configuration](/sdk/configuration) - Widget configuration options

@@ -17,7 +17,7 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Playground",
+          "anchor": "Demo Playground",
           "icon": "square-terminal",
           "href": "https://demo.trails.build/widget"
         }
@@ -83,10 +83,12 @@
               "sdk/configuration",
               {
                 "group": "Modes",
-                "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/receive"]
+                "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/earn"]
               },
               "sdk/theming",
               "sdk/gasless",
+              "sdk/quote-providers",
+              "sdk/tokens-and-chains",
               "sdk/hooks"
             ]
           }

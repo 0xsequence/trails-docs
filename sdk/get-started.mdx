@@ -12,6 +12,10 @@ sidebarTitle: "Getting Started"
   <Card title="React Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-starter">
     Minimal template for Trails with Earn, Swap, Pay, and Fund modes integrated.
   </Card>
+
+    <Card title="NextJS Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-nextjs-starter">
+    Minimal NextJS template for Trails with Earn, Swap, Pay, and Fund modes integrated.
+  </Card>
 </div>
 
 ## Prerequisites
@@ -20,7 +24,7 @@ sidebarTitle: "Getting Started"
 - wagmi
 - viem
 
-To install on your own application:
+To install in your own application:
 <Steps>
   <Step title="Install the SDK and dependencies">
     <CodeGroup>
@@ -42,7 +46,7 @@ To install on your own application:
   <Step title="Import and Use the Widget">
     Add the widget to your React application. Here are examples for different modes:
 
-    ### Payment Mode (Exact Output)
+    ### Pay Mode (Exact Output)
     Send exactly 1 USDC to a recipient on Base:
 
     ```tsx
@@ -51,11 +55,11 @@ To install on your own application:
     export const PaymentExample = () => {
       return (
         <TrailsWidget
+          mode="pay"
           toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1" // recipient address
           toAmount="1" 
           toChainId={8453}
           toToken="USDC"
-          mode="pay"
           onCheckoutComplete={(result) => {
             console.log('Payment completed:', result)
           }}
@@ -99,10 +103,10 @@ To install on your own application:
     export const FundExample = () => {
       return (
         <TrailsWidget
+          mode="fund"
           toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
           toChainId={8453}
           toToken="USDC"
-          mode="fund"
           onCheckoutComplete={(result) => {
             console.log('Funding completed:', result)
           }}
@@ -117,7 +121,7 @@ To install on your own application:
   </Step>
 
   <Step title="Handle Events (Optional)">
-    You can listen to various events during the transaction flow:
+    Listen to various events during the transaction flow:
 
     ```tsx
     import { TrailsWidget } from '0xtrails/widget'
@@ -125,11 +129,11 @@ To install on your own application:
     export const AdvancedExample = () => {
       return (
         <TrailsWidget
+          mode="pay"
           toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
           toAmount="1"
           toChainId={8453}
           toToken="USDC"
-          mode="pay"
           onCheckoutStatusUpdate={({ sessionId, transactionStates }) => {
             console.log('Transaction states updated:', sessionId, transactionStates)
           }}
@@ -139,8 +143,6 @@ To install on your own application:
           onCheckoutComplete={({ sessionId }) => {
             console.log('Transaction completed:', sessionId)
           }}
-          gasless={true}
-          theme="dark"
         >
           <button className="advanced-button">
             Send Payment
@@ -152,15 +154,15 @@ To install on your own application:
   </Step>
 </Steps>
 
+
 ## Available Modes
 
 The widget supports several modes for different use cases:
 
-- **`pay`** - Exact output amount (user pays exactly what's specified)
-- **`fund`** - Deposit/top-up (user chooses amount to send)
-- **`swap`** - Cross-chain token swapping
-- **`earn`** - Integrated yield farming and staking - bundled with existing integrations
-- **`receive`** - Request payments via QR code
+- **[`pay`](/sdk/modes/pay)** - Exact output amount (user pays exactly what's specified)
+- **[`fund`](/sdk/modes/fund)** - Deposit/top-up (user chooses amount to send)
+- **[`swap`](/sdk/modes/swap)** - Cross-chain token swapping
+- **[`earn`](/sdk/modes/earn)** - Integrated yield farming and staking - bundled with existing integrations
 
 ## Script Import
 

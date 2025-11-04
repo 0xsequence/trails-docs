@@ -1,6 +1,151 @@
 ---
 title: Quote Providers
+description: "Configure and optimize quote providers for cross-chain interactions"
 ---
 
-## Specifying Liquidity 
+## Quote Providers
 
+Trails integrates with multiple liquidity sources and bridge providers to find the best routes for your cross-chain transactions. You can specify a preferred provider or let Trails automatically select the optimal one.
+
+## Available Providers
+
+- **`auto`** (recommended): Automatically selects the best provider based on the route
+- **`lifi`**: Uses LiFi aggregator for cross-chain swaps
+- **`relay`**: Uses Relay for bridging operations
+- **`cctp`**: Uses Circle's Cross-Chain Transfer Protocol for USDC transfers
+
+## Configuration
+
+### Widget-Level Configuration
+
+Specify a quote provider when initializing the widget:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+
+<TrailsWidget
+  mode="swap"
+  quoteProvider="lifi" // Use LiFi as the quote provider
+  toAddress="0x..."
+  toChainId={8453}
+  toToken="USDC"
+/>
+```
+
+### Hook-Level Configuration
+
+When using the `useQuote` hook, the quote provider is determined by the SDK's default settings and route optimization.
+
+```tsx
+import { useQuote, TradeType } from '0xtrails'
+
+const { quote, swap } = useQuote({
+  walletClient,
+  fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  fromChainId: 1,
+  toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+  toChainId: 8453,
+  swapAmount: '1000000',
+  tradeType: TradeType.EXACT_INPUT,
+  // Quote provider is automatically optimized
+})
+```
+
+## Provider Characteristics
+
+### Auto (Recommended)
+
+The `auto` setting allows Trails to intelligently select the best provider for each transaction based on:
+
+- **Cost efficiency**: Lowest fees and gas costs
+- **Speed**: Fastest execution time
+- **Liquidity**: Best rates for the token pair
+- **Reliability**: Provider uptime and success rates
+
+```tsx
+<TrailsWidget
+  quoteProvider="auto" // Default - recommended for most cases
+  // ... other props
+/>
+```
+
+### LiFi
+
+LiFi is a cross-chain liquidity aggregator that sources routes from multiple bridges and DEXs:
+
+- **Multi-source**: Aggregates from 20+ bridges and DEXs
+- **Optimized routing**: Finds the best multi-hop routes
+- **Wide token support**: Supports a large variety of tokens
+
+```tsx
+<TrailsWidget
+  quoteProvider="lifi"
+  // ... other props
+/>
+```
+
+### Relay
+
+Relay provides fast cross-chain transfers with competitive fees:
+
+- **Fast execution**: Optimized for speed
+- **Native bridging**: Direct chain-to-chain transfers
+- **Lower complexity**: Simple bridge operations
+
+```tsx
+<TrailsWidget
+  quoteProvider="relay"
+  // ... other props
+/>
+```
+
+### CCTP
+
+Circle's Cross-Chain Transfer Protocol for native USDC transfers:
+
+- **Native USDC**: No wrapped tokens
+- **1:1 transfers**: No slippage for USDC
+- **Official Circle**: Secure and trusted
+
+```tsx
+<TrailsWidget
+  quoteProvider="cctp"
+  toToken="USDC" // Best for USDC transfers
+  // ... other props
+/>
+```
+
+## Best Practices
+
+1. **Use `auto` by default**: Let Trails optimize the route for you
+2. **Specify for USDC**: Use `cctp` for USDC-specific transfers if you want guaranteed 1:1 transfers
+3. **Consider your use case**: 
+   - High volume? Use `relay` for speed
+   - Need best rates? Use `lifi` for aggregation
+   - USDC transfers? Use `cctp` for native transfers
+
+## Example: Multi-Provider Strategy
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+
+// For USDC transfers, prefer CCTP
+const USDCTransfer = () => (
+  <TrailsWidget
+    mode="pay"
+    quoteProvider="cctp"
+    toToken="USDC"
+    toChainId={8453}
+    toAddress="0x..."
+  />
+)
+
+// For other tokens, use auto
+const GeneralTransfer = () => (
+  <TrailsWidget
+    mode="swap"
+    quoteProvider="auto"
+    // ... other props
+  />
+)
+```

@@ -1,154 +1,302 @@
 ---
-title: "Swap Mode"
-description: "Enable cross-chain token swapping with the Trails SDK"
+title: Swap Mode
+description: "Technical reference for implementing cross-chain token swaps"
 sidebarTitle: "Swap"
 ---
 
 ## Overview
 
-Swap mode enables users to exchange tokens across different blockchains seamlessly. Unlike pay mode (exact output) or fund mode (user-defined input), swap mode provides a flexible interface where users can select both input and output tokens and amounts.
+Swap mode provides a flexible interface for cross-chain token exchanges. Users control both input and output selections, with the widget handling optimal routing across bridges and DEXs.
 
-## Key Features
+**Trade Types**: Supports both `EXACT_INPUT` and `EXACT_OUTPUT` trade types.
 
-- **Cross-chain swapping**: Swap tokens between different blockchains
-- **Dynamic input/output**: Users control both source and destination amounts
-- **Real-time quotes**: Live pricing and optimal routing
-- **Gasless options**: Support for gasless transactions
-- **Multiple quote providers**: Access to various liquidity sources
+## Configuration
 
-## Basic Usage
+### Required Props
 
-### Simple Swap Widget
+| Prop | Type | Description |
+|------|------|-------------|
+| `mode` | `"swap"` | Sets the widget to swap mode |
+
+### Optional Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `fromChainId` | `number` | Pre-select source chain |
+| `fromToken` | `string` | Pre-select source token |
+| `toChainId` | `number` | Pre-select destination chain |
+| `toToken` | `string` | Pre-select destination token |
+| `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
+| `quoteProvider` | `QuoteProvider` | Quote provider selection |
+
+## Widget Implementation
+
+### Basic Swap Widget
+
+Minimal configuration - users select everything:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
 
-export const BasicSwap = () => {
-  return (
-    <TrailsWidget
-      mode="swap"
-      onCheckoutComplete={({ sessionId }) => {
-        console.log('Swap completed:', sessionId)
-      }}
-    >
-      <button className="swap-button">
-        Swap Tokens
-      </button>
-    </TrailsWidget>
-  )
-}
+<TrailsWidget
+  mode="swap"
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Swap completed:', sessionId)
+  }}
+>
+  <button>Swap Tokens</button>
+</TrailsWidget>
 ```
 
-## Using the useQuote Hook
+### Pre-configured Swap
 
-For more control over the swap process, use the `useQuote` hook directly:
+Pre-select chains and tokens:
+
+```tsx
+<TrailsWidget
+  mode="swap"
+  fromChainId={1} // Ethereum
+  fromToken="USDC"
+  toChainId={8453} // Base
+  toToken="ETH"
+  slippageTolerance="0.01" // 1%
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Swap completed:', sessionId)
+  }}
+>
+  <button>Swap USDC to ETH</button>
+</TrailsWidget>
+```
+
+### Custom Quote Provider
+
+Specify routing preference:
+
+```tsx
+<TrailsWidget
+  mode="swap"
+  quoteProvider="cctp" // Use Circle's CCTP for USDC
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('CCTP swap completed:', sessionId)
+  }}
+>
+  <button>Swap via CCTP</button>
+</TrailsWidget>
+```
+
+## Headless Implementation with useQuote
+
+For custom UI implementations, use the `useQuote` hook directly:
+
+### Basic useQuote Implementation
 
 ```tsx
 import { useQuote, TradeType } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-export const CustomSwapInterface = () => {
+export const CustomSwap = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
   
-  const [fromToken, setFromToken] = useState('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48') // USDC
-  const [toToken, setToToken] = useState('0x833589fcd6edb6e08f4c7c32d4f71b54bda02913') // USDC Base
-  const [amount, setAmount] = useState('1000000') // 1 USDC
-  const [tradeType, setTradeType] = useState(TradeType.EXACT_INPUT)
-
-  const { quote, swap, isLoadingQuote, quoteError } = useQuote({
+  const { quote, swap, isLoadingQuote, quoteError, refetchQuote } = useQuote({
     walletClient,
-    fromTokenAddress: fromToken,
-    fromChainId: 1, // Ethereum
-    toTokenAddress: toToken,
-    toChainId: 8453, // Base
-    swapAmount: amount,
-    tradeType,
-    toAddress: address,
+    fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC on Ethereum
+    fromChainId: 1,
+    toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // USDC on Base
+    toChainId: 8453,
+    swapAmount: '1000000', // 1 USDC (6 decimals)
+    tradeType: TradeType.EXACT_INPUT,
+    toRecipient: address,
     slippageTolerance: '0.005', // 0.5%
     onStatusUpdate: (states) => {
-      console.log('Swap progress:', states)
+      console.log('Transaction status:', states)
     },
   })
-
+  
+  // Refresh quotes every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchQuote?.()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [refetchQuote])
+  
   const handleSwap = async () => {
     if (!swap) return
     
     try {
       const result = await swap()
-      console.log('Swap completed:', result)
+      console.log('Swap result:', result)
     } catch (error) {
       console.error('Swap failed:', error)
     }
   }
-
-  if (isLoadingQuote) {
-    return <div>Loading quote...</div>
-  }
-
-  if (quoteError) {
-    return <div>Error: {String(quoteError)}</div>
-  }
-
-  if (!quote) {
-    return <div>No quote available</div>
-  }
-
+  
+  if (isLoadingQuote) return <div>Loading quote...</div>
+  if (quoteError) return <div>Error: {String(quoteError)}</div>
+  if (!quote) return <div>No quote available</div>
+  
   return (
-    <div className="swap-interface">
-      <div className="quote-display">
-        <h3>Swap Quote</h3>
-        <div>
-          From: {quote.originAmountFormatted} {quote.originToken.symbol}
-        </div>
-        <div>
-          To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol}
-        </div>
-        <div>
-          Fee: {quote.totalFeeAmountUsdDisplay}
-        </div>
-        <div>
-          Rate: 1 {quote.originToken.symbol} = {quote.destinationTokenRate} {quote.destinationToken.symbol}
-        </div>
-      </div>
-      
-      <button onClick={handleSwap} className="execute-button">
-        Execute Swap
-      </button>
+    <div>
+      <h3>Quote</h3>
+      <p>From: {quote.originAmountFormatted} {quote.originToken.symbol}</p>
+      <p>To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol}</p>
+      <p>Fee: {quote.totalFeeAmountUsdDisplay}</p>
+      <p>Rate: 1 {quote.originToken.symbol} = {quote.destinationTokenRate} {quote.destinationToken.symbol}</p>
+      <p>Est. Time: {quote.completionEstimateSeconds}s</p>
+      <button onClick={handleSwap}>Execute Swap</button>
     </div>
   )
 }
 ```
 
-## Trade Types
+### Trade Types
 
-Swap mode supports two trade types:
+#### EXACT_INPUT
 
-### EXACT_INPUT
-User specifies the exact amount of input tokens to swap:
+User specifies exact input amount; output amount varies:
 
 ```tsx
-import { TradeType } from '0xtrails'
-
-// User wants to swap exactly 100 USDC
 const { quote } = useQuote({
   // ... other props
-  swapAmount: '100000000', // 100 USDC (6 decimals)
+  swapAmount: '100000000', // 100 USDC exactly
   tradeType: TradeType.EXACT_INPUT,
 })
+// User sends exactly 100 USDC, receives ~0.039 ETH (varies with price)
 ```
 
-### EXACT_OUTPUT
-User specifies the exact amount of output tokens to receive:
+#### EXACT_OUTPUT
+
+User specifies exact output amount; input amount varies:
 
 ```tsx
-import { TradeType } from '0xtrails'
-
-// User wants to receive exactly 0.1 ETH
 const { quote } = useQuote({
   // ... other props
-  swapAmount: '100000000000000000', // 0.1 ETH (18 decimals)
+  swapAmount: '100000000000000000', // 0.1 ETH exactly
   tradeType: TradeType.EXACT_OUTPUT,
 })
+// User receives exactly 0.1 ETH, sends ~256 USDC (varies with price)
 ```
+
+### Quote Types
+
+```ts
+type UseQuoteProps = {
+  walletClient?: WalletClient
+  fromTokenAddress?: string | null
+  fromChainId?: number | null
+  toTokenAddress?: string | null
+  toChainId?: number | null
+  swapAmount?: string | bigint
+  toRecipient?: string | null
+  tradeType?: TradeType | null
+  slippageTolerance?: string | number | null
+  onStatusUpdate?: (txs: TransactionState[]) => void | null
+}
+
+type UseQuoteReturn = {
+  quote: Quote | null
+  swap: (() => Promise<SwapReturn | null>) | null
+  isLoadingQuote: boolean
+  quoteError: unknown
+  refetchQuote: (() => Promise<void>) | null
+}
+```
+
+## Quote Refresh Strategy
+
+Quotes can become stale. Implement refresh logic:
+
+```tsx
+// Refresh every 30 seconds
+useEffect(() => {
+  const interval = setInterval(() => {
+    refetchQuote?.()
+  }, 30000)
+  return () => clearInterval(interval)
+}, [refetchQuote])
+
+// Refresh on window focus
+useEffect(() => {
+  const handleFocus = () => refetchQuote?.()
+  window.addEventListener('focus', handleFocus)
+  return () => window.removeEventListener('focus', handleFocus)
+}, [refetchQuote])
+```
+
+## Event Handling
+
+### Widget Events
+
+```tsx
+<TrailsWidget
+  mode="swap"
+  onCheckoutStart={({ sessionId }) => {
+    console.log('Swap started:', sessionId)
+  }}
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Swap completed:', sessionId)
+  }}
+  onCheckoutError={({ sessionId, error }) => {
+    console.error('Swap failed:', error)
+  }}
+/>
+```
+
+### useQuote Transaction Status
+
+```tsx
+const { quote, swap } = useQuote({
+  // ... other props
+  onStatusUpdate: (states) => {
+    states.forEach(state => {
+      console.log(`${state.chainId}: ${state.status}`)
+      // States: 'pending', 'executing', 'completed', 'failed'
+    })
+  },
+})
+```
+
+## Error Handling
+
+```tsx
+import { getIsUserRejectionError, InsufficientBalanceError } from '0xtrails'
+
+const handleSwap = async () => {
+  try {
+    await swap()
+  } catch (error) {
+    if (getIsUserRejectionError(error)) {
+      console.log('User rejected transaction')
+    } else if (error instanceof InsufficientBalanceError) {
+      console.error('Insufficient balance')
+    } else {
+      console.error('Swap failed:', error)
+    }
+  }
+}
+```
+
+## Use Cases
+
+- **Cross-chain Token Exchange**: Swap any token to any other token across chains
+- **Portfolio Rebalancing**: Shift holdings between chains and tokens
+- **Yield Optimization**: Move assets to chains with better yields
+- **Gas Token Acquisition**: Get native tokens for new chains
+- **Arbitrage**: Take advantage of price differences across chains
+
+## Technical Notes
+
+- Quotes automatically factor in gas costs and fees
+- Multiple liquidity sources are queried for optimal routing
+- Supports both same-chain and cross-chain swaps
+- Native token wrapping/unwrapping is handled automatically
+- Slippage protection is built-in
+
+## See Also
+
+- [Use Case Examples](/use-cases/swap) - Implementation patterns
+- [Quote Providers](/sdk/quote-providers) - Provider comparison and selection
+- [Hooks Reference](/sdk/hooks) - useQuote hook details
+- [Configuration](/sdk/configuration) - Additional configuration options

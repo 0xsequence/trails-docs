@@ -6,6 +6,63 @@ sidebarTitle: "Hooks"
 
 All hooks and utilities are available from the `0xtrails` package unless stated otherwise.
 
+## Error Handling
+
+```ts
+import {
+  InsufficientBalanceError,
+  UserRejectionError,
+  getIsUserRejectionError,
+} from '0xtrails'
+```
+
+### InsufficientBalanceError
+
+Error thrown when a user has insufficient balance to complete a transaction.
+
+**Usage**:
+```ts
+try {
+  await swap()
+} catch (error) {
+  if (error instanceof InsufficientBalanceError) {
+    console.error('Insufficient balance for this transaction')
+  }
+}
+```
+
+### UserRejectionError
+
+Error thrown when a user rejects a transaction in their wallet.
+
+**Usage**:
+```ts
+try {
+  await swap()
+} catch (error) {
+  if (error instanceof UserRejectionError) {
+    console.log('User rejected the transaction')
+  }
+}
+```
+
+### getIsUserRejectionError
+
+Utility function to check if an error is a user rejection error.
+
+**Signature**: `(error: unknown) => boolean`
+
+**Usage**:
+```ts
+try {
+  await swap()
+} catch (error) {
+  if (getIsUserRejectionError(error)) {
+    console.log('User rejected the transaction')
+  }
+}
+```
+
 ## Chains
 
 ```ts
@@ -15,7 +72,7 @@ import { getSupportedChains, useSupportedChains } from '0xtrails'
 - `getSupportedChains()`: `Promise<Chain[]>`
 - `useSupportedChains()`: `{ supportedChains: Chain[], isLoadingChains: boolean }`
 
-Chain data structure:
+### Chain Type
 
 ```ts
 type Chain = {
@@ -33,11 +90,49 @@ type Chain = {
 }
 ```
 
-Utility:
+### Utility Functions
 
 ```ts
-import { getChainInfo } from '0xtrails'
+import { getChainInfo, getAllChains } from '0xtrails'
+
+// Get info for specific chain
 const chain = getChainInfo(8453) // Base chain info
+
+// Get all chains (including unsupported)
+const allChains = getAllChains()
+```
+
+## Indexer Client
+
+```ts
+import {
+  getIndexerGatewayClient,
+  useIndexerGatewayClient,
+} from '0xtrails'
+```
+
+### getIndexerGatewayClient
+
+Gets the indexer gateway client instance for querying blockchain data.
+
+**Signature**: `() => IndexerGatewayClient`
+
+**Usage**:
+```ts
+const client = getIndexerGatewayClient()
+// Use client to query blockchain data
+```
+
+### useIndexerGatewayClient
+
+React hook for accessing the indexer gateway client.
+
+**Signature**: `() => IndexerGatewayClient`
+
+**Usage**:
+```tsx
+const client = useIndexerGatewayClient()
+// Use client in your component
 ```
 
 ## Tokens
@@ -50,7 +145,7 @@ import { getSupportedTokens, useSupportedTokens, useTokenList } from '0xtrails'
 - `useSupportedTokens({ chainId?: number })`: `{ supportedTokens: SupportedToken[], isLoadingTokens: boolean }`
 - `getSupportedTokens()`: `Promise<SupportedToken[]>`
 
-Token data structure:
+### SupportedToken Type
 
 ```ts
 type SupportedToken = {
@@ -65,7 +160,7 @@ type SupportedToken = {
 }
 ```
 
-Additional helpers:
+### Additional Helpers
 
 ```ts
 import { useTokenInfo, useTokenAddress } from '0xtrails'
@@ -104,7 +199,7 @@ Balance hooks and utilities:
 - `useHasSufficientBalanceUsd(address, targetUsd)`: Check if account has sufficient USD balance
 - `useHasSufficientBalanceToken(address, tokenAddress, tokenAmount, chainId)`: Check token balance
 
-Balance data structures:
+### TokenBalance Type
 
 ```ts
 type TokenBalance = {
@@ -134,7 +229,7 @@ type TokenBalance = {
 }
 ```
 
-Example usage:
+### Example Usage
 
 ```tsx
 import { useTokenBalances, useAccountTotalBalanceUsd } from '0xtrails'
@@ -162,6 +257,7 @@ const WalletBalance = ({ address }: { address: string }) => {
 
 ```ts
 import { 
+  prepareSend,
   useQuote, 
   TradeType,
   type UseQuoteReturn,
@@ -171,9 +267,41 @@ import {
 } from '0xtrails'
 ```
 
+### prepareSend
+
+Prepares a send transaction with optimal routing. This is a lower-level function for advanced use cases.
+
+**Signature**:
+```ts
+function prepareSend(params: {
+  fromTokenAddress: string
+  fromChainId: number
+  toTokenAddress: string
+  toChainId: number
+  amount: string | bigint
+  tradeType: TradeType
+  toRecipient?: string
+  slippageTolerance?: string | number
+}): Promise<PrepareSendResult>
+```
+
+**Usage**:
+```ts
+const result = await prepareSend({
+  fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  fromChainId: 1,
+  toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+  toChainId: 8453,
+  amount: '1000000',
+  tradeType: TradeType.EXACT_INPUT,
+})
+```
+
 ### useQuote Hook
 
-The `useQuote` hook provides real-time quotes for token swaps and cross-chain transfers:
+The `useQuote` hook provides real-time quotes for token swaps and cross-chain transfers.
+
+#### Types
 
 ```ts
 type UseQuoteProps = {
@@ -196,18 +324,14 @@ type UseQuoteReturn = {
   quoteError: unknown
   refetchQuote: (() => Promise<void>) | null
 }
-```
 
-### Trade Types
-
-```ts
 enum TradeType {
   EXACT_INPUT = 'EXACT_INPUT',  // User specifies exact input amount
   EXACT_OUTPUT = 'EXACT_OUTPUT' // User specifies exact output amount
 }
 ```
 
-Usage example:
+#### Usage Example
 
 ```tsx
 import { useQuote, TradeType } from '0xtrails'
@@ -312,6 +436,158 @@ const calldata = encodeFunctionData({
 
 This pattern is essential for fund mode transactions where users choose their input amount, but the contract needs to receive the exact output amount after any swaps or bridging operations. 
 
+## Meta Transactions
+
+```ts
+import {
+  useMetaTxnsMonitor,
+  getMetaTxnReceipt,
+  type MetaTxn,
+  type MetaTxnStatus,
+} from '0xtrails'
+```
+
+### useMetaTxnsMonitor
+
+React hook for monitoring meta transaction status.
+
+**Signature**:
+```ts
+function useMetaTxnsMonitor(params: {
+  metaTxnIds?: string[]
+  accountAddress?: string
+  enabled?: boolean
+}): {
+  metaTxns: MetaTxn[]
+  isLoading: boolean
+}
+```
+
+**Usage**:
+```tsx
+const { metaTxns, isLoading } = useMetaTxnsMonitor({
+  metaTxnIds: ['meta-txn-123'],
+  enabled: true,
+})
+```
+
+### getMetaTxnReceipt
+
+Gets the receipt for a meta transaction.
+
+**Signature**: `(metaTxnId: string) => Promise<MetaTxnReceipt>`
+
+**Usage**:
+```ts
+const receipt = await getMetaTxnReceipt('meta-txn-123')
+```
+
+### MetaTxn Type
+
+```ts
+type MetaTxn = {
+  id: string
+  status: 'pending' | 'submitted' | 'confirmed' | 'failed'
+  txHash?: string
+  chainId: number
+  blockNumber?: number
+  timestamp: number
+}
+```
+
+## Transaction History
+
+```ts
+import {
+  getIntentTransactionHistory,
+  getAccountTransactionHistory,
+  useAccountTransactionHistory,
+  useIntentTransactionHistory,
+  getTxTimeDiff,
+} from '0xtrails'
+```
+
+### getIntentTransactionHistory
+
+Gets transaction history for a specific intent address.
+
+**Signature**:
+```ts
+function getIntentTransactionHistory(params: {
+  intentAddress: string
+  pageSize?: number
+  page?: number
+}): Promise<IntentTransactionHistoryResponse>
+```
+
+**Usage**:
+```ts
+const history = await getIntentTransactionHistory({
+  intentAddress: '0x...',
+  pageSize: 10,
+  page: 0,
+})
+```
+
+### getAccountTransactionHistory
+
+Gets transaction history for a wallet address interacting with Trails.
+
+**Signature**:
+```ts
+function getAccountTransactionHistory(params: {
+  chainId: number
+  accountAddress: string
+  pageSize?: number
+  includeMetadata?: boolean
+  page?: number
+}): Promise<TransactionHistoryResponse>
+```
+
+**Usage**:
+```ts
+const history = await getAccountTransactionHistory({
+  chainId: 1,
+  accountAddress: '0x...',
+  pageSize: 10,
+})
+```
+
+### useAccountTransactionHistory
+
+React hook for account transaction history with pagination.
+
+**Usage**:
+```tsx
+const { transactions, isLoading, error, hasMore, loadMore } = 
+  useAccountTransactionHistory({
+    chainId: 1,
+    accountAddress: address,
+  })
+```
+
+### useIntentTransactionHistory
+
+React hook for intent transaction history.
+
+**Usage**:
+```tsx
+const { transactions, isLoading, error } = useIntentTransactionHistory({
+  intentAddress: '0x...',
+})
+```
+
+### getTxTimeDiff
+
+Gets the time difference for a transaction in human-readable format.
+
+**Signature**: `(timestamp: string | number) => string`
+
+**Usage**:
+```ts
+const timeDiff = getTxTimeDiff(transaction.timestamp)
+console.log(timeDiff) // "5 minutes ago"
+```
 
 ## useGetTransactionHistory
 
@@ -321,7 +597,43 @@ Hook for fetching transaction history from a user's wallet address for a specifi
 import { useGetTransactionHistory } from '0xtrails'
 ```
 
-Usage:
+### Types
+
+```ts
+type TransactionHistoryItemFromAPI = {
+  txnHash: string
+  blockNumber: number
+  blockHash: string
+  chainId: number
+  metaTxnID: string | null
+  transfers: Transfer[]
+  timestamp: string
+}
+
+type TransactionHistoryItem = TransactionHistoryItemFromAPI & {
+  explorerUrl?: string
+  chainName?: string
+}
+
+type TransactionHistoryResponse = {
+  page: {
+    column: string
+    pageSize: number
+    more: boolean
+  }
+  transactions: TransactionHistoryItem[]
+}
+
+type GetAccountTransactionHistoryParams = {
+  chainId: number
+  accountAddress: string
+  pageSize?: number
+  includeMetadata?: boolean
+  page?: number
+}
+```
+
+### Usage
 
 ```tsx
 import { useGetTransactionHistory } from '0xtrails'
@@ -351,38 +663,279 @@ function TransactionList() {
 }
 ```
 
-Types:
+## Trails Hook
 
 ```ts
-export type TransactionHistoryItemFromAPI = {
-  txnHash: string
-  blockNumber: number
-  blockHash: string
+import {
+  useTrails,
+  type WagmiAccount,
+} from '0xtrails'
+```
+
+### useTrails
+
+Main React hook for Trails functionality. Provides access to all core Trails features including account info, chains, tokens, and balances.
+
+**Signature**:
+```ts
+function useTrails(): {
+  account: WagmiAccount | undefined
+  supportedChains: Chain[]
+  supportedTokens: SupportedToken[]
+  tokenBalances: TokenBalanceExtended[]
+  totalBalanceUsd: number
+  isLoading: boolean
+}
+```
+
+### WagmiAccount Type
+
+```ts
+type WagmiAccount = {
+  address: string
   chainId: number
-  metaTxnID: string | null
-  transfers: Transfer[]
-  timestamp: string
+  connector: Connector
 }
+```
 
-export type TransactionHistoryItem = TransactionHistoryItemFromAPI & {
-  explorerUrl?: string
-  chainName?: string
+### Usage
+
+```tsx
+const {
+  account,
+  supportedChains,
+  supportedTokens,
+  tokenBalances,
+  totalBalanceUsd,
+  isLoading
+} = useTrails()
+```
+
+## Encoders
+
+```ts
+import { getERC20TransferData } from '0xtrails'
+```
+
+### getERC20TransferData
+
+Encodes ERC20 transfer calldata for token transfers.
+
+**Signature**: `(to: string, amount: bigint) => string`
+
+**Usage**:
+```ts
+const transferData = getERC20TransferData(
+  '0x1234567890123456789012345678901234567890',
+  1000000n // 1 USDC (6 decimals)
+)
+```
+
+## Relayer
+
+```ts
+import {
+  getRelayer,
+  useRelayers,
+} from '0xtrails'
+```
+
+### getRelayer
+
+Gets relayer information for a specific chain.
+
+**Signature**: `(chainId: number) => Promise<Relayer>`
+
+**Usage**:
+```ts
+const relayer = await getRelayer(1)
+console.log(relayer.url)
+```
+
+### useRelayers
+
+React hook for accessing relayer information across all chains.
+
+**Signature**:
+```ts
+function useRelayers(): {
+  relayers: Map<number, Relayer>
+  isLoading: boolean
 }
+```
 
-export type TransactionHistoryResponse = {
-  page: {
-    column: string
-    pageSize: number
-    more: boolean
-  }
-  transactions: TransactionHistoryItem[]
-}
+**Usage**:
+```tsx
+const { relayers, isLoading } = useRelayers()
+const ethereumRelayer = relayers.get(1)
+```
 
-export type GetAccountTransactionHistoryParams = {
+## Logger
+
+```ts
+import { logger, getMinLogLevel } from '0xtrails'
+```
+
+### logger
+
+Logger instance for debugging and monitoring.
+
+**Methods**:
+- `logger.debug(message: string, ...args: any[]): void`
+- `logger.info(message: string, ...args: any[]): void`
+- `logger.warn(message: string, ...args: any[]): void`
+- `logger.error(message: string, ...args: any[]): void`
+
+**Usage**:
+```ts
+logger.info('Swap initiated', { fromToken, toToken })
+logger.error('Swap failed', error)
+```
+
+### getMinLogLevel
+
+Gets the minimum log level for the logger.
+
+**Signature**: `() => 'debug' | 'info' | 'warn' | 'error'`
+
+**Usage**:
+```ts
+const logLevel = getMinLogLevel()
+```
+
+## TrailsClient
+
+```ts
+import { getTrailsClient, useTrailsClient } from '0xtrails'
+```
+
+### getTrailsClient
+
+Gets the Trails client instance for interacting with the Trails protocol.
+
+**Signature**: `() => TrailsClient`
+
+**Usage**:
+```ts
+const client = getTrailsClient()
+```
+
+### useTrailsClient
+
+React hook for accessing the Trails client.
+
+**Signature**: `() => TrailsClient`
+
+**Usage**:
+```tsx
+const client = useTrailsClient()
+```
+
+## Advanced: Intent Functions
+
+<Warning>
+These are advanced functions for direct intent management. Most developers should use the TrailsWidget or useQuote hook instead.
+</Warning>
+
+```ts
+import {
+  calculateIntentAddress,
+  calculateOriginAndDestinationIntentAddresses,
+  commitIntent,
+  getIntent,
+  sendOriginTransaction,
+} from '0xtrails'
+```
+
+### Types
+
+```ts
+type OriginCallParams = {
+  to: string
+  value: bigint
+  data: string
   chainId: number
-  accountAddress: string
-  pageSize?: number
-  includeMetadata?: boolean
-  page?: number
 }
+
+type QuoteProvider = 'lifi' | 'relay' | 'cctp' | 'auto'
+
+type TrailsFee = {
+  amount: bigint
+  amountUsd: number
+  token: SupportedToken
+}
+```
+
+### calculateIntentAddress
+
+Calculates the intent contract address for a given set of parameters.
+
+**Signature**: `(params: IntentParams) => Promise<string>`
+
+**Usage**:
+```ts
+const intentAddress = await calculateIntentAddress({
+  fromChainId: 1,
+  toChainId: 8453,
+  // ... other params
+})
+```
+
+### calculateOriginAndDestinationIntentAddresses
+
+Calculates both origin and destination intent addresses.
+
+**Signature**:
+```ts
+function calculateOriginAndDestinationIntentAddresses(
+  params: IntentParams
+): Promise<{ originAddress: string; destinationAddress: string }>
+```
+
+**Usage**:
+```ts
+const { originAddress, destinationAddress } = 
+  await calculateOriginAndDestinationIntentAddresses(params)
+```
+
+### commitIntent
+
+Commits an intent to the blockchain.
+
+**Signature**: `(params: CommitIntentParams) => Promise<CommitIntentResult>`
+
+**Usage**:
+```ts
+const result = await commitIntent({
+  walletClient,
+  fromChainId: 1,
+  toChainId: 8453,
+  // ... other params
+})
+```
+
+### getIntent
+
+Retrieves an existing intent from the blockchain.
+
+**Signature**: `(intentAddress: string) => Promise<Intent>`
+
+**Usage**:
+```ts
+const intent = await getIntent('0x...')
+```
+
+### sendOriginTransaction
+
+Sends the origin transaction for an intent.
+
+**Signature**: `(params: SendOriginTxParams) => Promise<string>`
+
+**Usage**:
+```ts
+const txHash = await sendOriginTransaction({
+  walletClient,
+  intentAddress: '0x...',
+  // ... other params
+})
 ```
