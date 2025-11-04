@@ -1,0 +1,158 @@
+---
+title: GetIntentReceipt
+openapi: ../trails-api.gen.json post /rpc/Trails/GetIntentReceipt
+---
+
+## Overview
+
+The `GetIntentReceipt` endpoint retrieves the receipt for a specific intent, providing detailed information about all transactions involved in the cross-chain execution.
+
+## Use Cases
+
+- Check the status of an executing intent
+- Retrieve transaction hashes for block explorer links
+- Monitor cross-chain transaction progress
+- Get detailed transaction information for analytics
+- Verify successful completion
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique identifier of the intent
+
+## Response
+
+The response includes:
+
+- **intentReceipt** (IntentReceipt): Complete receipt with transaction details
+
+### IntentReceipt Structure
+
+- **id** (number): Internal database ID
+- **intentId** (string): Unique intent identifier
+- **status** (IntentStatus): Current status (`QUOTED`, `COMMITTED`, `EXECUTING`, `FAILED`, `SUCCEEDED`)
+- **ownerAddress** (string): Wallet address that initiated the intent
+- **originChainId** (number): Source chain ID
+- **destinationChainId** (number): Destination chain ID
+- **depositTransactionId** (number): ID of deposit transaction
+- **depositTransaction** (IntentTransaction): Deposit transaction details
+- **originTransactionId** (number): ID of origin transaction
+- **originTransaction** (IntentTransaction): Origin chain transaction details
+- **destinationTransactionId** (number): ID of destination transaction
+- **destinationTransaction** (IntentTransaction): Destination chain transaction details
+- **updatedAt** (string): Last update timestamp
+- **createdAt** (string): Creation timestamp
+
+### IntentTransaction Details
+
+Each transaction object includes:
+- **id** (number): Transaction database ID
+- **intentId** (string): Associated intent ID
+- **chainId** (number): Chain where transaction occurred
+- **fromAddress** (string): Sender address
+- **toAddress** (string): Recipient address
+- **tokenAddress** (string): Token contract address
+- **tokenAmount** (number): Amount transferred
+- **txnHash** (string): Transaction hash for block explorer
+- **status** (TransactionStatus): Transaction status
+  - `UNKNOWN`: Initial state
+  - `PENDING`: Waiting to be mined
+  - `RELAYING`: Being relayed
+  - `RELAYED`: Relayed successfully
+  - `MINING`: Being mined
+  - `SUCCEEDED`: Confirmed on-chain
+  - `FAILED`: Transaction failed
+- **statusReason** (string): Reason for failure (if failed)
+- **calldata** (string): Transaction calldata
+- **metaTxnId** (string): Meta-transaction ID (if gasless)
+- **precondition** (TransactionPrecondition): Pre-execution conditions
+- **depositIntentEntry** (DepositIntentEntry): Deposit signature details
+
+## Example
+
+```typescript
+const receiptResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/GetIntentReceipt', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_123abc'
+  })
+});
+
+const { intentReceipt } = await receiptResponse.json();
+
+console.log('Status:', intentReceipt.status);
+console.log('Deposit TX:', intentReceipt.depositTransaction.txnHash);
+console.log('Origin TX:', intentReceipt.originTransaction.txnHash);
+console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
+```
+
+## Polling Pattern
+
+For real-time updates, poll this endpoint:
+
+```typescript
+async function pollReceipt(intentId: string, maxAttempts = 60) {
+  for (let i = 0; i < maxAttempts; i++) {
+    const { intentReceipt } = await getIntentReceipt(intentId);
+    
+    console.log(`Attempt ${i + 1}: ${intentReceipt.status}`);
+    
+    if (intentReceipt.status === 'SUCCEEDED') {
+      return intentReceipt;
+    }
+    
+    if (intentReceipt.status === 'FAILED') {
+      throw new Error(intentReceipt.originTransaction.statusReason);
+    }
+    
+    // Wait 2 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  
+  throw new Error('Timeout waiting for intent completion');
+}
+
+const receipt = await pollReceipt('intent_123abc');
+console.log('Completed!', receipt);
+```
+
+## Block Explorer Links
+
+Use transaction hashes to create explorer links:
+
+```typescript
+function getExplorerUrl(chainId: number, txHash: string) {
+  const explorers = {
+    1: 'https://etherscan.io/tx/',
+    137: 'https://polygonscan.com/tx/',
+    8453: 'https://basescan.org/tx/',
+    42161: 'https://arbiscan.io/tx/',
+    10: 'https://optimistic.etherscan.io/tx/'
+  };
+  
+  return explorers[chainId] + txHash;
+}
+
+const { intentReceipt } = await getIntentReceipt(intentId);
+console.log('Origin TX:', getExplorerUrl(
+  intentReceipt.originChainId,
+  intentReceipt.originTransaction.txnHash
+));
+```
+
+<Info>
+For streaming updates without polling, consider using `WaitIntentReceipt` instead.
+</Info>
+
+## Next Steps
+
+- Use transaction hashes to verify on block explorers
+- Check destination wallet balance to confirm receipt
+- Use `GetIntent` to retrieve the original intent details
+- Use `SearchIntents` to find related transactions
+

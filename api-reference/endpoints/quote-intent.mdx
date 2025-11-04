@@ -1,0 +1,96 @@
+---
+title: QuoteIntent
+openapi: ../trails-api.gen.json post /rpc/Trails/QuoteIntent
+---
+
+## Overview
+
+The `QuoteIntent` endpoint allows you to request a quote for a cross-chain intent transaction. It provides comprehensive information about the transaction including gas fees, optimal routing, and price impact.
+
+## Use Cases
+
+- Get a quote for swapping tokens across different chains
+- Estimate fees before executing a cross-chain transaction
+- Compare different routing options
+- Calculate price impact and slippage
+
+## Request Parameters
+
+### Required Fields
+
+- **ownerAddress** (string): The wallet address initiating the transaction
+- **originChainId** (number): Source chain ID where the transaction originates
+- **originTokenAddress** (string): Contract address of the source token
+- **destinationChainId** (number): Target chain ID for the transaction
+- **destinationTokenAddress** (string): Contract address of the destination token
+- **destinationToAddress** (string): Recipient address on the destination chain
+
+### Optional Fields
+
+- **destinationCallData** (string): Custom calldata for contract interactions on destination chain
+- **destinationCallValue** (string): Value to send with the destination call
+- **originTokenAmount** (number): Amount of origin tokens (for EXACT_INPUT)
+- **destinationTokenAmount** (number): Amount of destination tokens (for EXACT_OUTPUT)
+- **tradeType** (TradeType): Either `EXACT_INPUT` or `EXACT_OUTPUT`
+- **options** (QuoteIntentRequestOptions):
+  - **quoteProvider** (QuoteProviderType): Preferred quote provider (`RELAY`, `CCTPV2`, or `LIFI`)
+  - **slippageTolerance** (number): Maximum acceptable slippage percentage
+  - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses
+
+## Response
+
+The response includes:
+
+- **intent** (Intent): Complete intent object with transaction details
+- **gasFeeOptions** (GasFeeOptions): Available gas fee payment options
+
+### Intent Object Details
+
+The intent object contains:
+- Unique intent ID
+- Transaction status
+- Deposit transaction details
+- Cross-chain calls to execute
+- Quote information (rates, slippage, price impact)
+- Fee breakdown (gas fees, provider fees)
+- Expiration timestamp
+
+## Example
+
+```typescript
+const quoteRequest = {
+  ownerAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+  originChainId: 1, // Ethereum
+  originTokenAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+  originTokenAmount: 100000000, // 100 USDC (6 decimals)
+  destinationChainId: 8453, // Base
+  destinationTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base
+  destinationToAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+  tradeType: "EXACT_INPUT",
+  options: {
+    slippageTolerance: 0.5, // 0.5%
+    quoteProvider: "RELAY"
+  }
+};
+
+const response = await fetch('https://api.trails.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify(quoteRequest)
+});
+
+const quote = await response.json();
+console.log('Quote:', quote);
+```
+
+## Next Steps
+
+After receiving a quote:
+1. Review the quote details, fees, and estimated amounts
+2. Use `CommitIntent` to commit the intent if the quote is acceptable
+3. Execute the transaction with `ExecuteIntent`
+4. Monitor progress with `GetIntentReceipt` or `WaitIntentReceipt`
+

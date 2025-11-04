@@ -1,163 +1,180 @@
 ---
-title: "Overview"
-description: "Complete reference for the Trails SDK"
+title: "Getting Started"
+description: "Learn how to integrate the Trails API for cross-chain transactions"
 ---
 
-## Welcome to the Trails SDK API Reference
+## Welcome to the Trails API
 
-The Trails SDK provides a comprehensive set of tools for building cross-chain applications with seamless token swapping, bridging, and payment functionality.
+The Trails API enables seamless cross-chain token swaps, bridges, and payments. This guide walks you through the complete flow from requesting a quote to executing a transaction.
 
-## Core Components
+## Core Workflow
 
-### TrailsWidget
-The main React component for integrating Trails functionality into your application.
+Every cross-chain transaction follows this four-step process:
 
-```tsx
-import { TrailsWidget } from '0xtrails/widget'
+```mermaid
+flowchart LR
+    A[Request Quote] --> B[Commit Quote]
+    B --> C[Execute Quote]
+    C --> D[Monitor Intent]
 ```
 
-**Props:**
-- `projectAccessKey: string` - Your project access key (optional)
-- `mode?: "pay" | "fund" | "earn" | "swap" | "receive"` - Widget operation mode
-- `toAddress?: string` - Destination address for payments
-- `toAmount?: string` - Exact amount for payments (pay mode)
-- `toChainId?: number | string` - Destination chain ID
-- `toToken?: string` - Destination token symbol or address
-- `toCalldata?: string` - Custom calldata for contract interactions
-- `gasless?: boolean` - Enable gasless transactions
-- `theme?: "light" | "dark" | "auto"` - Widget theme
-- `quoteProvider?: string` - Preferred quote provider
-- `onCheckoutComplete?: (data: { sessionId: string }) => void` - Success callback
-- `onCheckoutError?: (data: { sessionId: string; error: string }) => void` - Error callback
-- `onCheckoutStatusUpdate?: (data: { sessionId: string; transactionStates: TransactionState[] }) => void` - Transaction progress callback
+### Step 1: Get a Quote
 
-## Main Exports
+Request a quote to see rates, fees, and routing options for your transaction.
 
-### Hooks
+```typescript
+const quoteResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    originChainId: 1, // Ethereum
+    originTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+    originTokenAmount: 100000000, // 100 USDC (6 decimals)
+    destinationChainId: 8453, // Base
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    tradeType: 'EXACT_INPUT',
+    options: {
+      slippageTolerance: 0.5, // 0.5%
+      quoteProvider: 'RELAY'
+    }
+  })
+});
 
-```tsx
-// Chains
-import { useSupportedChains, getSupportedChains } from '0xtrails'
+const { intent, gasFeeOptions } = await quoteResponse.json();
 
-// Tokens  
-import { useSupportedTokens, getSupportedTokens, useTokenList } from '0xtrails'
-
-// Balances
-import { 
-  useTokenBalances, 
-  useAccountTotalBalanceUsd,
-  useHasSufficientBalanceToken,
-  useHasSufficientBalanceUsd 
-} from '0xtrails'
-
-// Quotes & Swapping
-import { useQuote, prepareSend, TradeType } from '0xtrails'
-
-// Meta Transactions
-import { useMetaTxnsMonitor } from '0xtrails'
-
-// Advanced
-import { useTrails } from '0xtrails'
+console.log('Quote received:', {
+  fromAmount: intent.quote.fromAmount,
+  toAmount: intent.quote.toAmount,
+  totalFees: intent.fees.totalFeeUsd,
+  expiresAt: intent.expiresAt
+});
 ```
 
-### Utilities
+**Key Parameters:**
 
-```tsx
-// API Clients
-import { getAPIClient, useAPIClient } from '0xtrails'
-import { getIndexerGatewayClient, useIndexerGatewayClient } from '0xtrails'
+- **ownerAddress**: Your wallet address
+- **originChainId** & **destinationChainId**: Source and destination chains
+- **originTokenAddress** & **destinationTokenAddress**: Token contracts
+- **originTokenAmount**: Amount to swap (in token's smallest unit)
+- **tradeType**: `EXACT_INPUT` (specify input) or `EXACT_OUTPUT` (specify output)
 
-// Intents (Advanced)
-import {
-  calculateIntentAddress,
-  commitIntentConfig,
-  getIntentCallsPayloads,
-  sendOriginTransaction
-} from '0xtrails'
+<Tip>
+Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` when you know exactly how much you need to receive.
+</Tip>
 
-// Relayers
-import { getRelayer, useRelayers } from '0xtrails'
+### Step 2: Commit the Intent
 
-// Meta Transactions
-import { relayerSendMetaTx, getMetaTxnReceipt } from '0xtrails'
+Lock in the quote by committing the intent. This reserves the rates and generates an intent ID.
 
-// Transaction Utilities
-import { getTxTimeDiff } from '0xtrails'
+```typescript
+const commitResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/CommitIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ intent })
+});
 
-// Encoders
-import { getERC20TransferData } from '0xtrails'
+const { intentId } = await commitResponse.json();
 
-// Constants
-import { TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+console.log('Intent committed:', intentId);
 ```
 
-## Type Definitions
+<Warning>
+Committed intents expire after a set period (check `intent.expiresAt`). Execute before expiration or request a new quote.
+</Warning>
 
-### Core Types
+### Step 3: Execute the Transaction
 
-```tsx
-export type TransactionState = {
-  chainId: number
-  transactionHash: string
-  state: 'pending' | 'confirmed' | 'failed'
-  explorerUrl: string
-  label: string
-  blockNumber?: number
-  decodedGuestModuleEvents?: Array<{ type: string; [key: string]: any }>
-  decodedTrailsTokenSweeperEvents?: Array<{ type: string; [key: string]: any }>
-}
+Now we can execute the intent. First, send tokens to the intent address then call the execution:
 
-export type PrepareSendQuote = {
-  originAmountFormatted: string
-  originAmountDisplay: string
-  originAmountUsdDisplay: string
-  destinationAmountFormatted: string
-  destinationAmountDisplay: string
-  destinationAmountUsdDisplay: string
-  originToken: SupportedToken
-  destinationToken: SupportedToken
-  originChain: Chain
-  destinationChain: Chain
-  totalFeeAmountUsdDisplay: string
-  completionEstimateSeconds: number
-  transactionStates?: TransactionState[]
-  // ... additional quote properties
-}
+```typescript
+// First, send tokens to the intent address
+const depositTx = await walletClient.sendTransaction({
+  to: intent.depositTransaction.toAddress,
+  value: 0n,
+  data: encodeERC20Transfer(
+    intent.depositTransaction.tokenAddress,
+    intent.depositTransaction.toAddress,
+    intent.depositTransaction.amount
+  )
+});
 
-export enum TradeType {
-  EXACT_INPUT = 0,  // User specifies exact input amount
-  EXACT_OUTPUT = 1  // User specifies exact output amount
-}
+// Wait for transaction confirmation
+const receipt = await publicClient.waitForTransactionReceipt({
+  hash: depositTx
+});
+
+// Then execute the intent
+const executeResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId,
+    depositTransactionHash: depositTx
+  })
+});
+
+const { intentStatus } = await executeResponse.json();
+console.log('Execution started:', intentStatus);
 ```
 
-### Token & Chain Types
+### Step 4: Monitor Completion
 
-```tsx
-export type SupportedToken = {
-  id: string
-  symbol: string
-  name: string
-  contractAddress: string
-  decimals: number
-  chainId: number
-  chainName: string
-  imageUrl: string
-}
+Track the transaction status via polling:
 
-export type Chain = {
-  id: number
-  name: string
-  chainId: number
-  rpcUrls: string[]
-  nativeCurrency: {
-    name: string
-    symbol: string
-    decimals: number
+```typescript
+async function pollForCompletion(intentId: string) {
+  while (true) {
+    const receiptResponse = await fetch(
+      'https://api.trails.sequence.app/rpc/Trails/GetIntentReceipt',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Key': 'YOUR_ACCESS_KEY'
+        },
+        body: JSON.stringify({ intentId })
+      }
+    );
+
+    const { intentReceipt } = await receiptResponse.json();
+
+    console.log('Status:', intentReceipt.status);
+
+    if (intentReceipt.status === 'SUCCEEDED') {
+      console.log('✅ Transaction completed!');
+      console.log('Deposit TX:', intentReceipt.depositTransaction.txnHash);
+      console.log('Origin TX:', intentReceipt.originTransaction.txnHash);
+      console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
+      return intentReceipt;
+    }
+
+    if (intentReceipt.status === 'FAILED') {
+      throw new Error('Transaction failed: ' + intentReceipt.originTransaction.statusReason);
+    }
+
+    // Wait 2 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
-  blockExplorerUrls?: string[]
-  imageUrl?: string
 }
+
+const receipt = await pollForCompletion(intentId);
 ```
 
+## Support
 
-For detailed examples and advanced usage, see the [Examples](/examples) section.
+Need help? Join our community:
+
+- **Telegram**: [https://t.me/build_with_trails](https://t.me/build_with_trails)
+- **Documentation**: Browse the endpoint references for detailed information
+- **Demo**: Try the [interactive playground](https://demo.trails.build/widget)

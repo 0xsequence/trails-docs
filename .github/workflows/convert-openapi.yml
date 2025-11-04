@@ -1,0 +1,46 @@
+name: Convert OpenAPI YAML to JSON
+
+on:
+  push:
+    paths:
+      - 'api-reference/trails-api.gen.yaml'
+    branches:
+      - '**'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Convert YAML to JSON
+        run: npm run convert-openapi
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code api-reference/trails-api.gen.json || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add api-reference/trails-api.gen.json
+          git commit -m "chore: auto-convert OpenAPI YAML to JSON"
+          git push
+

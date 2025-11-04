@@ -2,6 +2,7 @@
   "author": "James Lawton",
   "dependencies": {
     "@0xsequence/network": "latest",
+    "js-yaml": "^4.1.0",
     "mintlify": "4.2.103"
   },
   "description": "Documentation for Trails",
@@ -13,6 +14,7 @@
   "main": "index.js",
   "name": "Trails",
   "scripts": {
+    "convert-openapi": "node scripts/convert-yaml-to-json.js",
     "dev": "mintlify dev --no-open",
     "test": "mintlify broken-links"
   },

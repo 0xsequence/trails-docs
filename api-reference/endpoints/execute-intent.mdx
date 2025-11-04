@@ -1,0 +1,146 @@
+---
+title: ExecuteIntent
+openapi: ../trails-api.gen.json post /rpc/Trails/ExecuteIntent
+---
+
+## Overview
+
+The `ExecuteIntent` endpoint initiates the execution of a committed intent. This endpoint triggers the actual cross-chain transaction flow, including deposits, swaps, bridges, and destination calls.
+
+## Use Cases
+
+- Execute a committed cross-chain transaction
+- Initiate gasless transactions with deposit signatures
+- Trigger intent execution after deposit confirmation
+- Start the cross-chain bridging process
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique identifier returned from `CommitIntent`
+
+### Optional Fields
+
+- **depositTransactionHash** (string): Hash of the deposit transaction if already executed
+- **depositSignature** (DepositSignature): Signature for gasless execution
+  - **intentSignature** (string): EIP-712 signature of the intent
+  - **permitSignature** (string): ERC-2612 permit signature (if applicable)
+  - **permitDeadline** (number): Permit expiration timestamp
+  - **permitAmount** (number): Amount authorized by permit
+  - **selectedGasFeeOption** (FeeOption): Selected gas fee payment option
+  - **userNonce** (number): User's nonce for replay protection
+  - **deadline** (number): Signature expiration timestamp
+
+## Response
+
+The response includes:
+
+- **intentId** (string): The intent identifier
+- **intentStatus** (IntentStatus): Current status of the intent
+  - `QUOTED`: Initial quote generated
+  - `COMMITTED`: Intent committed and ready
+  - `EXECUTING`: Currently executing
+  - `FAILED`: Execution failed
+  - `SUCCEEDED`: Successfully completed
+
+## Execution Modes
+
+### Mode 1: With Deposit Transaction Hash
+
+If you've already executed the deposit transaction on-chain:
+
+```typescript
+const executeResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_123abc',
+    depositTransactionHash: '0x...'
+  })
+});
+```
+
+### Mode 2: With Deposit Signature (Gasless)
+
+For gasless execution using meta-transactions:
+
+```typescript
+// Prepare signature
+const signature = await signIntent(intent, walletClient);
+
+const executeResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_123abc',
+    depositSignature: {
+      intentSignature: signature,
+      selectedGasFeeOption: gasFeeOptions.feeOptions[0],
+      userNonce: 1,
+      deadline: Math.floor(Date.now() / 1000) + 3600
+    }
+  })
+});
+
+const { intentStatus } = await executeResponse.json();
+console.log('Execution started:', intentStatus);
+```
+
+## Transaction Flow
+
+Once executed, the intent goes through several stages:
+
+1. **Deposit**: Tokens are deposited to the origin intent address
+2. **Relaying**: Transaction is relayed to destination chain (if cross-chain)
+3. **Execution**: Destination calls are executed
+4. **Completion**: Final status is recorded
+
+## Example: Full Flow
+
+```typescript
+// Step 1: Quote
+const quoteResponse = await quoteIntent(quoteRequest);
+const { intent, gasFeeOptions } = quoteResponse;
+
+// Step 2: Commit
+const { intentId } = await commitIntent({ intent });
+
+// Step 3: Execute
+const { intentStatus } = await executeIntent({
+  intentId,
+  depositSignature: {
+    intentSignature: await signIntent(intent),
+    selectedGasFeeOption: gasFeeOptions.feeOptions[0],
+    userNonce: 1,
+    deadline: Math.floor(Date.now() / 1000) + 3600
+  }
+});
+
+console.log('Status:', intentStatus); // EXECUTING
+
+// Step 4: Monitor
+const receipt = await waitForReceipt(intentId);
+console.log('Receipt:', receipt);
+```
+
+## Error Handling
+
+<Warning>
+If execution fails, the intent status will be set to `FAILED`. Check the `statusReason` field in the receipt for details.
+</Warning>
+
+## Next Steps
+
+After executing an intent:
+1. Use `GetIntentReceipt` to poll for transaction status
+2. Use `WaitIntentReceipt` for streaming updates
+3. Check transaction hashes on block explorers
+4. Verify final balances on destination chain
+
