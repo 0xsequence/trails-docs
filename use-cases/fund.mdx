@@ -19,7 +19,7 @@ Trails simplifies this by allowing users to deposit funds using any token from a
 
 ## Use Cases
 
-Funding flows in Trails are modeled as exact input by default. For example, "I have exactly 10 USDC tokens I want to send out from the origin chain, and I'll receive 9.99 USDC on the destination."
+Funding flows in Trails are modeled as exact input by default. For example, "I have exactly 10 USDC tokens I want to send out from the origin chain, and I'll receive 9.99 USDC on the destination." Funding can done through a variety of methods such as the user's connected wallet, QR code deposit, or onramping from various fiat options.
 
 This is ideal for a variety of use cases and apps such as the following:
 
@@ -51,7 +51,6 @@ export const BaseDeposit = () => {
       toChainId={8453} // Base
       toToken="USDC"
       toAmount="100" // 100 USDC
-      theme="auto"
     />
   )
 }
