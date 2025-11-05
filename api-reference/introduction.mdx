@@ -5,11 +5,11 @@ description: "Learn how to integrate the Trails API for cross-chain transactions
 
 ## Welcome to the Trails API
 
-The Trails API enables seamless cross-chain token swaps, bridges, and payments. This guide walks you through the complete flow from requesting a quote to executing a transaction.
+The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions. This guide walks you through the complete flow from requesting a quote to executing a transaction.
 
 ## Core Workflow
 
-Every cross-chain transaction follows this four-step process:
+Every interaction through Trails follows this four-step process:
 
 ```mermaid
 flowchart LR
@@ -23,14 +23,13 @@ flowchart LR
 Request a quote to see rates, fees, and routing options for your transaction.
 
 ```typescript
-const quoteResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/QuoteIntent', {
+const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
-    ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // sender address
     originChainId: 1, // Ethereum
     originTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
     originTokenAmount: 100000000, // 100 USDC (6 decimals)
@@ -57,7 +56,7 @@ console.log('Quote received:', {
 
 **Key Parameters:**
 
-- **ownerAddress**: Your wallet address
+- **ownerAddress**: User's sender address
 - **originChainId** & **destinationChainId**: Source and destination chains
 - **originTokenAddress** & **destinationTokenAddress**: Token contracts
 - **originTokenAmount**: Amount to swap (in token's smallest unit)
@@ -69,14 +68,13 @@ Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` w
 
 ### Step 2: Commit the Intent
 
-Lock in the quote by committing the intent. This reserves the rates and generates an intent ID.
+Lock in the quote by committing the intent from the previous response which will reserve the rates.
 
 ```typescript
-const commitResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/CommitIntent', {
+const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({ intent })
 });
@@ -99,24 +97,23 @@ Now we can execute the intent. First, send tokens to the intent address then cal
 const depositTx = await walletClient.sendTransaction({
   to: intent.depositTransaction.toAddress,
   value: 0n,
-  data: encodeERC20Transfer(
+  data: encodeERC20Transfer( // Use your favorite library such as viem to encode if ERC20 transfer
     intent.depositTransaction.tokenAddress,
     intent.depositTransaction.toAddress,
     intent.depositTransaction.amount
   )
 });
 
-// Wait for transaction confirmation
+// Wait for transaction confirmation using viem
 const receipt = await publicClient.waitForTransactionReceipt({
   hash: depositTx
 });
 
-// Then execute the intent
-const executeResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/ExecuteIntent', {
+// Then execute the intent with the deposit transaction hash and intentId
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     intentId,
@@ -130,45 +127,44 @@ console.log('Execution started:', intentStatus);
 
 ### Step 4: Monitor Completion
 
-Track the transaction status via polling:
+Wait for the transaction to complete using the streaming endpoint:
 
 ```typescript
-async function pollForCompletion(intentId: string) {
+async function waitForCompletion(intentId: string) {
   while (true) {
-    const receiptResponse = await fetch(
-      'https://api.trails.sequence.app/rpc/Trails/GetIntentReceipt',
+    const waitResponse = await fetch(
+      'https://trails-api.sequence.app/rpc/Trails/WaitIntentReceipt',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Access-Key': 'YOUR_ACCESS_KEY'
         },
         body: JSON.stringify({ intentId })
       }
     );
 
-    const { intentReceipt } = await receiptResponse.json();
+    const { intentReceipt, done } = await waitResponse.json();
 
     console.log('Status:', intentReceipt.status);
 
-    if (intentReceipt.status === 'SUCCEEDED') {
-      console.log('✅ Transaction completed!');
-      console.log('Deposit TX:', intentReceipt.depositTransaction.txnHash);
-      console.log('Origin TX:', intentReceipt.originTransaction.txnHash);
-      console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
-      return intentReceipt;
+    // If done is true, the intent has reached a terminal state
+    if (done) {
+      if (intentReceipt.status === 'SUCCEEDED') {
+        console.log('✅ Transaction completed!');
+        console.log('Deposit TX:', intentReceipt.depositTransaction.txnHash);
+        console.log('Origin TX:', intentReceipt.originTransaction.txnHash);
+        console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
+        return intentReceipt;
+      } else {
+        throw new Error('Transaction failed: ' + intentReceipt.originTransaction.statusReason);
+      }
     }
-
-    if (intentReceipt.status === 'FAILED') {
-      throw new Error('Transaction failed: ' + intentReceipt.originTransaction.statusReason);
-    }
-
-    // Wait 2 seconds before next poll
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // If not done, the endpoint will have waited internally before returning until completion
   }
 }
 
-const receipt = await pollForCompletion(intentId);
+const receipt = await waitForCompletion(intentId);
 ```
 
 ## Support
@@ -176,5 +172,5 @@ const receipt = await pollForCompletion(intentId);
 Need help? Join our community:
 
 - **Telegram**: [https://t.me/build_with_trails](https://t.me/build_with_trails)
-- **Documentation**: Browse the endpoint references for detailed information
+- **Documentation**: Browse the endpoint references for detailed information and advanced use cases
 - **Demo**: Try the [interactive playground](https://demo.trails.build/widget)

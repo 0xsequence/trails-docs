@@ -39,7 +39,7 @@ Each intent in the array contains all the standard intent fields as described in
 Find all intents created by a specific wallet:
 
 ```typescript
-const searchResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/SearchIntents', {
+const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ intents.forEach(intent => {
 Look up an intent using its deposit transaction:
 
 ```typescript
-const searchResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/SearchIntents', {
+const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ if (intents.length > 0) {
 Find all intents using a specific intent contract:
 
 ```typescript
-const searchResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/SearchIntents', {
+const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ Create a user-friendly transaction history:
 
 ```typescript
 async function getTransactionHistory(userAddress: string) {
-  const { intents } = await fetch('https://api.trails.sequence.app/rpc/Trails/SearchIntents', {
+  const { intents } = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ function IntentHistory({ userAddress }: { userAddress: string }) {
     async function loadIntents() {
       try {
         const response = await fetch(
-          'https://api.trails.sequence.app/rpc/Trails/SearchIntents',
+          'https://trails-api.sequence.app/rpc/Trails/SearchIntents',
           {
             method: 'POST',
             headers: {

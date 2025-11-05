@@ -42,7 +42,7 @@ The `CommitIntent` step is crucial because it:
 
 ```typescript
 // First, get a quote
-const quoteResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/QuoteIntent', {
+const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ const quoteResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/Qu
 const { intent, gasFeeOptions } = await quoteResponse.json();
 
 // Then commit the intent
-const commitResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/CommitIntent', {
+const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

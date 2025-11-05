@@ -51,7 +51,7 @@ The response includes:
 If you've already executed the deposit transaction on-chain:
 
 ```typescript
-const executeResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/ExecuteIntent', {
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ For gasless execution using meta-transactions:
 // Prepare signature
 const signature = await signIntent(intent, walletClient);
 
-const executeResponse = await fetch('https://api.trails.sequence.app/rpc/Trails/ExecuteIntent', {
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

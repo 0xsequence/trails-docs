@@ -25,13 +25,14 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 - **destinationTokenAddress** (string): Contract address of the destination token
 - **destinationToAddress** (string): Recipient address on the destination chain
 
+
 ### Optional Fields
 
+- **tradeType** (TradeType): Either `EXACT_INPUT` or `EXACT_OUTPUT`
+- **destinationTokenAmount** (number): Amount of destination tokens (only for EXACT_OUTPUT)
+- **originTokenAmount** (number): Amount of origin tokens (only for EXACT_INPUT)
 - **destinationCallData** (string): Custom calldata for contract interactions on destination chain
 - **destinationCallValue** (string): Value to send with the destination call
-- **originTokenAmount** (number): Amount of origin tokens (for EXACT_INPUT)
-- **destinationTokenAmount** (number): Amount of destination tokens (for EXACT_OUTPUT)
-- **tradeType** (TradeType): Either `EXACT_INPUT` or `EXACT_OUTPUT`
 - **options** (QuoteIntentRequestOptions):
   - **quoteProvider** (QuoteProviderType): Preferred quote provider (`RELAY`, `CCTPV2`, or `LIFI`)
   - **slippageTolerance** (number): Maximum acceptable slippage percentage
@@ -73,7 +74,7 @@ const quoteRequest = {
   }
 };
 
-const response = await fetch('https://api.trails.sequence.app/rpc/Trails/QuoteIntent', {
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
