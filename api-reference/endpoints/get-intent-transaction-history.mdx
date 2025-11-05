@@ -343,38 +343,6 @@ async function getCompletedIntents() {
 `IntentSummary` objects are much lighter than full `Intent` objects. Use this endpoint for list views and only fetch full intent details when needed using `GetIntent`.
 </Info>
 
-## Export to CSV
-
-```typescript
-async function exportToCSV() {
-  const allIntents = await loadAllHistory();
-  
-  const csv = [
-    // Header
-    ['Intent ID', 'Status', 'From Chain', 'To Chain', 'From Token', 'To Token', 'From Amount', 'To Amount', 'Created At'].join(','),
-    // Rows
-    ...allIntents.map(intent => [
-      intent.intentId,
-      intent.status,
-      intent.originChainId,
-      intent.destinationChainId,
-      intent.originTokenMetadata.symbol,
-      intent.destinationTokenMetadata.symbol,
-      intent.originTokenAmount,
-      intent.destinationTokenAmount,
-      intent.createdAt
-    ].join(','))
-  ].join('\n');
-  
-  // Download file
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'intent-history.csv';
-  a.click();
-}
-```
 
 ## Best Practices
 

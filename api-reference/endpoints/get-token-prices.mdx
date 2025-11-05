@@ -1,0 +1,184 @@
+---
+title: GetTokenPrices
+openapi: ../trails-api.gen.json post /rpc/Trails/GetTokenPrices
+---
+
+## Overview
+
+The `GetTokenPrices` endpoint retrieves current USD prices for one or more tokens. This is useful for displaying real-time token values, calculating transaction costs, and showing users estimated amounts in fiat currency.
+
+## Use Cases
+
+- Display token values in USD in your UI
+- Calculate total transaction costs in fiat
+- Show users how much they'll receive in USD
+- Build portfolio value displays
+- Create price alerts or notifications
+- Compare token values across chains
+
+## Request Parameters
+
+### Required Fields
+
+- **tokens** (Token[]): Array of token objects to get prices for
+
+### Token Object Structure
+
+Each token object should include:
+- **chainId** (number): The chain ID where the token exists
+- **tokenAddress** (string): The token contract address
+- **tokenSymbol** (string, optional): Token symbol for reference
+
+## Response
+
+The response includes:
+
+- **tokenPrices** (TokenPrice[]): Array of token price objects
+
+### TokenPrice Object Structure
+
+Each price object contains:
+- **token** (Token): The token information
+  - **chainId** (number): Chain ID
+  - **tokenAddress** (string): Token contract address
+  - **tokenSymbol** (string): Token symbol
+- **priceUsd** (number): Current price in USD
+- **updatedAt** (string): Timestamp of last price update
+
+## Examples
+
+### Single Token Price
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tokens: [
+      {
+        chainId: 1,
+        tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC on Ethereum
+        tokenSymbol: 'USDC'
+      }
+    ]
+  })
+});
+
+const { tokenPrices } = await response.json();
+
+console.log('USDC Price:', tokenPrices[0].priceUsd);
+console.log('Updated:', tokenPrices[0].updatedAt);
+```
+
+### Multiple Token Prices
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tokens: [
+      {
+        chainId: 1,
+        tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH on Ethereum
+        tokenSymbol: 'WETH'
+      },
+      {
+        chainId: 1,
+        tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC on Ethereum
+        tokenSymbol: 'USDC'
+      },
+      {
+        chainId: 137,
+        tokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
+        tokenSymbol: 'USDC'
+      }
+    ]
+  })
+});
+
+const { tokenPrices } = await response.json();
+
+tokenPrices.forEach(price => {
+  console.log(`${price.token.tokenSymbol} on Chain ${price.token.chainId}:`, 
+              `$${price.priceUsd}`);
+});
+```
+
+## Calculate Transaction Cost
+
+```typescript
+async function calculateTransactionCost(intent: Intent) {
+  // Get price for the fee token
+  const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      tokens: [
+        {
+          chainId: intent.quoteRequest.originChainId,
+          tokenAddress: intent.fees.feeTokenAddress
+        }
+      ]
+    })
+  });
+
+  const { tokenPrices } = await response.json();
+  
+  if (tokenPrices.length > 0) {
+    const feeInUsd = intent.fees.totalFeeAmount * tokenPrices[0].priceUsd;
+    console.log(`Total Fee: ${intent.fees.totalFeeAmount} tokens`);
+    console.log(`Total Fee (USD): $${feeInUsd.toFixed(2)}`);
+    return feeInUsd;
+  }
+  
+  return null;
+}
+```
+
+## Common Token Addresses
+
+### Ethereum (chainId: 1)
+- **WETH**: `0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`
+- **USDC**: `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`
+- **USDT**: `0xdAC17F958D2ee523a2206206994597C13D831ec7`
+- **DAI**: `0x6B175474E89094C44Da98b954EedeAC495271d0F`
+
+### Polygon (chainId: 137)
+- **WMATIC**: `0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270`
+- **USDC**: `0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174`
+- **USDT**: `0xc2132D05D31c914a87C6611C10748AEb04B58e8F`
+
+### Base (chainId: 8453)
+- **WETH**: `0x4200000000000000000000000000000000000006`
+- **USDC**: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+
+### Arbitrum (chainId: 42161)
+- **WETH**: `0x82aF49447D8a07e3bd95BD0d56f35241523fBab1`
+- **USDC**: `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`
+
+
+## Notes
+
+- Not all tokens have price data available
+- The `updatedAt` timestamp indicates when the price was last refreshed
+- Prices are returned in USD
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="QuoteIntent" icon="dollar-sign" href="/api-reference/endpoints/quote-intent">
+    Use token prices to display quote values in USD
+  </Card>
+  
+  <Card title="GetIntent" icon="file-invoice-dollar" href="/api-reference/endpoints/get-intent">
+    Calculate total transaction costs with token prices
+  </Card>
+</CardGroup>
+

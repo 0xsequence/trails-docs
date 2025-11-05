@@ -2728,6 +2728,59 @@
           }
         }
       }
+    },
+    "/rpc/Trails/GetTokenPrices": {
+      "post": {
+        "summary": "Get Token Prices",
+        "description": "Retrieve current USD prices for specified tokens",
+        "operationId": "GetTokenPrices",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "tokens"
+                ],
+                "properties": {
+                  "tokens": {
+                    "type": "array",
+                    "description": "[]Token",
+                    "items": {
+                      "$ref": "#/components/schemas/Token"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "tokenPrices"
+                  ],
+                  "properties": {
+                    "tokenPrices": {
+                      "type": "array",
+                      "description": "[]TokenPrice",
+                      "items": {
+                        "$ref": "#/components/schemas/TokenPrice"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

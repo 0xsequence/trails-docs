@@ -5,7 +5,7 @@ description: "Learn how to integrate the Trails API for cross-chain transactions
 
 ## Welcome to the Trails API
 
-The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions. This guide walks you through the complete flow from requesting a quote to executing a transaction.
+The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions in a simplified interface with the Trails protocol. This guide walks you through the complete flow from requesting a quote to executing a transaction.
 
 ## Core Workflow
 
@@ -18,9 +18,32 @@ flowchart LR
     C --> D[Monitor Intent]
 ```
 
-### Step 1: Get a Quote
+<Steps>
+  <Step title="Get Wallet Balance">
+    Before requesting a quote, fetch the user's token balances using an Indexer Gateway to display available tokens and amounts:
 
-Request a quote to see rates, fees, and routing options for your transaction.
+```typescript
+const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGateway/GetTokenBalances', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'AQAAAAAAAF_JvPALhBthL7VGn6jV0YDqaFY'
+  },
+  body: JSON.stringify({
+    accountAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    includeMetadata: true
+  })
+});
+
+const { balances } = await balancesResponse.json();
+
+// Display balances in your UI for user to select token and amount
+console.log('Available tokens:', balances);
+```
+  </Step>
+
+  <Step title="Get a Quote">
+    Request a quote to see rates, fees, and routing options for your transaction.
 
 ```typescript
 const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
@@ -30,12 +53,12 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
   },
   body: JSON.stringify({
     ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // sender address
-    originChainId: 1, // Ethereum
-    originTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+    originChainId: 42161, // Arbitrum One
+    originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
     originTokenAmount: 100000000, // 100 USDC (6 decimals)
     destinationChainId: 8453, // Base
     destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-    destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // recipient
     tradeType: 'EXACT_INPUT',
     options: {
       slippageTolerance: 0.5, // 0.5%
@@ -65,10 +88,10 @@ console.log('Quote received:', {
 <Tip>
 Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` when you know exactly how much you need to receive.
 </Tip>
+  </Step>
 
-### Step 2: Commit the Intent
-
-Lock in the quote by committing the intent from the previous response which will reserve the rates.
+  <Step title="Commit the Intent">
+    Lock in the quote by committing the intent from the previous response which will reserve the rates.
 
 ```typescript
 const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
@@ -87,10 +110,14 @@ console.log('Intent committed:', intentId);
 <Warning>
 Committed intents expire after a set period (check `intent.expiresAt`). Execute before expiration or request a new quote.
 </Warning>
+  </Step>
 
-### Step 3: Execute the Transaction
+  <Step title="Execute the Transaction">
+    Now we can execute the intent. There are two ways to do this: the traditional flow (send tokens onchain) or the gasless flow to enable users to pay gas with non-native tokens:
 
-Now we can execute the intent. First, send tokens to the intent address then call the execution:
+<Tabs>
+  <Tab title="Transfer Flow">
+    Send tokens to the intent address, then call ExecuteIntent with the transaction hash:
 
 ```typescript
 // First, send tokens to the intent address
@@ -124,10 +151,113 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
 const { intentStatus } = await executeResponse.json();
 console.log('Execution started:', intentStatus);
 ```
+  </Tab>
 
-### Step 4: Monitor Completion
+  <Tab title="Alternative Fee Token Flow">
+    Sign ERC712 permit signatures which enables paying with any non-native gas tokens that are permit compatible:
 
-Wait for the transaction to complete using the streaming endpoint:
+```typescript
+// Select a gas fee option from the quote response
+const selectedGasFeeOption = gasFeeOptions[0]; // Choose based on user preference
+
+// 1. Sign the intent signature (ERC712) with fee payment authorization
+const intentSignature = await walletClient.signTypedData({
+  domain: {
+    name: 'Trails',
+    version: '1',
+    chainId: intent.originChainId,
+    verifyingContract: intent.depositTransaction.toAddress // intent address
+  },
+  types: {
+    Intent: [
+      { name: 'user', type: 'address' },
+      { name: 'token', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'intentAddress', type: 'address' },
+      { name: 'deadline', type: 'uint256' },
+      { name: 'chainId', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'feeAmount', type: 'uint256' },
+      { name: 'feeCollector', type: 'address' }
+    ]
+  },
+  primaryType: 'Intent',
+  message: {
+    user: intent.ownerAddress,
+    token: intent.depositTransaction.tokenAddress,
+    amount: intent.depositTransaction.amount,
+    intentAddress: intent.depositTransaction.toAddress,
+    deadline: intent.deadline,
+    chainId: intent.originChainId,
+    nonce: intent.userNonce,
+    feeAmount: selectedGasFeeOption.feeAmount,
+    feeCollector: selectedGasFeeOption.feeCollector
+  }
+});
+
+// 2. Sign the ERC20 permit (ERC2612) for token approval
+const permitDeadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+const permitAmount = intent.depositTransaction.amount;
+
+const permitSignature = await walletClient.signTypedData({
+  domain: {
+    name: 'USD Coin', // Get from token contract
+    version: '1',
+    chainId: intent.originChainId,
+    verifyingContract: intent.depositTransaction.tokenAddress
+  },
+  types: {
+    Permit: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' }
+    ]
+  },
+  primaryType: 'Permit',
+  message: {
+    owner: intent.ownerAddress,
+    spender: intent.depositTransaction.toAddress,
+    value: permitAmount,
+    nonce: 0, // Get current nonce from token contract's nonces(address) function
+    deadline: permitDeadline
+  }
+});
+
+// 3. Execute with signatures instead of transaction hash
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    intentId,
+    depositSignature: {
+      intentSignature,
+      permitSignature,
+      permitDeadline,
+      permitAmount,
+      selectedGasFeeOption,
+      userNonce: intent.userNonce,
+      deadline: intent.deadline
+    }
+  })
+});
+
+const { intentStatus } = await executeResponse.json();
+console.log('Execution started:', intentStatus);
+```
+
+<Note>
+The gasless flow requires ERC2612-compatible tokens (tokens with `permit()` function). The intent signature includes fee payment details, allowing users to pay gas fees with the transfer token.
+</Note>
+  </Tab>
+</Tabs>
+  </Step>
+
+  <Step title="Monitor Completion">
+    Wait for the transaction to complete using the streaming endpoint:
 
 ```typescript
 async function waitForCompletion(intentId: string) {
@@ -166,6 +296,8 @@ async function waitForCompletion(intentId: string) {
 
 const receipt = await waitForCompletion(intentId);
 ```
+  </Step>
+</Steps>
 
 ## Support
 
