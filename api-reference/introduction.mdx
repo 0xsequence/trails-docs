@@ -344,16 +344,14 @@ console.log('Execution started:', intentStatus);
 ```
 
 <Note>
-**Key Requirements:**
+****
 - Tokens must support ERC2612 permit (have `permit()` function)
 - User nonce is read from the Intent Entrypoint contract, not the quote response
 - Intent signature domain uses `TrailsIntentEntrypoint` name and the entrypoint contract as verifying contract
-- Permit signature (if needed) uses infinite approval (maxUint256) for better UX
-- Fee collector address comes from `selectedGasFeeOption.feeCollectorAddress`
 
 **Two Scenarios:**
 1. **First time / No approval**: Include `permitSignature`, `permitDeadline`, `permitAmount`
-2. **Already approved**: Omit permit fields entirely (like the example above - only `intentSignature`, `selectedGasFeeOption`, `userNonce`, `deadline`)
+2. **Already approved**: Omit permit fields entirely for a 1-click experience (like the example above - only `intentSignature`, `selectedGasFeeOption`, `userNonce`, `deadline`)
 </Note>
 
 **Example Request When Already Approved:**

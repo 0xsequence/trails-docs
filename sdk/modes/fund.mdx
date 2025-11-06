@@ -191,16 +191,7 @@ When the deposit amount is part of the calldata and user-selected, use `TRAILS_C
 - **Liquidity Provision**: Add liquidity to AMMs and pools
 - **Staking**: Fund staking contracts
 
-## Technical Notes
-
-- Fund mode uses `TradeType.EXACT_INPUT` internally
-- User selects input amount; output amount varies based on routes and fees
-- `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT` = `uint256.max` internally
-- Supports both EOA addresses and smart contract destinations
-- Calldata execution is atomic with the transfer
-
 ## See Also
 
 - [Use Case Examples](/use-cases/fund) - Detailed implementation patterns
 - [Configuration Reference](/sdk/configuration) - Full configuration options
-- [Hooks Reference](/sdk/hooks) - `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT` constant
