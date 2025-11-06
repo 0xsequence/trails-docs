@@ -44,13 +44,44 @@ The response includes:
   - `FAILED`: Execution failed
   - `SUCCEEDED`: Successfully completed
 
-## Execution Modes
+## Execution Options
 
 ### Mode 1: With Deposit Transaction Hash
 
-If you've already executed the deposit transaction on-chain:
+First, deposit tokens to the intent address, then call ExecuteIntent with the transaction hash:
 
 ```typescript
+import { encodeFunctionData } from 'viem';
+
+// Step 1: Send tokens to the intent address
+const depositTx = await walletClient.sendTransaction({
+  to: intent.depositTransaction.toAddress, // Intent address from quote
+  value: 0n, // 0 for ERC20 tokens, or native ETH amount
+  data: encodeFunctionData({
+    abi: [{
+      name: 'transfer',
+      type: 'function',
+      stateMutability: 'nonpayable',
+      inputs: [
+        { name: 'to', type: 'address' },
+        { name: 'amount', type: 'uint256' }
+      ],
+      outputs: [{ name: '', type: 'bool' }]
+    }],
+    functionName: 'transfer',
+    args: [
+      intent.depositTransaction.toAddress as `0x${string}`,
+      BigInt(intent.depositTransaction.amount)
+    ]
+  })
+});
+
+// Step 2: Wait for confirmation
+const receipt = await publicClient.waitForTransactionReceipt({
+  hash: depositTx
+});
+
+// Step 3: Execute the intent with the deposit transaction hash
 const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
   method: 'POST',
   headers: {
@@ -59,14 +90,17 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   },
   body: JSON.stringify({
     intentId: 'intent_123abc',
-    depositTransactionHash: '0x...'
+    depositTransactionHash: depositTx
   })
 });
+
+const { intentStatus } = await executeResponse.json();
+console.log('Execution started:', intentStatus);
 ```
 
 ### Mode 2: With Deposit Signature (Gasless)
 
-For gasless execution using meta-transactions:
+Trails also supports paying end to end in non-native gas tokens that are permit compatible:
 
 ```typescript
 // Prepare signature
@@ -93,13 +127,17 @@ const { intentStatus } = await executeResponse.json();
 console.log('Execution started:', intentStatus);
 ```
 
+<Note>
+For complete details on preparing the deposit signature with permit and intent signatures, see the [Alternative Fee Token Flow](/api-reference/introduction#alternative-fee-token-flow) in the Getting Started guide.
+</Note>
+
 ## Transaction Flow
 
 Once executed, the intent goes through several stages:
 
 1. **Deposit**: Tokens are deposited to the origin intent address
 2. **Relaying**: Transaction is relayed to destination chain (if cross-chain)
-3. **Execution**: Destination calls are executed
+3. **Execution**: Destination calls are executed if calldata is passed
 4. **Completion**: Final status is recorded
 
 ## Example: Full Flow

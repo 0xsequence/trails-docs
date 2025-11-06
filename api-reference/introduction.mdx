@@ -20,14 +20,14 @@ flowchart LR
 
 <Steps>
   <Step title="Get Wallet Balance">
-    Before requesting a quote, fetch the user's token balances using an Indexer Gateway to display available tokens and amounts:
+    Before requesting a quote, fetch the user's token balances using a multichain Indexer to display total available tokens and amounts for the user to select:
 
 ```typescript
 const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGateway/GetTokenBalances', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'AQAAAAAAAF_JvPALhBthL7VGn6jV0YDqaFY'
+    'X-Access-Key': 'AQAAAAAAAF_JvPALhBthL7VGn6jV0YDqaFY' // example access key
   },
   body: JSON.stringify({
     accountAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
@@ -37,7 +37,7 @@ const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGa
 
 const { balances } = await balancesResponse.json();
 
-// Display balances in your UI for user to select token and amount
+// Display balances in your UI for user to select tokens, amount, and routes.
 console.log('Available tokens:', balances);
 ```
   </Step>
@@ -107,24 +107,44 @@ const { intentId } = await commitResponse.json();
 console.log('Intent committed:', intentId);
 ```
 
+You cannot change the contents of the intent, or the server will reject the commit. The `intent` object contains everything needed to relay and execute the intent.
+
 <Warning>
 Committed intents expire after a set period (check `intent.expiresAt`). Execute before expiration or request a new quote.
 </Warning>
   </Step>
 
   <Step title="Execute the Transaction">
-    Now we can execute the intent. There are two ways to do this: the traditional flow (send tokens onchain) or the gasless flow to enable users to pay gas with non-native tokens:
+    Execute the intent using one of two mutually exclusive methods - either a normal transfer to the intent address or a permit operation if a user wants to pay in a non-native gas token:
 
 <Tabs>
   <Tab title="Transfer Flow">
-    Send tokens to the intent address, then call ExecuteIntent with the transaction hash:
+    Send tokens to the intent deposit address, then call `ExecuteIntent` with the transaction hash:
+
+<Accordion title="Setup: Instantiate viem">
+```typescript
+import { createWalletClient, createPublicClient, http } from 'viem';
+import { base, arbitrum, mainnet } from 'viem/chains'; // add other chains to support
+
+// Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
+const walletClient = createWalletClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+
+const publicClient = createPublicClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+```
+</Accordion>
 
 ```typescript
-// First, send tokens to the intent address
+// send tokens to the intent address
 const depositTx = await walletClient.sendTransaction({
   to: intent.depositTransaction.toAddress,
-  value: 0n,
-  data: encodeERC20Transfer( // Use your favorite library such as viem to encode if ERC20 transfer
+  value: 0n, // No native ETH sent (0 for ERC20 transfers, or ETH amount if sending native token)
+  data: encodeERC20Transfer( // Use your favorite library such as viem to encode ERC20 transfer
     intent.depositTransaction.tokenAddress,
     intent.depositTransaction.toAddress,
     intent.depositTransaction.amount
@@ -156,20 +176,124 @@ console.log('Execution started:', intentStatus);
   <Tab title="Alternative Fee Token Flow">
     Sign ERC712 permit signatures which enables paying with any non-native gas tokens that are permit compatible:
 
+<Accordion title="Setup: Instantiate viem">
 ```typescript
+import { createWalletClient, createPublicClient, http } from 'viem';
+import { base, arbitrum, mainnet } from 'viem/chains'; // add other chains to support
+
+// Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
+const walletClient = createWalletClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+
+const publicClient = createPublicClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+```
+</Accordion>
+
+```typescript
+import { erc20Abi } from 'viem';
+
 // Select a gas fee option from the quote response
 const selectedGasFeeOption = gasFeeOptions[0]; // Choose based on user preference
 
-// 1. Sign the intent signature (ERC712) with fee payment authorization
+// Constants for the flow
+const INTENT_ENTRYPOINT_ADDRESS = '0x9470d883bac170116d397db3da71b2e57d567583'; // Trails Intent Entrypoint (same on all chains)
+const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
+// 1. Get user nonce from Intent Entrypoint contract
+const userNonce = await publicClient.readContract({
+  address: INTENT_ENTRYPOINT_ADDRESS,
+  abi: [{
+    name: 'nonces',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }]
+  }],
+  functionName: 'nonces',
+  args: [intent.ownerAddress]
+});
+
+// 2. Check if approval is needed for the deposit token
+const currentAllowance = await publicClient.readContract({
+  address: intent.depositTransaction.tokenAddress,
+  abi: erc20Abi,
+  functionName: 'allowance',
+  args: [intent.ownerAddress, INTENT_ENTRYPOINT_ADDRESS]
+});
+
+const needsApproval = currentAllowance < BigInt(intent.depositTransaction.amount);
+
+// 3. If approval needed, get permit signature for the deposit token
+let permitSignature;
+let permitDeadline;
+let permitAmount;
+
+if (needsApproval) {
+  // Read token metadata for permit signature
+  const tokenNonce = await publicClient.readContract({
+    address: intent.depositTransaction.tokenAddress,
+    abi: [{
+      name: 'nonces',
+      type: 'function',
+      stateMutability: 'view',
+      inputs: [{ name: 'owner', type: 'address' }],
+      outputs: [{ name: '', type: 'uint256' }]
+    }],
+    functionName: 'nonces',
+    args: [intent.ownerAddress]
+  });
+
+  const tokenName = await publicClient.readContract({
+    address: intent.depositTransaction.tokenAddress,
+    abi: [{ name: 'name', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'string' }] }],
+    functionName: 'name'
+  });
+
+  permitDeadline = deadline;
+  permitAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'; // maxUint256 for infinite approval
+
+  permitSignature = await walletClient.signTypedData({
+    domain: {
+      name: tokenName,
+      version: '1',
+      chainId: intent.originChainId,
+      verifyingContract: intent.depositTransaction.tokenAddress
+    },
+    types: {
+      Permit: [
+        { name: 'owner', type: 'address' },
+        { name: 'spender', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+        { name: 'deadline', type: 'uint256' }
+      ]
+    },
+    primaryType: 'Permit',
+    message: {
+      owner: intent.ownerAddress,
+      spender: INTENT_ENTRYPOINT_ADDRESS,
+      value: permitAmount,
+      nonce: tokenNonce,
+      deadline: permitDeadline
+    }
+  });
+}
+
+// 4. Sign the intent signature (ERC712) with fee payment authorization
 const intentSignature = await walletClient.signTypedData({
   domain: {
-    name: 'Trails',
+    name: 'TrailsIntentEntrypoint',
     version: '1',
     chainId: intent.originChainId,
-    verifyingContract: intent.depositTransaction.toAddress // intent address
+    verifyingContract: INTENT_ENTRYPOINT_ADDRESS
   },
   types: {
-    Intent: [
+    TrailsIntent: [
       { name: 'user', type: 'address' },
       { name: 'token', type: 'address' },
       { name: 'amount', type: 'uint256' },
@@ -181,51 +305,21 @@ const intentSignature = await walletClient.signTypedData({
       { name: 'feeCollector', type: 'address' }
     ]
   },
-  primaryType: 'Intent',
+  primaryType: 'TrailsIntent',
   message: {
     user: intent.ownerAddress,
     token: intent.depositTransaction.tokenAddress,
     amount: intent.depositTransaction.amount,
     intentAddress: intent.depositTransaction.toAddress,
-    deadline: intent.deadline,
-    chainId: intent.originChainId,
-    nonce: intent.userNonce,
-    feeAmount: selectedGasFeeOption.feeAmount,
-    feeCollector: selectedGasFeeOption.feeCollector
+    deadline: BigInt(deadline),
+    chainId: BigInt(intent.originChainId),
+    nonce: userNonce,
+    feeAmount: BigInt(selectedGasFeeOption.amount),  // Note: 'amount' not 'feeAmount'
+    feeCollector: selectedGasFeeOption.feeCollectorAddress
   }
 });
 
-// 2. Sign the ERC20 permit (ERC2612) for token approval
-const permitDeadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-const permitAmount = intent.depositTransaction.amount;
-
-const permitSignature = await walletClient.signTypedData({
-  domain: {
-    name: 'USD Coin', // Get from token contract
-    version: '1',
-    chainId: intent.originChainId,
-    verifyingContract: intent.depositTransaction.tokenAddress
-  },
-  types: {
-    Permit: [
-      { name: 'owner', type: 'address' },
-      { name: 'spender', type: 'address' },
-      { name: 'value', type: 'uint256' },
-      { name: 'nonce', type: 'uint256' },
-      { name: 'deadline', type: 'uint256' }
-    ]
-  },
-  primaryType: 'Permit',
-  message: {
-    owner: intent.ownerAddress,
-    spender: intent.depositTransaction.toAddress,
-    value: permitAmount,
-    nonce: 0, // Get current nonce from token contract's nonces(address) function
-    deadline: permitDeadline
-  }
-});
-
-// 3. Execute with signatures instead of transaction hash
+// 5. Execute with signatures
 const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
   method: 'POST',
   headers: {
@@ -234,13 +328,13 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   body: JSON.stringify({
     intentId,
     depositSignature: {
-      intentSignature,
-      permitSignature,
-      permitDeadline,
-      permitAmount,
-      selectedGasFeeOption,
-      userNonce: intent.userNonce,
-      deadline: intent.deadline
+      intentSignature,                      // ERC712 intent signature
+      permitSignature,                      // ERC2612 permit signature (optional if already approved)
+      permitDeadline,                       // Permit expiration timestamp (optional)
+      permitAmount,                         // Permit amount - typically maxUint256 (optional)
+      selectedGasFeeOption,                 // Fee option with: amount, tokenAddress, feeCollectorAddress
+      userNonce: Number(userNonce),         // User's current nonce from Intent Entrypoint
+      deadline                              // Intent expiration timestamp
     }
   })
 });
@@ -250,8 +344,37 @@ console.log('Execution started:', intentStatus);
 ```
 
 <Note>
-The gasless flow requires ERC2612-compatible tokens (tokens with `permit()` function). The intent signature includes fee payment details, allowing users to pay gas fees with the transfer token.
+**Key Requirements:**
+- Tokens must support ERC2612 permit (have `permit()` function)
+- User nonce is read from the Intent Entrypoint contract, not the quote response
+- Intent signature domain uses `TrailsIntentEntrypoint` name and the entrypoint contract as verifying contract
+- Permit signature (if needed) uses infinite approval (maxUint256) for better UX
+- Fee collector address comes from `selectedGasFeeOption.feeCollectorAddress`
+
+**Two Scenarios:**
+1. **First time / No approval**: Include `permitSignature`, `permitDeadline`, `permitAmount`
+2. **Already approved**: Omit permit fields entirely (like the example above - only `intentSignature`, `selectedGasFeeOption`, `userNonce`, `deadline`)
 </Note>
+
+**Example Request When Already Approved:**
+```json
+{
+  "intentId": "0xc467d1ebb4c6aab9efd3485d2627e51fb8ce1f662808eccf1222f364a1aa2d01",
+  "depositSignature": {
+    "intentSignature": "0xe3e5a87b8c1a9f882f6b251ea551dc1703ce617a0308418...",
+    "selectedGasFeeOption": {
+      "tokenAddress": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenSymbol": "USDC",
+      "tokenDecimals": 6,
+      "amount": "7845",
+      "amountUsd": 0.007843596906252802,
+      "feeCollectorAddress": "0x76008498f26789dd8b691bebe24c889a3dd1a2fc"
+    },
+    "userNonce": 1,
+    "deadline": 1762424131
+  }
+}
+```
   </Tab>
 </Tabs>
   </Step>
@@ -298,6 +421,24 @@ const receipt = await waitForCompletion(intentId);
 ```
   </Step>
 </Steps>
+
+Now you have an end to end API integration with Trails!
+
+## Next Steps
+
+Explore additional endpoints to enhance your integration:
+
+### Transaction Management
+
+- **[GetIntent](/api-reference/endpoints/get-intent)** - Retrieve full intent details including quote, fees, and status
+- **[GetIntentReceipt](/api-reference/endpoints/get-intent-receipt)** - Poll for transaction status and get receipt with transaction hashes
+- **[WaitIntentReceipt](/api-reference/endpoints/wait-intent-receipt)** - Stream intent updates with automatic polling until completion
+- **[GetIntentTransactionHistory](/api-reference/endpoints/get-intent-transaction-history)** - Get complete transaction history for a user's wallet address
+
+### Discovery & Search
+
+- **[SearchIntents](/api-reference/endpoints/search-intents)** - Search and filter intents by status, user, chain, or date range
+- **[GetTokenPrices](/api-reference/endpoints/get-token-prices)** - Get current USD prices for tokens to display values in your UI
 
 ## Support
 

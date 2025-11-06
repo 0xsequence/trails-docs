@@ -25,7 +25,6 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 - **destinationTokenAddress** (string): Contract address of the destination token
 - **destinationToAddress** (string): Recipient address on the destination chain
 
-
 ### Optional Fields
 
 - **tradeType** (TradeType): Either `EXACT_INPUT` or `EXACT_OUTPUT`
@@ -92,6 +91,4 @@ console.log('Quote:', quote);
 After receiving a quote:
 1. Review the quote details, fees, and estimated amounts
 2. Use `CommitIntent` to commit the intent if the quote is acceptable
-3. Execute the transaction with `ExecuteIntent`
-4. Monitor progress with `GetIntentReceipt` or `WaitIntentReceipt`
 

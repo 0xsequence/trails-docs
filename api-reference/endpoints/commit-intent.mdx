@@ -10,9 +10,8 @@ The `CommitIntent` endpoint commits an intent to the Trails system, reserving th
 ## Use Cases
 
 - Lock in a quote before execution
-- Reserve liquidity for the transaction
 - Prepare the intent for signing and execution
-- Transition from quoted to committed state
+- Transition from quoted to committed state and preparing a deposit intent address
 
 ## Request Parameters
 
@@ -36,7 +35,6 @@ The `CommitIntent` step is crucial because it:
 1. Reserves the quoted rates
 2. Locks in the gas fee estimates
 3. Validates the intent parameters
-4. Creates a unique intent ID for tracking
 
 ## Example
 
@@ -74,13 +72,13 @@ Committed intents have an expiration time. Make sure to execute the intent befor
 </Warning>
 
 <Info>
-The intent object from `QuoteIntent` can be modified before committing if you need to adjust parameters, but be aware that this may invalidate the quote.
+The intent object from `QuoteIntent` should not be modified, otherwise the API will reject the commitment.
 </Info>
 
 ## Next Steps
 
 After committing an intent:
-1. Prepare the transaction signature using the provided intent details
+1. Prepare the transaction signature using the provided intent details for the user to deposit into the intent address
 2. Execute the transaction with `ExecuteIntent`
-3. Monitor the transaction status with `GetIntentReceipt`
+3. Monitor the transaction status with `WaitIntentReceipt`
 
