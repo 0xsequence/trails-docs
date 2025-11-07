@@ -2502,11 +2502,6 @@
         "summary": "Quote Intent",
         "description": "Get a quote for a cross-chain intent transaction including gas fees and optimal routing",
         "operationId": "QuoteIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2536,11 +2531,6 @@
         "summary": "Commit Intent",
         "description": "Commit an intent to execute a cross-chain transaction",
         "operationId": "CommitIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2570,11 +2560,6 @@
         "summary": "Execute Intent",
         "description": "Execute a committed intent transaction",
         "operationId": "ExecuteIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2604,11 +2589,6 @@
         "summary": "Get Intent Receipt",
         "description": "Retrieve the receipt for a completed intent transaction",
         "operationId": "GetIntentReceipt",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2638,11 +2618,6 @@
         "summary": "Wait for Intent Receipt",
         "description": "Wait for an intent transaction to complete and return the receipt",
         "operationId": "WaitIntentReceipt",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2672,11 +2647,6 @@
         "summary": "Get Intent",
         "description": "Retrieve details of a specific intent by ID",
         "operationId": "GetIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2706,11 +2676,6 @@
         "summary": "Search Intents",
         "description": "Search for intents by various criteria including owner address, intent address, or transaction hash",
         "operationId": "SearchIntents",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2740,11 +2705,6 @@
         "summary": "Get Intent Transaction History",
         "description": "Retrieve transaction history for intents with pagination support",
         "operationId": "GetIntentTransactionHistory",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2774,11 +2734,6 @@
         "summary": "Get Token Prices",
         "description": "Retrieve current USD prices for specified tokens",
         "operationId": "GetTokenPrices",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
