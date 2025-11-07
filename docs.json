@@ -52,7 +52,6 @@
             "group": "Examples",
             "pages": [
               "examples/receive",
-              "examples/alt-fee-tokens",
               "examples/wallet-compatibility",
               "examples/transaction-history",
               "examples/x402"
@@ -63,7 +62,8 @@
             "pages": [
               "architecture/how-it-works",
               "architecture/protocol",
-              "architecture/pricing-fees"
+              "architecture/pricing-fees",
+              "architecture/alt-fee-tokens"
             ]
           },
           {
