@@ -4,18 +4,12 @@
     "title": "Trails API",
     "version": ""
   },
-  "servers": [
-    {
-      "url": "https://trails-api.sequence.app",
-      "description": "Trails API Server"
-    }
-  ],
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "description": "apiKey for authenticating requests, get an access key at https://t.me/build_with_trails",
+        "description": "Project access key for authenticating requests, get an access key at https://sequence.build",
         "name": "X-Access-Key"
       }
     },
@@ -1160,6 +1154,36 @@
           }
         }
       },
+      "ErrorIntentsDisabled": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "IntentsDisabled"
+          },
+          "code": {
+            "type": "number",
+            "example": 9000
+          },
+          "msg": {
+            "type": "string",
+            "example": "Intents service is currently unavailable"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 400
+          }
+        }
+      },
       "TradeType": {
         "type": "string",
         "description": "Represented as string on the server side",
@@ -1182,12 +1206,15 @@
         "description": "Represented as uint8 on the server side",
         "enum": [
           "UNKNOWN",
+          "ON_HOLD",
           "PENDING",
           "RELAYING",
-          "RELAYED",
+          "SENT",
+          "ERRORED",
           "MINING",
           "SUCCEEDED",
-          "FAILED"
+          "FAILED",
+          "ABORTED"
         ]
       },
       "IntentStatus": {
@@ -1277,6 +1304,7 @@
         "type": "object",
         "required": [
           "id",
+          "projectId",
           "intentId",
           "status",
           "quoteRequest",
@@ -1295,6 +1323,9 @@
         ],
         "properties": {
           "id": {
+            "type": "number"
+          },
+          "projectId": {
             "type": "number"
           },
           "intentId": {
@@ -1496,6 +1527,7 @@
         "type": "object",
         "required": [
           "id",
+          "projectId",
           "intentId",
           "status",
           "ownerAddress",
@@ -1504,12 +1536,13 @@
           "depositTransactionId",
           "depositTransaction",
           "originTransactionId",
-          "originTransaction",
-          "destinationTransactionId",
-          "destinationTransaction"
+          "originTransaction"
         ],
         "properties": {
           "id": {
+            "type": "number"
+          },
+          "projectId": {
             "type": "number"
           },
           "intentId": {
@@ -1603,6 +1636,9 @@
             "$ref": "#/components/schemas/DepositIntentEntry"
           },
           "txnHash": {
+            "type": "string"
+          },
+          "txnMinedAt": {
             "type": "string"
           },
           "status": {
@@ -2232,7 +2268,8 @@
           "ver",
           "branch",
           "commitHash",
-          "runnables"
+          "runnables",
+          "services"
         ],
         "properties": {
           "healthOK": {
@@ -2255,6 +2292,35 @@
           },
           "runnables": {
             "type": "object"
+          },
+          "services": {
+            "type": "array",
+            "description": "[]ServiceStatus",
+            "items": {
+              "$ref": "#/components/schemas/ServiceStatus"
+            }
+          }
+        }
+      },
+      "ServiceStatus": {
+        "type": "object",
+        "required": [
+          "name",
+          "healthy",
+          "latency"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "healthy": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "latency": {
+            "type": "string"
           }
         }
       },
@@ -2400,13 +2466,19 @@
       "SearchIntentsRequest": {
         "type": "object",
         "properties": {
-          "byOriginIntentAddress": {
+          "byIntentId": {
             "type": "string"
           },
-          "byDepositTransactionHash": {
+          "byProjectId": {
+            "type": "number"
+          },
+          "byTransactionHash": {
             "type": "string"
           },
           "byOwnerAddress": {
+            "type": "string"
+          },
+          "byOriginIntentAddress": {
             "type": "string"
           }
         }
@@ -2431,6 +2503,12 @@
         "properties": {
           "page": {
             "$ref": "#/components/schemas/Page"
+          },
+          "byProjectId": {
+            "type": "number"
+          },
+          "byOwnerAddress": {
+            "type": "string"
           }
         }
       },
@@ -2496,291 +2574,5 @@
       }
     }
   },
-  "paths": {
-    "/rpc/Trails/QuoteIntent": {
-      "post": {
-        "summary": "Quote Intent",
-        "description": "Get a quote for a cross-chain intent transaction including gas fees and optimal routing",
-        "operationId": "QuoteIntent",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QuoteIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QuoteIntentResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/CommitIntent": {
-      "post": {
-        "summary": "Commit Intent",
-        "description": "Commit an intent to execute a cross-chain transaction",
-        "operationId": "CommitIntent",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CommitIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommitIntentResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/ExecuteIntent": {
-      "post": {
-        "summary": "Execute Intent",
-        "description": "Execute a committed intent transaction",
-        "operationId": "ExecuteIntent",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExecuteIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExecuteIntentResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetIntentReceipt": {
-      "post": {
-        "summary": "Get Intent Receipt",
-        "description": "Retrieve the receipt for a completed intent transaction",
-        "operationId": "GetIntentReceipt",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIntentReceiptRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetIntentReceiptResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/WaitIntentReceipt": {
-      "post": {
-        "summary": "Wait for Intent Receipt",
-        "description": "Wait for an intent transaction to complete and return the receipt",
-        "operationId": "WaitIntentReceipt",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WaitIntentReceiptRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WaitIntentReceiptResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetIntent": {
-      "post": {
-        "summary": "Get Intent",
-        "description": "Retrieve details of a specific intent by ID",
-        "operationId": "GetIntent",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetIntentResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/SearchIntents": {
-      "post": {
-        "summary": "Search Intents",
-        "description": "Search for intents by various criteria including owner address, intent address, or transaction hash",
-        "operationId": "SearchIntents",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SearchIntentsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchIntentsResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetIntentTransactionHistory": {
-      "post": {
-        "summary": "Get Intent Transaction History",
-        "description": "Retrieve transaction history for intents with pagination support",
-        "operationId": "GetIntentTransactionHistory",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIntentTransactionHistoryRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetIntentTransactionHistoryResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetTokenPrices": {
-      "post": {
-        "summary": "Get Token Prices",
-        "description": "Retrieve current USD prices for specified tokens",
-        "operationId": "GetTokenPrices",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "tokens"
-                ],
-                "properties": {
-                  "tokens": {
-                    "type": "array",
-                    "description": "[]Token",
-                    "items": {
-                      "$ref": "#/components/schemas/Token"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "tokenPrices"
-                  ],
-                  "properties": {
-                    "tokenPrices": {
-                      "type": "array",
-                      "description": "[]TokenPrice",
-                      "items": {
-                        "$ref": "#/components/schemas/TokenPrice"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  "paths": null
 }
