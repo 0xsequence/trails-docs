@@ -1,0 +1,84 @@
+---
+title: CommitIntent
+openapi: ../trails-api.gen.json post /rpc/Trails/CommitIntent
+---
+
+## Overview
+
+The `CommitIntent` endpoint commits an intent to the Trails system, reserving the quote and preparing it for execution. This is a required step between getting a quote and executing the transaction.
+
+## Use Cases
+
+- Lock in a quote before execution
+- Prepare the intent for signing and execution
+- Transition from quoted to committed state and preparing a deposit intent address
+
+## Request Parameters
+
+### Required Fields
+
+- **intent** (Intent): The complete intent object returned from `QuoteIntent`
+
+## Response
+
+The response includes:
+
+- **intentId** (string): Unique identifier for the committed intent
+
+## Intent Lifecycle
+
+```
+QuoteIntent → CommitIntent → ExecuteIntent → Receipt
+```
+
+The `CommitIntent` step is crucial because it:
+1. Reserves the quoted rates
+2. Locks in the gas fee estimates
+3. Validates the intent parameters
+
+## Example
+
+```typescript
+// First, get a quote
+const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify(quoteRequest)
+});
+
+const { intent, gasFeeOptions } = await quoteResponse.json();
+
+// Then commit the intent
+const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ intent })
+});
+
+const { intentId } = await commitResponse.json();
+console.log('Intent committed:', intentId);
+```
+
+## Important Notes
+
+<Warning>
+Committed intents have an expiration time. Make sure to execute the intent before it expires, or you'll need to get a new quote.
+</Warning>
+
+<Info>
+The intent object from `QuoteIntent` should not be modified, otherwise the API will reject the commitment.
+</Info>
+
+## Next Steps
+
+After committing an intent:
+1. Prepare the transaction signature using the provided intent details for the user to deposit into the intent address
+2. Execute the transaction with `ExecuteIntent`
+3. Monitor the transaction status with `WaitIntentReceipt`
+

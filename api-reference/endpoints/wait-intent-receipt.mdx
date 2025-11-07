@@ -1,0 +1,220 @@
+---
+title: WaitIntentReceipt
+openapi: ../trails-api.gen.json post /rpc/Trails/WaitIntentReceipt
+---
+
+## Overview
+
+The `WaitIntentReceipt` endpoint provides a streaming or long-polling mechanism to wait for an intent to complete. Unlike `GetIntentReceipt`, which requires manual polling, this endpoint holds the connection until the intent reaches a terminal state or times out.
+
+## Use Cases
+
+- Wait for transaction completion without polling
+- Implement real-time transaction monitoring
+- Reduce API calls by using long-polling
+- Get notified immediately when transaction completes
+- Simplify client-side code for waiting
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique identifier of the intent to monitor
+
+## Response
+
+The response includes:
+
+- **intentReceipt** (IntentReceipt): Complete receipt with transaction details
+- **done** (boolean): Indicates if the intent has reached a terminal state
+  - `true`: Intent is complete (SUCCEEDED or FAILED)
+  - `false`: Intent is still processing (may require another call)
+
+## Behavior
+
+This endpoint will:
+1. Check the current status of the intent
+2. If complete (`SUCCEEDED` or `FAILED`), return immediately with `done: true`
+3. If still processing, wait for state changes
+4. Return updates as they occur
+5. Timeout after a reasonable period if no completion
+
+## Example
+
+```typescript
+async function waitForCompletion(intentId: string) {
+  const response = await fetch('https://trails-api.sequence.app/rpc/Trails/WaitIntentReceipt', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Access-Key': 'YOUR_ACCESS_KEY'
+    },
+    body: JSON.stringify({ intentId })
+  });
+
+  const { intentReceipt, done } = await response.json();
+  
+  if (done) {
+    if (intentReceipt.status === 'SUCCEEDED') {
+      console.log('Transaction succeeded!');
+      return intentReceipt;
+    } else {
+      throw new Error(`Transaction failed: ${intentReceipt.originTransaction.statusReason}`);
+    }
+  } else {
+    // Not done yet, call again
+    return waitForCompletion(intentId);
+  }
+}
+
+// Usage
+try {
+  const receipt = await waitForCompletion('intent_123abc');
+  console.log('Completed:', receipt);
+} catch (error) {
+  console.error('Failed:', error);
+}
+```
+
+## Comparison: WaitIntentReceipt vs GetIntentReceipt
+
+### GetIntentReceipt (Manual Polling)
+
+```typescript
+// Requires manual polling loop
+async function pollReceipt(intentId: string) {
+  while (true) {
+    const { intentReceipt } = await getIntentReceipt(intentId);
+    
+    if (intentReceipt.status === 'SUCCEEDED' || intentReceipt.status === 'FAILED') {
+      return intentReceipt;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+  }
+}
+```
+
+### WaitIntentReceipt (Long Polling)
+
+```typescript
+// Automatic waiting, no manual delay needed
+async function waitReceipt(intentId: string) {
+  const { intentReceipt, done } = await waitIntentReceipt(intentId);
+  
+  if (!done) {
+    return waitReceipt(intentId); // Recursively wait if needed
+  }
+  
+  return intentReceipt;
+}
+```
+
+<Info>
+`WaitIntentReceipt` is more efficient as it reduces the number of API calls and provides near-instant updates.
+</Info>
+
+## With Progress Updates
+
+```typescript
+async function waitWithProgress(intentId: string, onProgress?: (status: string) => void) {
+  let lastStatus = '';
+  
+  const wait = async (): Promise<IntentReceipt> => {
+    const { intentReceipt, done } = await fetch(
+      'https://trails-api.sequence.app/rpc/Trails/WaitIntentReceipt',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Key': 'YOUR_ACCESS_KEY'
+        },
+        body: JSON.stringify({ intentId })
+      }
+    ).then(r => r.json());
+    
+    // Report progress if status changed
+    if (intentReceipt.status !== lastStatus) {
+      lastStatus = intentReceipt.status;
+      onProgress?.(intentReceipt.status);
+    }
+    
+    if (done) {
+      return intentReceipt;
+    }
+    
+    return wait(); // Continue waiting
+  };
+  
+  return wait();
+}
+
+// Usage with progress callback
+const receipt = await waitWithProgress('intent_123abc', (status) => {
+  console.log('Status update:', status);
+  // Update UI, show loading state, etc.
+});
+```
+
+## Timeout Handling
+
+```typescript
+async function waitWithTimeout(intentId: string, timeoutMs = 300000) {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout waiting for intent')), timeoutMs);
+  });
+  
+  const waitPromise = (async () => {
+    let done = false;
+    let receipt;
+    
+    while (!done) {
+      const response = await fetch(
+        'https://trails-api.sequence.app/rpc/Trails/WaitIntentReceipt',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Access-Key': 'YOUR_ACCESS_KEY'
+          },
+          body: JSON.stringify({ intentId })
+        }
+      );
+      
+      const data = await response.json();
+      receipt = data.intentReceipt;
+      done = data.done;
+    }
+    
+    return receipt;
+  })();
+  
+  return Promise.race([waitPromise, timeoutPromise]);
+}
+
+try {
+  const receipt = await waitWithTimeout('intent_123abc', 60000); // 1 minute timeout
+  console.log('Completed:', receipt);
+} catch (error) {
+  console.error('Timed out or failed:', error);
+}
+```
+
+## Best Practices
+
+<Warning>
+Always implement timeout handling to prevent indefinite waiting in case of network issues or unexpected states.
+</Warning>
+
+<Info>
+For UI applications, combine this endpoint with progress callbacks to provide real-time feedback to users.
+</Info>
+
+## Next Steps
+
+After receiving the completed receipt:
+1. Verify transaction hashes on block explorers
+2. Update UI to show completion status
+3. Trigger any post-transaction logic
+4. Store receipt for record-keeping
+

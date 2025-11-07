@@ -39,7 +39,6 @@ Trails is easy to get started, however we have deep configuration options to add
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `gasless` | `boolean` | No | Enable alternative fee tokens that support permit() for transactions (default: `false`) |
 | `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
 | `quoteProvider` | `"auto" \| "lifi" \| "relay" \| "cctp"` | No | Preferred quote provider (default: `"auto"`). `"auto"` automatically selects best provider, `"lifi"` uses LiFi aggregator for multi-source routing, `"relay"` uses Relay for fast direct transfers, `"cctp"` uses Circle's CCTP for native USDC transfers |
 | `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |

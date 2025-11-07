@@ -229,6 +229,7 @@ export default function PayWidget() {
     <div className="space-y-4">
       <TrailsWidget
         ref={widgetRef}
+        apiKey="YOUR_API_KEY"
         mode="pay"
         theme="auto"
         toAddress="0xYourAddress"
@@ -383,6 +384,7 @@ The `paymentMiddleware` intercepts requests to protected routes and verifies the
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0xYourAddress"
   toAmount="0.1"

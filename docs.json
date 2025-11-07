@@ -52,7 +52,6 @@
             "group": "Examples",
             "pages": [
               "examples/receive",
-              "examples/alt-fee-tokens",
               "examples/wallet-compatibility",
               "examples/transaction-history",
               "examples/x402"
@@ -63,7 +62,8 @@
             "pages": [
               "architecture/how-it-works",
               "architecture/protocol",
-              "architecture/pricing-fees"
+              "architecture/pricing-fees",
+              "architecture/alt-fee-tokens"
             ]
           },
           {
@@ -97,9 +97,23 @@
         "description": "Trails API Referencing",
         "groups": [
           {
-            "group": "API reference",
+            "group": "Overview",
             "pages": [
               "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api-reference/endpoints/quote-intent",
+              "api-reference/endpoints/commit-intent",
+              "api-reference/endpoints/execute-intent",
+              "api-reference/endpoints/get-intent-receipt",
+              "api-reference/endpoints/wait-intent-receipt",
+              "api-reference/endpoints/get-intent",
+              "api-reference/endpoints/search-intents",
+              "api-reference/endpoints/get-intent-transaction-history",
+              "api-reference/endpoints/get-token-prices"
             ]
           }
         ]

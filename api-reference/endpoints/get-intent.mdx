@@ -1,0 +1,263 @@
+---
+title: GetIntent
+openapi: ../trails-api.gen.json post /rpc/Trails/GetIntent
+---
+
+## Overview
+
+The `GetIntent` endpoint retrieves the complete intent object for a specific intent ID. This provides all the details about the intent including quote information, fee breakdown, transaction calls, and metadata.
+
+## Use Cases
+
+- Retrieve full intent details after creation
+- Review quote and fee information
+- Inspect transaction calls and preconditions
+- Verify intent parameters
+- Debug issues with intent execution
+- Display intent details in UI
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique identifier of the intent
+
+## Response
+
+The response includes:
+
+- **intent** (Intent): Complete intent object with all details
+
+### Intent Object Structure
+
+The intent object contains comprehensive information:
+
+#### Core Fields
+- **id** (number): Internal database ID
+- **intentId** (string): Unique intent identifier
+- **status** (IntentStatus): Current status
+- **ownerAddress** (string): Wallet address of the intent owner
+- **originIntentAddress** (string): Intent contract address on origin chain
+- **destinationIntentAddress** (string): Intent contract address on destination chain
+- **destinationSalt** (number): Salt for deterministic intent address generation
+- **trailsVersion** (string): Version of Trails protocol used
+- **expiresAt** (string): Intent expiration timestamp
+- **createdAt** (string): Creation timestamp
+- **updatedAt** (string): Last update timestamp
+
+#### Quote Request
+- **quoteRequest** (QuoteIntentRequest): Original quote parameters
+  - Origin and destination chain/token details
+  - Amounts and trade type
+  - Options (provider, slippage, etc.)
+
+#### Transaction Details
+- **depositTransaction** (DepositTransaction): Deposit details
+  - Token address and amount
+  - Recipient address
+  - Token decimals
+  
+- **calls** (IntentCalls[]): Cross-chain calls to execute
+  - Chain ID for each call set
+  - Transaction calls with calldata
+  - Nonce and space information
+
+- **preconditions** (TransactionPrecondition[]): Pre-execution checks
+  - Token balance requirements
+  - Minimum amount validations
+
+- **metaTxns** (MetaTxn[]): Meta-transaction information
+  - Meta-transaction IDs
+  - Wallet addresses
+  - Contract targets
+
+#### Quote Information
+- **quote** (IntentProviderQuote): Quote provider details
+  - Provider name and request ID
+  - Input/output amounts and minimums
+  - Slippage and price impact
+  - Provider fees in USD
+
+#### Fee Breakdown
+- **fees** (IntentFees): Comprehensive fee information
+  - **originGas**: Origin chain gas fees
+  - **destinationGas**: Destination chain gas fees
+  - **provider**: Provider fees (quote provider + Trails)
+  - **feeTokenAddress**: Token used for fees
+  - **feeTokenTotal**: Total fee in fee token
+  - **totalFeeAmount**: Total fee amount
+  - **totalFeeUsd**: Total fee in USD
+
+## Example
+
+```typescript
+const intentResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/GetIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_123abc'
+  })
+});
+
+const { intent } = await intentResponse.json();
+
+console.log('Intent ID:', intent.intentId);
+console.log('Status:', intent.status);
+console.log('Owner:', intent.ownerAddress);
+console.log('Expires:', intent.expiresAt);
+
+// Quote information
+console.log('From Amount:', intent.quote.fromAmount);
+console.log('To Amount:', intent.quote.toAmount);
+console.log('Price Impact:', intent.quote.priceImpact);
+
+// Fee breakdown
+console.log('Total Fee (USD):', intent.fees.totalFeeUsd);
+console.log('Origin Gas Fee:', intent.fees.originGas.totalFeeUsd);
+console.log('Destination Gas Fee:', intent.fees.destinationGas.totalFeeUsd);
+console.log('Provider Fee:', intent.fees.provider.totalFeeUsd);
+```
+
+## Detailed Fee Inspection
+
+```typescript
+function analyzeFees(intent: Intent) {
+  const fees = intent.fees;
+  
+  console.log('=== Fee Breakdown ===');
+  
+  // Gas fees
+  console.log('\nOrigin Chain Gas:');
+  console.log('  Chain ID:', fees.originGas.chainId);
+  console.log('  Gas Limit:', fees.originGas.totalGasLimit);
+  console.log('  Gas Price:', fees.originGas.gasPrice);
+  console.log('  Native Token:', fees.originGas.nativeTokenSymbol);
+  console.log('  Cost (USD):', fees.originGas.totalFeeUsd);
+  console.log('  Network Status:', fees.originGas.chainGasUsageStatus);
+  
+  console.log('\nDestination Chain Gas:');
+  console.log('  Chain ID:', fees.destinationGas.chainId);
+  console.log('  Gas Limit:', fees.destinationGas.totalGasLimit);
+  console.log('  Gas Price:', fees.destinationGas.gasPrice);
+  console.log('  Native Token:', fees.destinationGas.nativeTokenSymbol);
+  console.log('  Cost (USD):', fees.destinationGas.totalFeeUsd);
+  console.log('  Network Status:', fees.destinationGas.chainGasUsageStatus);
+  
+  // Provider fees
+  console.log('\nProvider Fees:');
+  console.log('  Quote Provider:', fees.provider.quoteProvider);
+  console.log('  Provider Fee:', fees.provider.quoteProviderFeeUsd, 'USD');
+  console.log('  Trails Fee:', fees.provider.trailsFeeUsd, 'USD');
+  console.log('  Total Provider:', fees.provider.totalFeeUsd, 'USD');
+  
+  // Grand total
+  console.log('\n=== TOTAL ===');
+  console.log('Fee Token:', fees.feeTokenAddress);
+  console.log('Total Amount:', fees.totalFeeAmount);
+  console.log('Total USD:', fees.totalFeeUsd);
+}
+
+const { intent } = await getIntent('intent_123abc');
+analyzeFees(intent);
+```
+
+## Inspecting Transaction Calls
+
+```typescript
+function inspectCalls(intent: Intent) {
+  console.log('=== Transaction Calls ===\n');
+  
+  intent.calls.forEach((intentCall, index) => {
+    console.log(`Call Set ${index + 1}:`);
+    console.log('  Chain ID:', intentCall.chainId);
+    console.log('  Space:', intentCall.space);
+    console.log('  Nonce:', intentCall.nonce);
+    console.log('  Calls:', intentCall.calls.length);
+    
+    intentCall.calls.forEach((call, callIndex) => {
+      console.log(`\n  Call ${callIndex + 1}:`);
+      console.log('    To:', call.to);
+      console.log('    Value:', call.value);
+      console.log('    Data:', call.data);
+      console.log('    Gas Limit:', call.gasLimit);
+      console.log('    Delegate:', call.delegateCall);
+    });
+    
+    console.log('\n');
+  });
+}
+
+const { intent } = await getIntent('intent_123abc');
+inspectCalls(intent);
+```
+
+## Use Cases
+
+### 1. Display Intent Summary in UI
+
+```tsx
+function IntentSummary({ intentId }: { intentId: string }) {
+  const [intent, setIntent] = useState<Intent | null>(null);
+  
+  useEffect(() => {
+    getIntent(intentId).then(({ intent }) => setIntent(intent));
+  }, [intentId]);
+  
+  if (!intent) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      <h2>Intent {intent.intentId}</h2>
+      <div>Status: {intent.status}</div>
+      <div>From: Chain {intent.quoteRequest.originChainId}</div>
+      <div>To: Chain {intent.quoteRequest.destinationChainId}</div>
+      <div>Amount: {intent.quote.fromAmount} → {intent.quote.toAmount}</div>
+      <div>Total Fee: ${intent.fees.totalFeeUsd}</div>
+      <div>Expires: {new Date(intent.expiresAt).toLocaleString()}</div>
+    </div>
+  );
+}
+```
+
+### 2. Verify Intent Before Signing
+
+```typescript
+async function verifyBeforeSigning(intentId: string) {
+  const { intent } = await getIntent(intentId);
+  
+  // Check expiration
+  const expiresAt = new Date(intent.expiresAt);
+  const now = new Date();
+  
+  if (expiresAt < now) {
+    throw new Error('Intent has expired');
+  }
+  
+  // Check fees are reasonable
+  if (intent.fees.totalFeeUsd > 10) {
+    console.warn('High fees detected:', intent.fees.totalFeeUsd);
+  }
+  
+  // Check slippage
+  const slippage = (intent.quote.fromAmount - intent.quote.fromAmountMin) / intent.quote.fromAmount;
+  if (slippage > 0.05) {
+    console.warn('High slippage:', slippage * 100, '%');
+  }
+  
+  return intent;
+}
+```
+
+<Info>
+Use this endpoint to retrieve intent details at any time. The intent object remains accessible even after execution completes.
+</Info>
+
+## Next Steps
+
+- Use `GetIntentReceipt` to check execution status and get transaction hashes
+- Use `SearchIntents` to find all intents for a specific address
+- Modify and recommit expired intents with fresh quotes
+

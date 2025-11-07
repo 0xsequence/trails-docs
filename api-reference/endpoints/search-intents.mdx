@@ -1,0 +1,294 @@
+---
+title: SearchIntents
+openapi: ../trails-api.gen.json post /rpc/Trails/SearchIntents
+---
+
+## Overview
+
+The `SearchIntents` endpoint allows you to search for intents using various criteria such as owner address, intent address, or deposit transaction hash. This is useful for finding all intents associated with a wallet or tracking specific transactions.
+
+## Use Cases
+
+- Find all intents for a specific wallet address
+- Look up an intent by its deposit transaction hash
+- Track intents associated with a specific intent contract address
+- Build transaction history interfaces
+- Audit and analytics
+- Retrieve intent IDs for status monitoring
+
+## Request Parameters
+
+All parameters are optional, but at least one should be provided:
+
+- **byOwnerAddress** (string): Search by wallet address that created the intent
+- **byOriginIntentAddress** (string): Search by origin chain intent contract address
+- **byDepositTransactionHash** (string): Search by deposit transaction hash
+
+## Response
+
+The response includes:
+
+- **intents** (Intent[]): Array of matching intent objects
+
+Each intent in the array contains all the standard intent fields as described in the `GetIntent` endpoint.
+
+## Examples
+
+### Search by Owner Address
+
+Find all intents created by a specific wallet:
+
+```typescript
+const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    byOwnerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+  })
+});
+
+const { intents } = await searchResponse.json();
+
+console.log(`Found ${intents.length} intents`);
+intents.forEach(intent => {
+  console.log(`Intent ${intent.intentId}: ${intent.status}`);
+});
+```
+
+### Search by Deposit Transaction Hash
+
+Look up an intent using its deposit transaction:
+
+```typescript
+const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    byDepositTransactionHash: '0x1234567890abcdef...'
+  })
+});
+
+const { intents } = await searchResponse.json();
+
+if (intents.length > 0) {
+  console.log('Found intent:', intents[0].intentId);
+  console.log('Status:', intents[0].status);
+} else {
+  console.log('No intent found for this transaction');
+}
+```
+
+### Search by Origin Intent Address
+
+Find all intents using a specific intent contract:
+
+```typescript
+const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    byOriginIntentAddress: '0xabcdef1234567890...'
+  })
+});
+
+const { intents } = await searchResponse.json();
+console.log('Found intents:', intents.map(i => i.intentId));
+```
+
+## Building a Transaction History
+
+Create a user-friendly transaction history:
+
+```typescript
+async function getTransactionHistory(userAddress: string) {
+  const { intents } = await fetch('https://trails-api.sequence.app/rpc/Trails/SearchIntents', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Access-Key': 'YOUR_ACCESS_KEY'
+    },
+    body: JSON.stringify({
+      byOwnerAddress: userAddress
+    })
+  }).then(r => r.json());
+  
+  // Sort by creation date (newest first)
+  const sorted = intents.sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  
+  // Format for display
+  return sorted.map(intent => ({
+    id: intent.intentId,
+    status: intent.status,
+    fromChain: intent.quoteRequest.originChainId,
+    toChain: intent.quoteRequest.destinationChainId,
+    fromAmount: intent.quote.fromAmount,
+    toAmount: intent.quote.toAmount,
+    totalFees: intent.fees.totalFeeUsd,
+    createdAt: intent.createdAt,
+    expiresAt: intent.expiresAt
+  }));
+}
+
+const history = await getTransactionHistory('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb');
+console.table(history);
+```
+
+## UI Component Example
+
+```tsx
+import { useState, useEffect } from 'react';
+
+function IntentHistory({ userAddress }: { userAddress: string }) {
+  const [intents, setIntents] = useState<Intent[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    async function loadIntents() {
+      try {
+        const response = await fetch(
+          'https://trails-api.sequence.app/rpc/Trails/SearchIntents',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Access-Key': 'YOUR_ACCESS_KEY'
+            },
+            body: JSON.stringify({
+              byOwnerAddress: userAddress
+            })
+          }
+        );
+        
+        const { intents } = await response.json();
+        setIntents(intents);
+      } catch (error) {
+        console.error('Failed to load intents:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadIntents();
+  }, [userAddress]);
+  
+  if (loading) return <div>Loading...</div>;
+  
+  return (
+    <div className="intent-history">
+      <h2>Transaction History</h2>
+      {intents.length === 0 ? (
+        <p>No transactions found</p>
+      ) : (
+        <ul>
+          {intents.map(intent => (
+            <li key={intent.intentId}>
+              <div>
+                <strong>{intent.intentId}</strong>
+                <span className={`status-${intent.status.toLowerCase()}`}>
+                  {intent.status}
+                </span>
+              </div>
+              <div>
+                Chain {intent.quoteRequest.originChainId} → 
+                Chain {intent.quoteRequest.destinationChainId}
+              </div>
+              <div>
+                {intent.quote.fromAmount} → {intent.quote.toAmount}
+              </div>
+              <div>
+                Fee: ${intent.fees.totalFeeUsd}
+              </div>
+              <div>
+                {new Date(intent.createdAt).toLocaleString()}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+## Filtering and Analytics
+
+```typescript
+async function analyzeUserActivity(userAddress: string) {
+  const { intents } = await searchIntents({ byOwnerAddress: userAddress });
+  
+  const stats = {
+    total: intents.length,
+    succeeded: intents.filter(i => i.status === 'SUCCEEDED').length,
+    failed: intents.filter(i => i.status === 'FAILED').length,
+    pending: intents.filter(i => 
+      ['QUOTED', 'COMMITTED', 'EXECUTING'].includes(i.status)
+    ).length,
+    totalVolume: intents.reduce((sum, i) => sum + i.quote.fromAmount, 0),
+    totalFees: intents.reduce((sum, i) => sum + parseFloat(i.fees.totalFeeUsd), 0),
+    chains: [...new Set(intents.flatMap(i => 
+      [i.quoteRequest.originChainId, i.quoteRequest.destinationChainId]
+    ))],
+    providers: [...new Set(intents.map(i => i.quote.quoteProvider))]
+  };
+  
+  return stats;
+}
+
+const stats = await analyzeUserActivity('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb');
+console.log('User Activity:', stats);
+```
+
+## Pagination Considerations
+
+<Warning>
+The `SearchIntents` endpoint may return a large number of results for active addresses. Consider implementing client-side pagination or using `GetIntentTransactionHistory` for paginated results.
+</Warning>
+
+## Best Practices
+
+1. **Cache results**: Store search results locally to reduce API calls
+2. **Filter on client**: Apply additional filters on the client side after fetching
+3. **Limit date range**: Use `createdAt` timestamps to filter by date range
+4. **Combine with GetIntentReceipt**: Fetch receipts for intents that need transaction hashes
+
+## Example: Recent Active Intents
+
+```typescript
+async function getRecentActiveIntents(userAddress: string, hoursAgo: number = 24) {
+  const { intents } = await searchIntents({ byOwnerAddress: userAddress });
+  
+  const cutoff = Date.now() - (hoursAgo * 60 * 60 * 1000);
+  
+  return intents
+    .filter(i => new Date(i.createdAt).getTime() > cutoff)
+    .filter(i => ['COMMITTED', 'EXECUTING'].includes(i.status))
+    .sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+}
+
+const activeIntents = await getRecentActiveIntents(userAddress, 24);
+console.log('Active intents in last 24h:', activeIntents.length);
+```
+
+<Info>
+For paginated transaction history with optimized summary data, use the `GetIntentTransactionHistory` endpoint instead.
+</Info>
+
+## Next Steps
+
+- Use `GetIntent` to get full details for specific intents
+- Use `GetIntentReceipt` to get transaction hashes and status
+- Use `GetIntentTransactionHistory` for paginated history views
+

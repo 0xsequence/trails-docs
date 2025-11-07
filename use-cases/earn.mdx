@@ -26,6 +26,7 @@ import { TrailsWidget } from '0xtrails/widget'
 export const App = () => {
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="earn"
       renderInline={true}
       theme="auto"
@@ -64,6 +65,7 @@ export const AaveDepositExample = () => {
 
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="earn"
       toAddress={AAVE_POOL_CONTRACT}
       toAmount="100" // 100 USDC

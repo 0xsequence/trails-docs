@@ -1,163 +1,462 @@
 ---
-title: "Overview"
-description: "Complete reference for the Trails SDK"
+title: "Getting Started"
+description: "Learn how to integrate the Trails API for cross-chain transactions"
 ---
 
-## Welcome to the Trails SDK API Reference
+## Welcome to the Trails API
 
-The Trails SDK provides a comprehensive set of tools for building cross-chain applications with seamless token swapping, bridging, and payment functionality.
+The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions in a simplified interface with the Trails protocol. This guide walks you through the complete flow from requesting a quote to executing a transaction.
 
-## Core Components
+<Note>
+**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) to request your API access key.
+</Note>
 
-### TrailsWidget
-The main React component for integrating Trails functionality into your application.
+## Core Workflow
 
-```tsx
-import { TrailsWidget } from '0xtrails/widget'
+Every interaction through Trails follows this four-step process:
+
+```mermaid
+flowchart LR
+    A[Request Quote] --> B[Commit Quote]
+    B --> C[Execute Quote]
+    C --> D[Monitor Intent]
 ```
 
-**Props:**
-- `projectAccessKey: string` - Your project access key (optional)
-- `mode?: "pay" | "fund" | "earn" | "swap" | "receive"` - Widget operation mode
-- `toAddress?: string` - Destination address for payments
-- `toAmount?: string` - Exact amount for payments (pay mode)
-- `toChainId?: number | string` - Destination chain ID
-- `toToken?: string` - Destination token symbol or address
-- `toCalldata?: string` - Custom calldata for contract interactions
-- `gasless?: boolean` - Enable gasless transactions
-- `theme?: "light" | "dark" | "auto"` - Widget theme
-- `quoteProvider?: string` - Preferred quote provider
-- `onCheckoutComplete?: (data: { sessionId: string }) => void` - Success callback
-- `onCheckoutError?: (data: { sessionId: string; error: string }) => void` - Error callback
-- `onCheckoutStatusUpdate?: (data: { sessionId: string; transactionStates: TransactionState[] }) => void` - Transaction progress callback
+<Steps>
+  <Step title="Get Wallet Balance">
+    Before requesting a quote, fetch the user's token balances using a multichain Indexer to display total available tokens and amounts for the user to select:
 
-## Main Exports
+```typescript
+const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGateway/GetTokenBalances', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    accountAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    includeMetadata: true
+  })
+});
 
-### Hooks
+const { balances } = await balancesResponse.json();
 
-```tsx
-// Chains
-import { useSupportedChains, getSupportedChains } from '0xtrails'
+// Display balances in your UI for user to select tokens, amount, and routes.
+console.log('Available tokens:', balances);
+```
+  </Step>
 
-// Tokens  
-import { useSupportedTokens, getSupportedTokens, useTokenList } from '0xtrails'
+  <Step title="Get a Quote">
+    Request a quote to see rates, fees, and routing options for your transaction.
 
-// Balances
-import { 
-  useTokenBalances, 
-  useAccountTotalBalanceUsd,
-  useHasSufficientBalanceToken,
-  useHasSufficientBalanceUsd 
-} from '0xtrails'
+```typescript
+const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // sender address
+    originChainId: 42161, // Arbitrum One
+    originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
+    originTokenAmount: 100000000, // 100 USDC (6 decimals)
+    destinationChainId: 8453, // Base
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // recipient
+    tradeType: 'EXACT_INPUT',
+    options: {
+      slippageTolerance: 0.5, // 0.5%
+      quoteProvider: 'RELAY'
+    }
+  })
+});
 
-// Quotes & Swapping
-import { useQuote, prepareSend, TradeType } from '0xtrails'
+const { intent, gasFeeOptions } = await quoteResponse.json();
 
-// Meta Transactions
-import { useMetaTxnsMonitor } from '0xtrails'
-
-// Advanced
-import { useTrails } from '0xtrails'
+console.log('Quote received:', {
+  fromAmount: intent.quote.fromAmount,
+  toAmount: intent.quote.toAmount,
+  totalFees: intent.fees.totalFeeUsd,
+  expiresAt: intent.expiresAt
+});
 ```
 
-### Utilities
+**Key Parameters:**
 
-```tsx
-// API Clients
-import { getAPIClient, useAPIClient } from '0xtrails'
-import { getIndexerGatewayClient, useIndexerGatewayClient } from '0xtrails'
+- **ownerAddress**: User's wallet address
+- **originChainId** & **destinationChainId**: Source and destination chains
+- **originTokenAddress** & **destinationTokenAddress**: Token contracts
+- **originTokenAmount**: Amount to swap (in token's smallest unit)
+- **tradeType**: `EXACT_INPUT` (specify input) or `EXACT_OUTPUT` (specify output)
 
-// Intents (Advanced)
-import {
-  calculateIntentAddress,
-  commitIntentConfig,
-  getIntentCallsPayloads,
-  sendOriginTransaction
-} from '0xtrails'
+<Tip>
+Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` when you know exactly how much you need to receive.
+</Tip>
+  </Step>
 
-// Relayers
-import { getRelayer, useRelayers } from '0xtrails'
+  <Step title="Commit the Intent">
+    Lock in the quote by committing the intent from the previous response which will reserve the rates.
 
-// Meta Transactions
-import { relayerSendMetaTx, getMetaTxnReceipt } from '0xtrails'
+```typescript
+const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({ intent })
+});
 
-// Transaction Utilities
-import { getTxTimeDiff } from '0xtrails'
+const { intentId } = await commitResponse.json();
 
-// Encoders
-import { getERC20TransferData } from '0xtrails'
-
-// Constants
-import { TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+console.log('Intent committed:', intentId);
 ```
 
-## Type Definitions
+You cannot change the contents of the intent, or the server will reject the commit. The `intent` object contains everything needed to relay and execute the intent.
 
-### Core Types
+<Warning>
+Committed intents expire after a set period (check `intent.expiresAt`). Execute before expiration or request a new quote.
+</Warning>
+  </Step>
 
-```tsx
-export type TransactionState = {
-  chainId: number
-  transactionHash: string
-  state: 'pending' | 'confirmed' | 'failed'
-  explorerUrl: string
-  label: string
-  blockNumber?: number
-  decodedGuestModuleEvents?: Array<{ type: string; [key: string]: any }>
-  decodedTrailsTokenSweeperEvents?: Array<{ type: string; [key: string]: any }>
-}
+  <Step title="Execute the Transaction">
+    Execute the intent using one of two mutually exclusive methods - either a normal transfer to the intent address or a permit operation if a user wants to pay in a non-native gas token:
 
-export type PrepareSendQuote = {
-  originAmountFormatted: string
-  originAmountDisplay: string
-  originAmountUsdDisplay: string
-  destinationAmountFormatted: string
-  destinationAmountDisplay: string
-  destinationAmountUsdDisplay: string
-  originToken: SupportedToken
-  destinationToken: SupportedToken
-  originChain: Chain
-  destinationChain: Chain
-  totalFeeAmountUsdDisplay: string
-  completionEstimateSeconds: number
-  transactionStates?: TransactionState[]
-  // ... additional quote properties
-}
+<Tabs>
+  <Tab title="Transfer Flow">
+    Send tokens to the intent deposit address, then call `ExecuteIntent` with the transaction hash:
 
-export enum TradeType {
-  EXACT_INPUT = 0,  // User specifies exact input amount
-  EXACT_OUTPUT = 1  // User specifies exact output amount
-}
+<Accordion title="Setup: Instantiate viem">
+```typescript
+import { createWalletClient, createPublicClient, http } from 'viem';
+import { base, arbitrum, mainnet } from 'viem/chains'; // add other chains to support
+
+// Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
+const walletClient = createWalletClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+
+const publicClient = createPublicClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
 ```
+</Accordion>
 
-### Token & Chain Types
+```typescript
+// Send tokens to the intent address (where Trails will execute from)
+const intentAddress = intent.depositTransaction.toAddress;
+const tokenAddress = intent.depositTransaction.tokenAddress;
+const amount = intent.depositTransaction.amount;
 
-```tsx
-export type SupportedToken = {
-  id: string
-  symbol: string
-  name: string
-  contractAddress: string
-  decimals: number
-  chainId: number
-  chainName: string
-  imageUrl: string
+const depositTxHash = await walletClient.sendTransaction({
+  to: intentAddress,
+  value: 0n, // No native ETH sent (0 for ERC20 transfers, or ETH amount if sending native token)
+  data: encodeERC20Transfer( // Use your favorite library such as viem to encode ERC20 transfer
+    tokenAddress,
+    intentAddress,
+    amount
+  )
+});
+
+// Wait for transaction confirmation using viem
+const receipt = await publicClient.waitForTransactionReceipt({
+  hash: depositTxHash
+});
+
+// Then execute the intent with the deposit transaction hash and intentId
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    intentId,
+    depositTransactionHash: depositTxHash
+  })
+});
+
+const { intentStatus } = await executeResponse.json();
+console.log('Execution started:', intentStatus);
+```
+  </Tab>
+
+  <Tab title="Alternative Fee Token Flow">
+    Sign ERC712 permit signatures which enables paying with any non-native gas tokens that are permit compatible:
+
+<Accordion title="Setup: Instantiate viem">
+```typescript
+import { createWalletClient, createPublicClient, http } from 'viem';
+import { base, arbitrum, mainnet } from 'viem/chains'; // add other chains to support
+
+// Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
+const walletClient = createWalletClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+
+const publicClient = createPublicClient({
+  chain: mainnet, base, arbitrum
+  transport: http()
+});
+```
+</Accordion>
+
+```typescript
+import { erc20Abi, parseAbi } from 'viem';
+
+// Select a gas fee option from the quote response
+const selectedGasFeeOption = gasFeeOptions.feeOptions[0]; // Choose based on user preference
+
+// Constants for the flow
+const INTENT_ENTRYPOINT_ADDRESS = '0x9470d883bac170116d397db3da71b2e57d567583'; // Trails Intent Entrypoint (same on all chains)
+const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
+// 1. Get user nonce from Intent Entrypoint contract
+const userNonce = await publicClient.readContract({
+  address: INTENT_ENTRYPOINT_ADDRESS,
+  abi: parseAbi([
+    'function nonces(address user) view returns (uint256)'
+  ]),
+  functionName: 'nonces',
+  args: [intent.ownerAddress]
+});
+
+// 2. Check if approval is needed for the deposit token
+const tokenAddress = intent.depositTransaction.tokenAddress;
+const currentAllowance = await publicClient.readContract({
+  address: tokenAddress,
+  abi: erc20Abi,
+  functionName: 'allowance',
+  args: [intent.ownerAddress, INTENT_ENTRYPOINT_ADDRESS]
+});
+
+const needsApproval = currentAllowance < BigInt(intent.depositTransaction.amount);
+
+// 3. If approval needed, get permit signature for the deposit token
+let permitSignature;
+let permitDeadline;
+let permitAmount;
+
+if (needsApproval) {
+  // Read token metadata for permit signature
+  const tokenNonce = await publicClient.readContract({
+    address: tokenAddress,
+    abi: parseAbi([
+      'function nonces(address owner) view returns (uint256)'
+    ]),
+    functionName: 'nonces',
+    args: [intent.ownerAddress]
+  });
+
+  const tokenName = await publicClient.readContract({
+    address: tokenAddress,
+    abi: parseAbi([
+      'function name() view returns (string)'
+    ]),
+    functionName: 'name'
+  });
+
+  permitDeadline = deadline;
+  permitAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'; // maxUint256 for infinite approval
+
+  permitSignature = await walletClient.signTypedData({
+    domain: {
+      name: tokenName,
+      version: '1',
+      chainId: intent.originChainId,
+      verifyingContract: tokenAddress
+    },
+    types: {
+      Permit: [
+        { name: 'owner', type: 'address' },
+        { name: 'spender', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+        { name: 'deadline', type: 'uint256' }
+      ]
+    },
+    primaryType: 'Permit',
+    message: {
+      owner: intent.ownerAddress,
+      spender: INTENT_ENTRYPOINT_ADDRESS,
+      value: permitAmount,
+      nonce: tokenNonce,
+      deadline: permitDeadline
+    }
+  });
 }
 
-export type Chain = {
-  id: number
-  name: string
-  chainId: number
-  rpcUrls: string[]
-  nativeCurrency: {
-    name: string
-    symbol: string
-    decimals: number
+// 4. Sign the intent signature (ERC712) with fee payment authorization
+const intentAddress = intent.depositTransaction.toAddress;
+const intentSignature = await walletClient.signTypedData({
+  domain: {
+    name: 'TrailsIntentEntrypoint',
+    version: '1',
+    chainId: intent.originChainId,
+    verifyingContract: INTENT_ENTRYPOINT_ADDRESS
+  },
+  types: {
+    TrailsIntent: [
+      { name: 'user', type: 'address' },
+      { name: 'token', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'intentAddress', type: 'address' },
+      { name: 'deadline', type: 'uint256' },
+      { name: 'chainId', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'feeAmount', type: 'uint256' },
+      { name: 'feeCollector', type: 'address' }
+    ]
+  },
+  primaryType: 'TrailsIntent',
+  message: {
+    user: intent.ownerAddress,
+    token: tokenAddress,
+    amount: intent.depositTransaction.amount,
+    intentAddress: intentAddress,
+    deadline: BigInt(deadline),
+    chainId: BigInt(intent.originChainId),
+    nonce: userNonce,
+    feeAmount: BigInt(selectedGasFeeOption.amount),
+    feeCollector: selectedGasFeeOption.feeCollectorAddress
   }
-  blockExplorerUrls?: string[]
-  imageUrl?: string
-}
+});
+
+// 5. Execute with signatures
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    intentId,
+    depositSignature: {
+      intentSignature,                      // ERC712 intent signature
+      permitSignature,                      // ERC2612 permit signature (optional if already approved)
+      permitDeadline,                       // Permit expiration timestamp (optional)
+      permitAmount,                         // Permit amount - typically maxUint256 (optional)
+      selectedGasFeeOption,                 // Fee option with: amount, tokenAddress, feeCollectorAddress
+      userNonce: Number(userNonce),         // User's current nonce from Intent Entrypoint
+      deadline                              // Intent expiration timestamp
+    }
+  })
+});
+
+const { intentStatus } = await executeResponse.json();
+console.log('Execution started:', intentStatus);
 ```
 
+<Note>
+****
+- Tokens must support ERC2612 permit (have `permit()` function)
+- User nonce is read from the Intent Entrypoint contract, not the quote response
+- Intent signature domain uses `TrailsIntentEntrypoint` name and the entrypoint contract as verifying contract
 
-For detailed examples and advanced usage, see the [Examples](/examples) section.
+**Two Scenarios:**
+1. **First time / No approval**: Include `permitSignature`, `permitDeadline`, `permitAmount`
+2. **Already approved**: Omit permit fields entirely for a 1-click experience (like the example above - only `intentSignature`, `selectedGasFeeOption`, `userNonce`, `deadline`)
+</Note>
+
+**Example Request When Already Approved:**
+```json
+{
+  "intentId": "0xc467d1ebb4c6aab9efd3485d2627e51fb8ce1f662808eccf1222f364a1aa2d01",
+  "depositSignature": {
+    "intentSignature": "0xe3e5a87b8c1a9f882f6b251ea551dc1703ce617a0308418...",
+    "selectedGasFeeOption": {
+      "tokenAddress": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenSymbol": "USDC",
+      "tokenDecimals": 6,
+      "amount": "7845",
+      "amountUsd": 0.007843596906252802,
+      "feeCollectorAddress": "0x76008498f26789dd8b691bebe24c889a3dd1a2fc"
+    },
+    "userNonce": 1,
+    "deadline": 1762424131
+  }
+}
+```
+  </Tab>
+</Tabs>
+  </Step>
+
+  <Step title="Monitor Completion">
+    Wait for the transaction to complete using the streaming endpoint:
+
+```typescript
+async function waitForCompletion(intentId: string) {
+  while (true) {
+    const waitResponse = await fetch(
+      'https://trails-api.sequence.app/rpc/Trails/WaitIntentReceipt',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Key': 'YOUR_API_KEY'
+        },
+        body: JSON.stringify({ intentId })
+      }
+    );
+
+    const { intentReceipt, done } = await waitResponse.json();
+
+    console.log('Status:', intentReceipt.status);
+
+    // If done is true, the intent has reached a terminal state
+    if (done) {
+      if (intentReceipt.status === 'SUCCEEDED') {
+        console.log('✅ Transaction completed!');
+        console.log('Deposit TX:', intentReceipt.depositTransaction.txnHash);
+        console.log('Origin TX:', intentReceipt.originTransaction.txnHash);
+        console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
+        return intentReceipt;
+      } else {
+        throw new Error('Transaction failed: ' + intentReceipt.originTransaction.statusReason);
+      }
+    }
+    
+    // If not done, the endpoint will have waited internally before returning until completion
+  }
+}
+
+const receipt = await waitForCompletion(intentId);
+```
+  </Step>
+</Steps>
+
+Now you have an end to end API integration with Trails for seamless chain abstraction flows! You can continue this initial integration for specific use cases such as:
+
+- x402 Payments
+- AI Agents 
+- Server-side currency conversion & settlement
+- Fund, Swap, Earn, or Pay for any application
+- Pass in optional calldata to call any smart contract function
+
+## Next Steps
+
+Explore additional endpoints to enhance your integration:
+
+### Transaction Management
+
+- **[GetIntent](/api-reference/endpoints/get-intent)** - Retrieve full intent details including quote, fees, and status
+- **[GetIntentReceipt](/api-reference/endpoints/get-intent-receipt)** - Poll for transaction status and get receipt with transaction hashes
+- **[WaitIntentReceipt](/api-reference/endpoints/wait-intent-receipt)** - Stream intent updates with automatic polling until completion
+- **[GetIntentTransactionHistory](/api-reference/endpoints/get-intent-transaction-history)** - Get complete transaction history for a user's wallet address
+
+### Discovery & Search
+
+- **[SearchIntents](/api-reference/endpoints/search-intents)** - Search and filter intents by status, user, chain, or date range
+- **[GetTokenPrices](/api-reference/endpoints/get-token-prices)** - Get current USD prices for tokens to display values in your UI
+
+## Support
+
+Need help? Join our community:
+
+- **Telegram**: [https://t.me/build_with_trails](https://t.me/build_with_trails)
+- **Documentation**: Browse the endpoint references for detailed information and advanced use cases
+- **Demo**: Try the [interactive playground](https://demo.trails.build/widget)
