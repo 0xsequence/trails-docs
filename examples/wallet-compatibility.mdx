@@ -35,6 +35,7 @@ export function App() {
     <WagmiProvider config={config}>
       {/* Your app with TrailsWidget */}
       <TrailsWidget
+        apiKey="YOUR_API_KEY"
         mode="pay"
         toAddress="0x..." 
         toAmount="1000"
@@ -79,6 +80,7 @@ export function AppWithSequence() {
   return (
     <WagmiProvider config={config}>
       <TrailsWidget
+        apiKey="YOUR_API_KEY"
         mode="pay"
         toAddress="0x..."
         toAmount="1000"
@@ -127,6 +129,7 @@ export function AppWithPrivy() {
     >
       <WagmiProvider config={config}>
         <TrailsWidget
+          apiKey="YOUR_API_KEY"
           mode="pay"
           toAddress="0x..."
           toAmount="1000"
@@ -192,6 +195,7 @@ export function MultiWalletApp() {
       <WagmiProvider config={config}>
         {/* Users can connect with any of the configured wallets */}
         <TrailsWidget
+          apiKey="YOUR_API_KEY"
           mode="pay"
           toAddress="0x..."
           toAmount="1000"

@@ -18,6 +18,7 @@ import { TrailsWidget } from '0xtrails/widget'
 export const FixedQRPayment = () => {
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="receive"
       toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1" // Your address
       toAmount="25"
@@ -43,6 +44,7 @@ import { TrailsWidget } from '0xtrails/widget'
 export const FlexibleQRPayment = () => {
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="receive"
       toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
       toChainId={8453}

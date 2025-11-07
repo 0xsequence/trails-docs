@@ -33,6 +33,7 @@ import { TrailsWidget } from '0xtrails/widget'
 export const SimplePayment = () => {
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="pay"
       toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
       toAmount="1"
@@ -76,6 +77,7 @@ export const CrossChainNFTPurchase = () => {
 
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="pay"
       toAddress={NFT_CONTRACT}
       toAmount="0.00002"

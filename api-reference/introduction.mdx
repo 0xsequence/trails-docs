@@ -7,6 +7,10 @@ description: "Learn how to integrate the Trails API for cross-chain transactions
 
 The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions in a simplified interface with the Trails protocol. This guide walks you through the complete flow from requesting a quote to executing a transaction.
 
+<Note>
+**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) to request your API access key.
+</Note>
+
 ## Core Workflow
 
 Every interaction through Trails follows this four-step process:
@@ -27,7 +31,7 @@ const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGa
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'AQAAAAAAAF_JvPALhBthL7VGn6jV0YDqaFY' // example access key
+    'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({
     accountAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
@@ -50,6 +54,7 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({
     ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // sender address
@@ -79,7 +84,7 @@ console.log('Quote received:', {
 
 **Key Parameters:**
 
-- **ownerAddress**: User's sender address
+- **ownerAddress**: User's wallet address
 - **originChainId** & **destinationChainId**: Source and destination chains
 - **originTokenAddress** & **destinationTokenAddress**: Token contracts
 - **originTokenAmount**: Amount to swap (in token's smallest unit)
@@ -98,6 +103,7 @@ const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/C
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({ intent })
 });
@@ -140,20 +146,24 @@ const publicClient = createPublicClient({
 </Accordion>
 
 ```typescript
-// send tokens to the intent address
-const depositTx = await walletClient.sendTransaction({
-  to: intent.depositTransaction.toAddress,
+// Send tokens to the intent address (where Trails will execute from)
+const intentAddress = intent.depositTransaction.toAddress;
+const tokenAddress = intent.depositTransaction.tokenAddress;
+const amount = intent.depositTransaction.amount;
+
+const depositTxHash = await walletClient.sendTransaction({
+  to: intentAddress,
   value: 0n, // No native ETH sent (0 for ERC20 transfers, or ETH amount if sending native token)
   data: encodeERC20Transfer( // Use your favorite library such as viem to encode ERC20 transfer
-    intent.depositTransaction.tokenAddress,
-    intent.depositTransaction.toAddress,
-    intent.depositTransaction.amount
+    tokenAddress,
+    intentAddress,
+    amount
   )
 });
 
 // Wait for transaction confirmation using viem
 const receipt = await publicClient.waitForTransactionReceipt({
-  hash: depositTx
+  hash: depositTxHash
 });
 
 // Then execute the intent with the deposit transaction hash and intentId
@@ -161,10 +171,11 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({
     intentId,
-    depositTransactionHash: depositTx
+    depositTransactionHash: depositTxHash
   })
 });
 
@@ -195,10 +206,10 @@ const publicClient = createPublicClient({
 </Accordion>
 
 ```typescript
-import { erc20Abi } from 'viem';
+import { erc20Abi, parseAbi } from 'viem';
 
 // Select a gas fee option from the quote response
-const selectedGasFeeOption = gasFeeOptions[0]; // Choose based on user preference
+const selectedGasFeeOption = gasFeeOptions.feeOptions[0]; // Choose based on user preference
 
 // Constants for the flow
 const INTENT_ENTRYPOINT_ADDRESS = '0x9470d883bac170116d397db3da71b2e57d567583'; // Trails Intent Entrypoint (same on all chains)
@@ -207,20 +218,17 @@ const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
 // 1. Get user nonce from Intent Entrypoint contract
 const userNonce = await publicClient.readContract({
   address: INTENT_ENTRYPOINT_ADDRESS,
-  abi: [{
-    name: 'nonces',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'user', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256' }]
-  }],
+  abi: parseAbi([
+    'function nonces(address user) view returns (uint256)'
+  ]),
   functionName: 'nonces',
   args: [intent.ownerAddress]
 });
 
 // 2. Check if approval is needed for the deposit token
+const tokenAddress = intent.depositTransaction.tokenAddress;
 const currentAllowance = await publicClient.readContract({
-  address: intent.depositTransaction.tokenAddress,
+  address: tokenAddress,
   abi: erc20Abi,
   functionName: 'allowance',
   args: [intent.ownerAddress, INTENT_ENTRYPOINT_ADDRESS]
@@ -236,21 +244,19 @@ let permitAmount;
 if (needsApproval) {
   // Read token metadata for permit signature
   const tokenNonce = await publicClient.readContract({
-    address: intent.depositTransaction.tokenAddress,
-    abi: [{
-      name: 'nonces',
-      type: 'function',
-      stateMutability: 'view',
-      inputs: [{ name: 'owner', type: 'address' }],
-      outputs: [{ name: '', type: 'uint256' }]
-    }],
+    address: tokenAddress,
+    abi: parseAbi([
+      'function nonces(address owner) view returns (uint256)'
+    ]),
     functionName: 'nonces',
     args: [intent.ownerAddress]
   });
 
   const tokenName = await publicClient.readContract({
-    address: intent.depositTransaction.tokenAddress,
-    abi: [{ name: 'name', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'string' }] }],
+    address: tokenAddress,
+    abi: parseAbi([
+      'function name() view returns (string)'
+    ]),
     functionName: 'name'
   });
 
@@ -262,7 +268,7 @@ if (needsApproval) {
       name: tokenName,
       version: '1',
       chainId: intent.originChainId,
-      verifyingContract: intent.depositTransaction.tokenAddress
+      verifyingContract: tokenAddress
     },
     types: {
       Permit: [
@@ -285,6 +291,7 @@ if (needsApproval) {
 }
 
 // 4. Sign the intent signature (ERC712) with fee payment authorization
+const intentAddress = intent.depositTransaction.toAddress;
 const intentSignature = await walletClient.signTypedData({
   domain: {
     name: 'TrailsIntentEntrypoint',
@@ -308,13 +315,13 @@ const intentSignature = await walletClient.signTypedData({
   primaryType: 'TrailsIntent',
   message: {
     user: intent.ownerAddress,
-    token: intent.depositTransaction.tokenAddress,
+    token: tokenAddress,
     amount: intent.depositTransaction.amount,
-    intentAddress: intent.depositTransaction.toAddress,
+    intentAddress: intentAddress,
     deadline: BigInt(deadline),
     chainId: BigInt(intent.originChainId),
     nonce: userNonce,
-    feeAmount: BigInt(selectedGasFeeOption.amount),  // Note: 'amount' not 'feeAmount'
+    feeAmount: BigInt(selectedGasFeeOption.amount),
     feeCollector: selectedGasFeeOption.feeCollectorAddress
   }
 });
@@ -324,6 +331,7 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({
     intentId,
@@ -389,6 +397,7 @@ async function waitForCompletion(intentId: string) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Access-Key': 'YOUR_API_KEY'
         },
         body: JSON.stringify({ intentId })
       }
@@ -420,7 +429,13 @@ const receipt = await waitForCompletion(intentId);
   </Step>
 </Steps>
 
-Now you have an end to end API integration with Trails!
+Now you have an end to end API integration with Trails for seamless chain abstraction flows! You can continue this initial integration for specific use cases such as:
+
+- x402 Payments
+- AI Agents 
+- Server-side currency conversion & settlement
+- Fund, Swap, Earn, or Pay for any application
+- Pass in optional calldata to call any smart contract function
 
 ## Next Steps
 

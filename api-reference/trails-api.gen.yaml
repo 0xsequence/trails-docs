@@ -11,7 +11,7 @@ servers:
   - url: https://trails-api.sequence.app
     description: Trails API Server
 components:
-  securitySchemes: {'ApiKeyAuth': {'type': 'apiKey', 'in': 'header', 'description': 'Project access key for authenticating requests, get an access key at https://sequence.build', 'name': 'X-Access-Key'}}
+  securitySchemes: {'ApiKeyAuth': {'type': 'apiKey', 'in': 'header', 'description': 'apiKey for authenticating requests, get an access key at https://t.me/build_with_trails', 'name': 'X-Access-Key'}}
   schemas:
     ErrorWebrpcEndpoint:
       type: object

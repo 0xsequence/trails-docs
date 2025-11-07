@@ -15,8 +15,8 @@ import { TrailsWidget } from '0xtrails/widget'
 
 export const GaslessWithPaymaster = () => (
   <TrailsWidget
+    apiKey="YOUR_API_KEY"
     mode="pay"
-    gasless={true}
     paymasterUrls={[
       { chainId: 8453, url: 'https://paymaster.example.com' }
     ]}
@@ -37,8 +37,8 @@ import { TrailsWidget } from '0xtrails/widget'
 
 export const GaslessWithSequence = () => (
   <TrailsWidget
+    apiKey="YOUR_API_KEY"
     mode="pay"
-    gasless={true}
     toAddress="0x1234567890123456789012345678901234567890"
     toAmount="0.1"
     toChainId={8453}

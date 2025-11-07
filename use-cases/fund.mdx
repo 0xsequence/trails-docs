@@ -46,6 +46,7 @@ import { TrailsWidget } from '0xtrails/widget'
 export const BaseDeposit = () => {
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="fund"
       toAddress="0x..." // Recipient Address
       toChainId={8453} // Base
@@ -84,6 +85,7 @@ export const AaveDepositExample = () => {
 
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       toAddress={AAVE_POOL_CONTRACT}
       toAmount="100" // 100 USDC
       toChainId={8453} // Base
@@ -141,6 +143,7 @@ export const YearnDepositExample = () => {
 
   return (
     <TrailsWidget
+      apiKey="YOUR_API_KEY"
       mode="fund"
       toAddress={YEARN_VAULT_CONTRACT}
       toChainId={747474} // Katana
