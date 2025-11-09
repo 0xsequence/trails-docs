@@ -2423,6 +2423,13 @@
         "properties": {
           "intentId": {
             "type": "string"
+          },
+          "lastReceiptStates": {
+            "type": "array",
+            "description": "[]TransactionStatus",
+            "items": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
           }
         }
       },
@@ -2430,11 +2437,19 @@
         "type": "object",
         "required": [
           "intentReceipt",
+          "receiptStates",
           "done"
         ],
         "properties": {
           "intentReceipt": {
             "$ref": "#/components/schemas/IntentReceipt"
+          },
+          "receiptStates": {
+            "type": "array",
+            "description": "[]TransactionStatus",
+            "items": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
           },
           "done": {
             "type": "boolean"
