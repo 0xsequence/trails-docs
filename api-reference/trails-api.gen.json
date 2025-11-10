@@ -2495,6 +2495,9 @@
           },
           "byOriginIntentAddress": {
             "type": "string"
+          },
+          "byDestinationIntentAddress": {
+            "type": "string"
           }
         }
       },
