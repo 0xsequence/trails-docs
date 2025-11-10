@@ -1290,7 +1290,7 @@
         "type": "object",
         "properties": {
           "quoteProvider": {
-            "$ref": "#/components/schemas/QuoteProviderType"
+            "type": "string"
           },
           "slippageTolerance": {
             "type": "number"
