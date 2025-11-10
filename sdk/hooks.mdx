@@ -216,16 +216,26 @@ The `useQuote` hook provides real-time quotes for token swaps and cross-chain tr
 
 ```ts
 type UseQuoteProps = {
-  walletClient?: WalletClient
+  walletClient?: any 
   fromTokenAddress?: string | null
   fromChainId?: number | null
   toTokenAddress?: string | null
   toChainId?: number | null
+  toCalldata?: string | null
   swapAmount?: string | bigint
   toRecipient?: string | null
   tradeType?: TradeType | null
   slippageTolerance?: string | number | null
-  onStatusUpdate?: (txs: TransactionState[]) => void | null
+  onStatusUpdate?: ((transactionStates: TransactionState[]) => void) | null
+  quoteProvider?: string | null
+  checkoutOnHandlers?: Partial<CheckoutOnHandlers>
+  paymasterUrl?: string
+  selectedFeeToken?: {
+    tokenAddress: string
+    tokenSymbol?: string
+  } | null
+  abortSignal?: AbortSignal
+  apiKey?: string | null
 }
 
 type UseQuoteReturn = {
@@ -265,6 +275,32 @@ const SwapComponent = () => {
     onStatusUpdate: (states) => {
       console.log('Transaction states:', states)
     },
+    checkoutOnHandlers: {
+      triggerCheckoutStart: () => {
+        console.log("Checkout started")
+      },
+      triggerCheckoutSignatureConfirmed: () => {
+        console.log("Signature confirmed")
+      },
+      triggerCheckoutSignatureRequest: () => {
+        console.log("Signature request")
+      },
+      triggerCheckoutComplete: (
+        txStatus: "success" | "fail",
+        accountAddress?: string,
+      ) => {
+        console.log(`Checkout complete for account ${accountAddress}: ${txStatus}`)
+      },
+      triggerCheckoutStatusUpdate: (transactionStates: TransactionState[]) => {
+        console.log("Transaction states updated:", transactionStates)
+      },
+      triggerCheckoutQuote: (quote: any) => {
+        console.log("Quote received:", quote)
+      },
+      triggerCheckoutSignatureRejected: (error: any) => {
+        console.log("Signature rejected:", error)
+      },
+    }
   })
 
   // Quotes can become stale; refetch every ~30 seconds
