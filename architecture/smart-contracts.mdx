@@ -1,0 +1,47 @@
+---
+title: 'Trails Contracts'
+description: 'Trails protocol smart contracts and security audits'
+icon: 'file-contract'
+---
+
+## Overview
+
+Trails is built on a robust set of smart contracts deployed across multiple chains. All contracts are deployed via ERC-2470 Singleton Factory for deterministic addresses, ensuring consistency across the ecosystem.
+
+## Contracts Repository
+
+The complete source code for all Trails smart contracts is available on GitHub:
+
+<Card
+  title="Trails Contracts"
+  icon="github"
+  href="https://github.com/0xsequence/trails-contracts"
+>
+  View the full smart contract source code, documentation, and deployment scripts
+</Card>
+
+### Key Contracts
+
+The Trails protocol consists of several core smart contracts:
+
+- **TrailsRouter** - Main routing contract for intent execution and token operations
+- **TrailsIntentEntrypoint** - Entry point for intent deposits with permit support
+- **TrailsRouterShim** - Execution wrapper with sentinel tracking for success/failure states
+
+All contracts leverage Sequence v3 account abstraction for flexible, secure cross-chain operations.
+
+## Security Audits
+
+Security is a top priority for Trails. All smart contracts have undergone comprehensive third-party security audits:
+
+<Card
+  title="Security Audits"
+  icon="shield-check"
+  href="https://github.com/0xsequence/trails-contracts/tree/master/audits"
+>
+  Review detailed security audit reports from independent security firms
+</Card>
+
+
+For a technical overview, see the [Protocol Architecture](/architecture/protocol) documentation.
+
