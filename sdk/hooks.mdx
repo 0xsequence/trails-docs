@@ -6,6 +6,34 @@ sidebarTitle: "Hooks"
 
 All hooks and utilities are available from the `0xtrails` package unless stated otherwise.
 
+## TrailsProvider
+
+<Warning>
+**Required for Hooks**: The `TrailsProvider` must wrap your application when using any Trails hooks. This provider configures the necessary context for all hook functionality.
+</Warning>
+
+```tsx
+import { TrailsProvider } from '0xtrails'
+
+<TrailsProvider
+  config={{
+    trailsApiKey: "...",
+    trailsApiUrl: "...", // optional
+    sequenceIndexerUrl: "...", // optional
+    sequenceNodeGatewayUrl: "..." // optional
+  }}
+>
+  <App />
+</TrailsProvider>
+```
+
+### Configuration Options
+
+- **`trailsApiKey`** (required): Your Trails API key. Join the [Trails Telegram group](https://t.me/build_with_trails) to request access.
+- **`trailsApiUrl`** (optional): Custom API endpoint URL if using a self-hosted instance.
+- **`sequenceIndexerUrl`** (optional): Custom Sequence indexer URL.
+- **`sequenceNodeGatewayUrl`** (optional): Custom Sequence node gateway URL.
+
 ## Chains
 
 ```ts
