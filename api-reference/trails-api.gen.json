@@ -1281,6 +1281,9 @@
           "tradeType": {
             "$ref": "#/components/schemas/TradeType"
           },
+          "onlyNativeGasFee": {
+            "type": "boolean"
+          },
           "options": {
             "$ref": "#/components/schemas/QuoteIntentRequestOptions"
           }
