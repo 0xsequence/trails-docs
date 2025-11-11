@@ -11,20 +11,12 @@ export function openSearch() {
 <div className="relative w-full flex items-center justify-center" style={{ 
   height: '26rem', 
   overflow: 'hidden',
-  backgroundSize: '400% 400%',
-  animation: 'gradientFlow 20s ease infinite'
+  backgroundImage: 'url(/images/Trails%20-%20Pattern%20White.svg)',
+  backgroundRepeat: 'repeat',
+  backgroundSize: '400px 400px'
 }}>
-  <style jsx>{`
-    @keyframes gradientFlow {
-      0% { background-position: 0% 50%; }
-      25% { background-position: 100% 50%; }
-      50% { background-position: 100% 100%; }
-      75% { background-position: 0% 100%; }
-      100% { background-position: 0% 50%; }
-    }
-  `}</style>
   <div className="absolute inset-0" style={{
-    background: 'radial-gradient(circle at 20% 80%, rgba(244, 244, 245, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(228, 228, 231, 0.3) 0%, transparent 50%)',
+    background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5))',
   }}></div>
   <div className="relative z-10" style={{ position: 'absolute', textAlign: 'center', padding: '0 1rem' }}>
     <div
