@@ -1,0 +1,92 @@
+---
+title: "Trails API SDK"
+description: "TypeScript/JavaScript client for the Trails API"
+---
+
+## Installation
+
+Install the Trails API client SDK:
+
+<CodeGroup>
+```shell pnpm
+pnpm install @0xsequence/trails-api
+```
+```shell npm
+npm install @0xsequence/trails-api
+```
+```shell yarn
+yarn add @0xsequence/trails-api
+```
+```shell bun
+bun add @0xsequence/trails-api
+```
+</CodeGroup>
+
+## Quick Start
+
+Import and initialize the client with your API key:
+
+```typescript
+import { TrailsApi } from '@0xsequence/trails-api'
+
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+```
+
+<Note>
+**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) to request your API access key.
+</Note>
+
+## Usage Example
+
+The SDK provides fully typed methods for all Trails API endpoints:
+
+```typescript
+// Request a quote
+const quoteResponse = await trailsApi.quoteIntent({
+  ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+  originChainId: 42161, // Arbitrum One
+  originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
+  originTokenAmount: '100000000', // 100 USDC
+  destinationChainId: 8453, // Base
+  destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+  tradeType: 'EXACT_INPUT',
+  options: {
+    slippageTolerance: 0.5,
+    quoteProvider: 'RELAY'
+  }
+})
+
+// Commit the intent
+const { intentId } = await trailsApi.commitIntent({
+  intent: quoteResponse.intent
+})
+
+// Execute the intent
+await trailsApi.executeIntent({
+  intentId,
+  depositTransactionHash: txHash
+})
+
+// Monitor completion
+const receipt = await trailsApi.waitIntentReceipt({ intentId })
+```
+
+## TypeScript Support
+
+The SDK is written in TypeScript and includes complete type definitions for all methods, request parameters, and response objects. You'll get full autocomplete and type checking in your IDE.
+
+## API Reference
+
+All SDK methods correspond directly to the Trails API endpoints. For detailed information about request parameters, response formats, and advanced options, refer to the endpoint documentation:
+
+- [QuoteIntent](/api-reference/endpoints/quote-intent) - Get quotes for cross-chain transactions
+- [CommitIntent](/api-reference/endpoints/commit-intent) - Lock in rates
+- [ExecuteIntent](/api-reference/endpoints/execute-intent) - Execute transactions
+- [WaitIntentReceipt](/api-reference/endpoints/wait-intent-receipt) - Monitor completion
+- [GetIntent](/api-reference/endpoints/get-intent) - Retrieve intent details
+- [GetIntentReceipt](/api-reference/endpoints/get-intent-receipt) - Get transaction receipt
+- [SearchIntents](/api-reference/endpoints/search-intents) - Search and filter intents
+- [GetIntentTransactionHistory](/api-reference/endpoints/get-intent-transaction-history) - Get transaction history
+- [GetTokenPrices](/api-reference/endpoints/get-token-prices) - Get current token prices
+
