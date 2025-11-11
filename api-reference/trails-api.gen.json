@@ -1244,8 +1244,7 @@
           "originChainId",
           "originTokenAddress",
           "destinationChainId",
-          "destinationTokenAddress",
-          "destinationToAddress"
+          "destinationTokenAddress"
         ],
         "properties": {
           "ownerAddress": {
@@ -1270,7 +1269,7 @@
             "type": "string"
           },
           "destinationCallValue": {
-            "type": "string"
+            "type": "number"
           },
           "originTokenAmount": {
             "type": "number"
@@ -1312,13 +1311,14 @@
           "status",
           "quoteRequest",
           "ownerAddress",
+          "originChainId",
+          "destinationChainId",
           "originIntentAddress",
-          "destinationIntentAddress",
-          "destinationSalt",
+          "salt",
           "depositTransaction",
-          "calls",
-          "preconditions",
-          "metaTxns",
+          "originCalls",
+          "originPrecondition",
+          "originMetaTxn",
           "quote",
           "fees",
           "trailsVersion",
@@ -1343,38 +1343,41 @@
           "ownerAddress": {
             "type": "string"
           },
+          "originChainId": {
+            "type": "number"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
           "originIntentAddress": {
             "type": "string"
           },
           "destinationIntentAddress": {
             "type": "string"
           },
-          "destinationSalt": {
+          "salt": {
             "type": "number"
           },
           "depositTransaction": {
             "$ref": "#/components/schemas/DepositTransaction"
           },
-          "calls": {
-            "type": "array",
-            "description": "[]IntentCalls",
-            "items": {
-              "$ref": "#/components/schemas/IntentCalls"
-            }
+          "originCalls": {
+            "$ref": "#/components/schemas/IntentCalls"
           },
-          "preconditions": {
-            "type": "array",
-            "description": "[]TransactionPrecondition",
-            "items": {
-              "$ref": "#/components/schemas/TransactionPrecondition"
-            }
+          "destinationCalls": {
+            "$ref": "#/components/schemas/IntentCalls"
           },
-          "metaTxns": {
-            "type": "array",
-            "description": "[]MetaTxn",
-            "items": {
-              "$ref": "#/components/schemas/MetaTxn"
-            }
+          "originPrecondition": {
+            "$ref": "#/components/schemas/TransactionPrecondition"
+          },
+          "destinationPrecondition": {
+            "$ref": "#/components/schemas/TransactionPrecondition"
+          },
+          "originMetaTxn": {
+            "$ref": "#/components/schemas/MetaTxn"
+          },
+          "destinationMetaTxn": {
+            "$ref": "#/components/schemas/MetaTxn"
           },
           "quote": {
             "$ref": "#/components/schemas/IntentProviderQuote"
@@ -1709,7 +1712,6 @@
         "type": "object",
         "required": [
           "originGas",
-          "destinationGas",
           "provider",
           "feeTokenAddress",
           "feeTokenTotal",
