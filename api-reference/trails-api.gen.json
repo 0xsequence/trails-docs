@@ -2118,7 +2118,8 @@
           "tokenDecimals",
           "amount",
           "amountUsd",
-          "feeCollectorAddress"
+          "feeCollectorAddress",
+          "is2612"
         ],
         "properties": {
           "tokenAddress": {
@@ -2138,6 +2139,9 @@
           },
           "feeCollectorAddress": {
             "type": "string"
+          },
+          "is2612": {
+            "type": "boolean"
           }
         }
       },
