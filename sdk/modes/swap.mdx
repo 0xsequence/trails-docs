@@ -39,6 +39,7 @@ Minimal configuration - users select everything:
 import { TrailsWidget } from '0xtrails/widget'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="swap"
   onCheckoutComplete={({ sessionId }) => {
     console.log('Swap completed:', sessionId)
@@ -54,6 +55,7 @@ Pre-select chains and tokens:
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="swap"
   fromChainId={1} // Ethereum
   fromToken="USDC"
@@ -74,6 +76,7 @@ Specify routing preference:
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="swap"
   quoteProvider="cctp" // Use Circle's CCTP for USDC
   onCheckoutComplete={({ sessionId }) => {
@@ -231,6 +234,7 @@ useEffect(() => {
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="swap"
   onCheckoutStart={({ sessionId }) => {
     console.log('Swap started:', sessionId)

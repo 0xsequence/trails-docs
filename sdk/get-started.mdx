@@ -25,24 +25,22 @@ sidebarTitle: "Getting Started"
 ## Prerequisites
 
 - React 18+ (18.0 or newer)
-- wagmi
-- viem
 
 To install in your own application:
 <Steps>
   <Step title="Install the SDK and dependencies">
     <CodeGroup>
     ```shell pnpm
-    pnpm i 0xtrails wagmi viem
+    pnpm i 0xtrails
     ```
     ```shell npm
-    npm install --save 0xtrails wagmi viem
+    npm install --save 0xtrails
     ```
     ```shell yarn
-    yarn add 0xtrails wagmi viem
+    yarn add 0xtrails
     ```
     ```shell bun
-    bun add 0xtrails wagmi viem
+    bun add 0xtrails
     ```
     </CodeGroup>
   </Step>
@@ -59,13 +57,14 @@ To install in your own application:
     export const PaymentExample = () => {
       return (
         <TrailsWidget
+          apiKey="YOUR_API_KEY"
           mode="pay"
           toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1" // recipient address
-          toAmount="1" 
+          toAmount="1"
           toChainId={8453}
           toToken="USDC"
           onCheckoutComplete={(result) => {
-            console.log('Payment completed:', result)
+              console.log('Payment completed:', result)
           }}
         >
           <button className="pay-button">
@@ -85,6 +84,7 @@ To install in your own application:
     export const SwapExample = () => {
       return (
         <TrailsWidget
+          apiKey="YOUR_API_KEY"
           mode="swap"
           onCheckoutComplete={(result) => {
             console.log('Swap completed:', result)
@@ -105,8 +105,9 @@ To install in your own application:
     import { TrailsWidget } from '0xtrails/widget'
 
     export const FundExample = () => {
-      return (
+      return (  
         <TrailsWidget
+          apiKey="YOUR_API_KEY"
           mode="fund"
           toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
           toChainId={8453}
@@ -133,6 +134,7 @@ To install in your own application:
     export const AdvancedExample = () => {
       return (
         <TrailsWidget
+          apiKey="YOUR_API_KEY"
           mode="pay"
           toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
           toAmount="1"
@@ -183,6 +185,7 @@ You can load the Trails widget from various CDNs:
 <script src="https://cdn.jsdelivr.net/npm/0xtrails@latest/dist/umd/trails.min.js"></script>
 <script>
   TrailsWidget.render(document.getElementById('trails'), {
+    apiKey: 'YOUR_API_KEY',
     toAddress: '0x97c4A952b46bEcaD0663f76357d3776ba11566E1',
     toAmount: '0.1',
     toChainId: 8453,

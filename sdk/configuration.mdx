@@ -11,7 +11,7 @@ Trails is easy to get started, however we have deep configuration options to add
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectAccessKey` | `string` | No | Your project access key provided by Trails |
+| `apiKey` | `string` | No | Your project access key provided by Trails |
 | `mode` | `"pay" \| "fund" \| "earn" \| "swap" \| "receive"` | Yes | Widget operation mode |
 | `toAddress` | `string` | No | Destination address for payments |
 | `toAmount` | `string` | No | Exact amount for payments (used in pay mode) |
@@ -69,6 +69,7 @@ const calldata = encodeFunctionData({
 })
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..." // Contract address
   toAmount="0.1"
@@ -88,6 +89,7 @@ const calldata = encodeFunctionData({
 import { getIsUserRejectionError } from '0xtrails'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
   toAmount="1"
@@ -132,6 +134,7 @@ User rejection occurs when a user declines to sign a transaction in their wallet
 import { getIsUserRejectionError, TrailsWidget } from '0xtrails'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
   onCheckoutError={({ sessionId, error }) => {

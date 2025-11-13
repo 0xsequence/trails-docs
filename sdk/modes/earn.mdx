@@ -42,6 +42,7 @@ Use pre-integrated protocols (Aave, Morpho, etc.):
 import { TrailsWidget } from '0xtrails/widget'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="earn"
   onCheckoutComplete={({ sessionId }) => {
     console.log('Deposit completed:', sessionId)
@@ -83,6 +84,7 @@ const supplyCalldata = encodeFunctionData({
 })
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="earn"
   toAddress={AAVE_POOL}
   toAmount="1"
@@ -118,6 +120,7 @@ const stakeCalldata = encodeFunctionData({
 })
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="earn"
   toAddress={STAKING_CONTRACT}
   toChainId={1}
@@ -157,7 +160,8 @@ const depositCalldata = encodeFunctionData({
   ],
 })
 
-<TrailsWidget
+<TrailsWidget 
+  apiKey="YOUR_API_KEY"
   mode="earn"
   toAddress={VAULT_ADDRESS}
   toChainId={1}
@@ -260,6 +264,7 @@ const lidoSubmit = encodeFunctionData({
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="earn"
   toAddress="0x..."
   toChainId={1}
@@ -323,6 +328,7 @@ Any protocol with a deposit/stake function can be integrated:
 import { getIsUserRejectionError, InsufficientBalanceError } from '0xtrails'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="earn"
   toAddress="0x..."
   toCalldata={calldata}
