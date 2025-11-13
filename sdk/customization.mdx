@@ -142,6 +142,7 @@ The Trails widget is fully customizable through CSS variables, allowing you to m
 ### Monospace Theme
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="swap"
   customCss={`
     --trails-font-family: "Fira Code", "Monaco", "Consolas", monospace;
@@ -154,6 +155,7 @@ The Trails widget is fully customizable through CSS variables, allowing you to m
 ### Rounded Theme
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
   customCss={`
@@ -168,6 +170,7 @@ The Trails widget is fully customizable through CSS variables, allowing you to m
 ### Square Theme
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="fund"
   toAddress="0x..."
   customCss={`
@@ -185,6 +188,7 @@ The Trails widget is fully customizable through CSS variables, allowing you to m
 ### Custom Shadows
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="swap"
   customCss={`
     --trails-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
@@ -195,6 +199,7 @@ The Trails widget is fully customizable through CSS variables, allowing you to m
 ### Glassmorphism Effect
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
   customCss={`
@@ -244,6 +249,7 @@ customCss={{
 Consider how your customizations work with the `theme` prop:
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   theme="dark"
   customCss={`
     /* Your dark theme customizations */

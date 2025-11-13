@@ -40,6 +40,7 @@ Simple payment to a recipient address:
 import { TrailsWidget } from '0xtrails/widget'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
   toAmount="10"
@@ -74,6 +75,7 @@ const nftMintCalldata = encodeFunctionData({
 })
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0xNFT_CONTRACT_ADDRESS"
   toAmount="0.00002"
@@ -94,6 +96,7 @@ Specify a particular quote provider for routing:
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
   toAmount="100"
@@ -110,6 +113,7 @@ Handle payment lifecycle events:
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
   toAmount="10"

@@ -60,7 +60,7 @@ import { sequenceWallet } from '@0xsequence/wagmi-connector'
 const sequenceConnector = sequenceWallet({
   connectOptions: {
     app: "Your App Name",
-    projectAccessKey: "your-sequence-project-key",
+    apiKey: "your-sequence-project-key",
   },
   defaultNetwork: 1, // Mainnet
   walletAppURL: "https://sequence.app",
@@ -158,7 +158,7 @@ import { PrivyProvider } from '@privy-io/react-auth'
 const sequenceConnector = sequenceWallet({
   connectOptions: {
     app: "Your App",
-    projectAccessKey: "your-sequence-key",
+    apiKey: "your-sequence-key",
   },
   defaultNetwork: 1,
 })

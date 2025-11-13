@@ -40,6 +40,7 @@ Simple deposit to a chain:
 import { TrailsWidget } from '0xtrails/widget'
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="fund"
   toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
   toChainId={8453} // Base
@@ -58,6 +59,7 @@ Pre-populate a specific amount:
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="fund"
   toAddress="0x..."
   toAmount="100" // Pre-filled, user can change
@@ -97,6 +99,7 @@ const aaveDepositCalldata = encodeFunctionData({
 })
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="fund"
   toAddress="0xa0d9C1E9E48Ca30c8d8C3B5D69FF5dc1f6DFfC24" // Aave Pool on Base
   toAmount="100"
@@ -134,6 +137,7 @@ const vaultDepositCalldata = encodeFunctionData({
 })
 
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="fund"
   toAddress="0x80c34BD3A3569E126e7055831036aa7b212cB159" // Yearn Vault
   toChainId={747474} // Katana
@@ -164,6 +168,7 @@ When the deposit amount is part of the calldata and user-selected, use `TRAILS_C
 
 ```tsx
 <TrailsWidget
+  apiKey="YOUR_API_KEY"
   mode="fund"
   toAddress="0x..."
   toChainId={8453}
