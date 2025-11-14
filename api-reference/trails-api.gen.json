@@ -2564,10 +2564,10 @@
             "type": "string"
           },
           "before": {
-            "type": "object"
+            "type": "number"
           },
           "after": {
-            "type": "object"
+            "type": "number"
           },
           "sort": {
             "type": "array",
