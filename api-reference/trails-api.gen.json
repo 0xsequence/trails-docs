@@ -1332,6 +1332,36 @@
           "CCTPV2_MESSAGE"
         ]
       },
+      "IntentStatus": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "QUOTED",
+          "COMMITTED",
+          "EXECUTING",
+          "FAILED",
+          "SUCCEEDED"
+        ]
+      },
+      "TransactionType": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "UNKNOWN",
+          "DEPOSIT",
+          "ORIGIN",
+          "DESTINATION",
+          "ROUTE"
+        ]
+      },
+      "TransactionContext": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "NONE",
+          "CCTPV2_MESSAGE"
+        ]
+      },
       "TransactionStatus": {
         "type": "string",
         "description": "Represented as uint8 on the server side",
