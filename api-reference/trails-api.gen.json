@@ -1154,7 +1154,7 @@
           }
         }
       },
-      "ErrorIntentsSameChainNative": {
+      "ErrorIntentsSkipped": {
         "type": "object",
         "required": [
           "error",
@@ -1165,7 +1165,7 @@
         "properties": {
           "error": {
             "type": "string",
-            "example": "IntentsSameChainNative"
+            "example": "IntentsSkipped"
           },
           "code": {
             "type": "number",
@@ -1173,7 +1173,7 @@
           },
           "msg": {
             "type": "string",
-            "example": "Intents skipped as client is attempting same-chain native transaction"
+            "example": "Intents skipped as client is attempting a transaction that does not require intents"
           },
           "cause": {
             "type": "string"
