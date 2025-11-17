@@ -1231,6 +1231,36 @@
           "LIFI"
         ]
       },
+      "IntentStatus": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "QUOTED",
+          "COMMITTED",
+          "EXECUTING",
+          "FAILED",
+          "SUCCEEDED"
+        ]
+      },
+      "TransactionType": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "UNKNOWN",
+          "DEPOSIT",
+          "ORIGIN",
+          "DESTINATION",
+          "ROUTE"
+        ]
+      },
+      "TransactionContext": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "NONE",
+          "CCTPV2_MESSAGE"
+        ]
+      },
       "TransactionStatus": {
         "type": "string",
         "description": "Represented as uint8 on the server side",
@@ -1245,17 +1275,6 @@
           "SUCCEEDED",
           "FAILED",
           "ABORTED"
-        ]
-      },
-      "IntentStatus": {
-        "type": "string",
-        "description": "Represented as uint8 on the server side",
-        "enum": [
-          "QUOTED",
-          "COMMITTED",
-          "EXECUTING",
-          "FAILED",
-          "SUCCEEDED"
         ]
       },
       "ChainGasUsageStatus": {
@@ -1628,6 +1647,8 @@
           "id",
           "intentId",
           "chainId",
+          "type",
+          "context",
           "fromAddress",
           "toAddress",
           "tokenAddress",
@@ -1643,6 +1664,12 @@
           },
           "chainId": {
             "type": "number"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "context": {
+            "$ref": "#/components/schemas/TransactionContext"
           },
           "fromAddress": {
             "type": "string"
