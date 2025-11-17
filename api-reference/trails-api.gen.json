@@ -1154,6 +1154,36 @@
           }
         }
       },
+      "ErrorIntentsSameChainNative": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "IntentsSameChainNative"
+          },
+          "code": {
+            "type": "number",
+            "example": 7000
+          },
+          "msg": {
+            "type": "string",
+            "example": "Intents skipped as client is attempting same-chain native transaction"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 400
+          }
+        }
+      },
       "ErrorIntentsDisabled": {
         "type": "object",
         "required": [
