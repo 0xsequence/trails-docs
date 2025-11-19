@@ -8,7 +8,7 @@ info:
   title: 'Trails API'
   version: ''
 components:
-  securitySchemes: {'ApiKeyAuth': {'type': 'apiKey', 'in': 'header', 'description': 'Project access key for authenticating requests, get an access key at https://sequence.build', 'name': 'X-Access-Key'}}
+  securitySchemes: {'ApiKeyAuth': {'type': 'apiKey', 'in': 'header', 'description': 'API Key for authenticating requests, get an access key at https://trails.build and request early access', 'name': 'X-Access-Key'}}
   schemas:
     ErrorWebrpcEndpoint:
       type: object
@@ -1838,3 +1838,249 @@ components:
         order:
           $ref: '#/components/schemas/SortOrder'
 paths:
+  /rpc/Trails/QuoteIntent:
+    post:
+      summary: Quote Intent
+      description: Request a quote for a cross-chain intent transaction
+      operationId: quoteIntent
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteIntentRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteIntentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/CommitIntent:
+    post:
+      summary: Commit Intent
+      description: Commit an intent to the Trails system
+      operationId: commitIntent
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitIntentRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommitIntentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/ExecuteIntent:
+    post:
+      summary: Execute Intent
+      description: Execute a committed intent transaction
+      operationId: executeIntent
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteIntentRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteIntentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/GetIntentReceipt:
+    post:
+      summary: Get Intent Receipt
+      description: Retrieve the receipt for an executed intent
+      operationId: getIntentReceipt
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetIntentReceiptRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetIntentReceiptResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/WaitIntentReceipt:
+    post:
+      summary: Wait Intent Receipt
+      description: Wait for an intent receipt to be ready
+      operationId: waitIntentReceipt
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitIntentReceiptRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitIntentReceiptResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/GetIntent:
+    post:
+      summary: Get Intent
+      description: Retrieve a specific intent by ID
+      operationId: getIntent
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetIntentRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetIntentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/SearchIntents:
+    post:
+      summary: Search Intents
+      description: Search for intents by various criteria
+      operationId: searchIntents
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchIntentsRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchIntentsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/GetIntentTransactionHistory:
+    post:
+      summary: Get Intent Transaction History
+      description: Retrieve transaction history for an intent
+      operationId: getIntentTransactionHistory
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetIntentTransactionHistoryRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetIntentTransactionHistoryResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+  /rpc/Trails/GetTokenPrices:
+    post:
+      summary: Get Token Prices
+      description: Retrieve current USD prices for tokens
+      operationId: getTokenPrices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tokens
+              properties:
+                tokens:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Token'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - tokenPrices
+                properties:
+                  tokenPrices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TokenPrice'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWebrpcBadRequest'
