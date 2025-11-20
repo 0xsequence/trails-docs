@@ -9,7 +9,7 @@
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "description": "Project access key for authenticating requests, get an access key at https://sequence.build",
+        "description": "API Key for authenticating requests, get an access key at https://trails.build and request early access",
         "name": "X-Access-Key"
       }
     },
