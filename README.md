@@ -2,6 +2,12 @@
 # Trails Documentation
 Welcome to the Trails docs! 
 
+## What is Trails?
+
+The onchain transaction rails for every token from every chain with every wallet with one, aggregated balance - powered by intents. Trails automatically detects and orchestrates the necessary steps in order to execute any cross-chain transaction with any token by swapping, bridging, and calling any arbitrary function. Integrate in seconds with only a few lines of code.
+
+![1-click cross-chain orchestration](images/trailsreadme.jpg)
+
 ## Development
 To install the repo, use the following command:
 
