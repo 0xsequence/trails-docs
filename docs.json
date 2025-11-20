@@ -20,6 +20,11 @@
           "anchor": "Demo Playground",
           "icon": "square-terminal",
           "href": "https://demo.trails.build/widget"
+        },
+        {
+          "anchor": "Trails Status",
+          "icon": "heart-pulse",
+          "href": "https://status.trails.build"
         }
       ]
     },
