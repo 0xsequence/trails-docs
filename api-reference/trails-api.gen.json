@@ -15,7 +15,7 @@
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "description": "API Key for authenticating requests, get an access key at https://trails.build and request early access",
+        "description": "Project access key for authenticating requests, get an access key at https://sequence.build",
         "name": "X-Access-Key"
       }
     },
@@ -3121,6 +3121,200 @@
           },
           "nextPage": {
             "$ref": "#/components/schemas/Page"
+          }
+        }
+      },
+      "GetTokenPricesRequest": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]Token",
+            "items": {
+              "$ref": "#/components/schemas/Token"
+            }
+          }
+        }
+      },
+      "GetTokenPricesResponse": {
+        "type": "object",
+        "required": [
+          "tokenPrices"
+        ],
+        "properties": {
+          "tokenPrices": {
+            "type": "array",
+            "description": "[]TokenPrice",
+            "items": {
+              "$ref": "#/components/schemas/TokenPrice"
+            }
+          }
+        }
+      },
+      "GetChainsRequest": {
+        "type": "object",
+        "properties": {
+          "routeProvider": {
+            "type": "string"
+          }
+        }
+      },
+      "GetChainsResponse": {
+        "type": "object",
+        "required": [
+          "chains"
+        ],
+        "properties": {
+          "chains": {
+            "type": "array",
+            "description": "[]ChainInfo",
+            "items": {
+              "$ref": "#/components/schemas/ChainInfo"
+            }
+          }
+        }
+      },
+      "GetExactOutputRoutesRequest": {
+        "type": "object",
+        "required": [
+          "destinationChainId",
+          "destinationTokenAddress"
+        ],
+        "properties": {
+          "destinationChainId": {
+            "type": "number"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "GetExactOutputRoutesResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "GetExactInputRoutesRequest": {
+        "type": "object",
+        "required": [
+          "originChainId",
+          "originTokenAddress"
+        ],
+        "properties": {
+          "originChainId": {
+            "type": "number"
+          },
+          "originTokenAddress": {
+            "type": "string"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "GetExactInputRoutesResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "GetPopularTokensRequest": {
+        "type": "object",
+        "properties": {
+          "routeProvider": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "chainIds": {
+            "type": "array",
+            "description": "[]uint64",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "GetPopularTokensResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "SearchTokensRequest": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "routeProvider": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "chainIds": {
+            "type": "array",
+            "description": "[]uint64",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "SearchTokensResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
           }
         }
       },
