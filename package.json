@@ -14,7 +14,7 @@
   "main": "index.js",
   "name": "Trails",
   "scripts": {
-    "convert-openapi": "node scripts/convert-yaml-to-json.js",
+    "convert-openapi": "node .github/scripts/convert-yaml-to-json.js",
     "dev": "mintlify dev --no-open",
     "test": "mintlify broken-links"
   },

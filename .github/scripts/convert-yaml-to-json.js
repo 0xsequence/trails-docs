@@ -4,9 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 
-// Paths
-const yamlPath = path.join(__dirname, '../api-reference/trails-api.gen.yaml');
-const jsonPath = path.join(__dirname, '../api-reference/trails-api.gen.json');
+// Paths (updated for .github/scripts location)
+const yamlPath = path.join(__dirname, '../../api-reference/trails-api.gen.yaml');
+const jsonPath = path.join(__dirname, '../../api-reference/trails-api.gen.json');
 
 try {
   // Read YAML file
@@ -23,4 +23,5 @@ try {
   console.error('❌ Error converting YAML to JSON:', error.message);
   process.exit(1);
 }
+
 
