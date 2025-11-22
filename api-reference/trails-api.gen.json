@@ -2918,6 +2918,12 @@
           "destinationTokenAddress": {
             "type": "string"
           },
+          "originChainId": {
+            "type": "number"
+          },
+          "originTokenAddress": {
+            "type": "string"
+          },
           "ownerAddress": {
             "type": "string"
           }
