@@ -9,7 +9,7 @@
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "description": "API Key for authenticating requests, get an access key at https://trails.build and request early access",
+        "description": "Project access key for authenticating requests, get an access key at https://sequence.build",
         "name": "X-Access-Key"
       }
     },
@@ -1154,6 +1154,36 @@
           }
         }
       },
+      "ErrorIntentsSkipped": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "IntentsSkipped"
+          },
+          "code": {
+            "type": "number",
+            "example": 7000
+          },
+          "msg": {
+            "type": "string",
+            "example": "Intents skipped as client is attempting a transaction that does not require intents"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 400
+          }
+        }
+      },
       "ErrorIntentsDisabled": {
         "type": "object",
         "required": [
@@ -1201,6 +1231,36 @@
           "LIFI"
         ]
       },
+      "IntentStatus": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "QUOTED",
+          "COMMITTED",
+          "EXECUTING",
+          "FAILED",
+          "SUCCEEDED"
+        ]
+      },
+      "TransactionType": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "UNKNOWN",
+          "DEPOSIT",
+          "ORIGIN",
+          "DESTINATION",
+          "ROUTE"
+        ]
+      },
+      "TransactionContext": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "NONE",
+          "CCTPV2_MESSAGE"
+        ]
+      },
       "TransactionStatus": {
         "type": "string",
         "description": "Represented as uint8 on the server side",
@@ -1215,17 +1275,6 @@
           "SUCCEEDED",
           "FAILED",
           "ABORTED"
-        ]
-      },
-      "IntentStatus": {
-        "type": "string",
-        "description": "Represented as uint8 on the server side",
-        "enum": [
-          "QUOTED",
-          "COMMITTED",
-          "EXECUTING",
-          "FAILED",
-          "SUCCEEDED"
         ]
       },
       "ChainGasUsageStatus": {
@@ -1244,8 +1293,7 @@
           "originChainId",
           "originTokenAddress",
           "destinationChainId",
-          "destinationTokenAddress",
-          "destinationToAddress"
+          "destinationTokenAddress"
         ],
         "properties": {
           "ownerAddress": {
@@ -1270,7 +1318,7 @@
             "type": "string"
           },
           "destinationCallValue": {
-            "type": "string"
+            "type": "number"
           },
           "originTokenAmount": {
             "type": "number"
@@ -1281,6 +1329,9 @@
           "tradeType": {
             "$ref": "#/components/schemas/TradeType"
           },
+          "onlyNativeGasFee": {
+            "type": "boolean"
+          },
           "options": {
             "$ref": "#/components/schemas/QuoteIntentRequestOptions"
           }
@@ -1290,7 +1341,7 @@
         "type": "object",
         "properties": {
           "quoteProvider": {
-            "$ref": "#/components/schemas/QuoteProviderType"
+            "type": "string"
           },
           "slippageTolerance": {
             "type": "number"
@@ -1309,13 +1360,14 @@
           "status",
           "quoteRequest",
           "ownerAddress",
+          "originChainId",
+          "destinationChainId",
           "originIntentAddress",
-          "destinationIntentAddress",
-          "destinationSalt",
+          "salt",
           "depositTransaction",
-          "calls",
-          "preconditions",
-          "metaTxns",
+          "originCalls",
+          "originPrecondition",
+          "originMetaTxn",
           "quote",
           "fees",
           "trailsVersion",
@@ -1340,38 +1392,41 @@
           "ownerAddress": {
             "type": "string"
           },
+          "originChainId": {
+            "type": "number"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
           "originIntentAddress": {
             "type": "string"
           },
           "destinationIntentAddress": {
             "type": "string"
           },
-          "destinationSalt": {
+          "salt": {
             "type": "number"
           },
           "depositTransaction": {
             "$ref": "#/components/schemas/DepositTransaction"
           },
-          "calls": {
-            "type": "array",
-            "description": "[]IntentCalls",
-            "items": {
-              "$ref": "#/components/schemas/IntentCalls"
-            }
+          "originCalls": {
+            "$ref": "#/components/schemas/IntentCalls"
           },
-          "preconditions": {
-            "type": "array",
-            "description": "[]TransactionPrecondition",
-            "items": {
-              "$ref": "#/components/schemas/TransactionPrecondition"
-            }
+          "destinationCalls": {
+            "$ref": "#/components/schemas/IntentCalls"
           },
-          "metaTxns": {
-            "type": "array",
-            "description": "[]MetaTxn",
-            "items": {
-              "$ref": "#/components/schemas/MetaTxn"
-            }
+          "originPrecondition": {
+            "$ref": "#/components/schemas/TransactionPrecondition"
+          },
+          "destinationPrecondition": {
+            "$ref": "#/components/schemas/TransactionPrecondition"
+          },
+          "originMetaTxn": {
+            "$ref": "#/components/schemas/MetaTxn"
+          },
+          "destinationMetaTxn": {
+            "$ref": "#/components/schemas/MetaTxn"
           },
           "quote": {
             "$ref": "#/components/schemas/IntentProviderQuote"
@@ -1592,6 +1647,8 @@
           "id",
           "intentId",
           "chainId",
+          "type",
+          "context",
           "fromAddress",
           "toAddress",
           "tokenAddress",
@@ -1607,6 +1664,12 @@
           },
           "chainId": {
             "type": "number"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "context": {
+            "$ref": "#/components/schemas/TransactionContext"
           },
           "fromAddress": {
             "type": "string"
@@ -1706,7 +1769,6 @@
         "type": "object",
         "required": [
           "originGas",
-          "destinationGas",
           "provider",
           "feeTokenAddress",
           "feeTokenTotal",
@@ -2113,7 +2175,8 @@
           "tokenDecimals",
           "amount",
           "amountUsd",
-          "feeCollectorAddress"
+          "feeCollectorAddress",
+          "is2612"
         ],
         "properties": {
           "tokenAddress": {
@@ -2133,6 +2196,9 @@
           },
           "feeCollectorAddress": {
             "type": "string"
+          },
+          "is2612": {
+            "type": "boolean"
           }
         }
       },
@@ -2224,6 +2290,81 @@
             "type": "string"
           },
           "sequenceWalletUtilsAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "ChainInfo": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "tokenName",
+          "tokenSymbol",
+          "tokenDecimals",
+          "isTestnet",
+          "supportsBridging"
+        ],
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tokenName": {
+            "type": "string"
+          },
+          "tokenSymbol": {
+            "type": "string"
+          },
+          "tokenDecimals": {
+            "type": "number"
+          },
+          "isTestnet": {
+            "type": "boolean"
+          },
+          "supportsBridging": {
+            "type": "boolean"
+          },
+          "logoUri": {
+            "type": "string"
+          },
+          "blockExplorerUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "TokenInfo": {
+        "type": "object",
+        "required": [
+          "chainId",
+          "address",
+          "name",
+          "symbol",
+          "decimals",
+          "supportsBridging"
+        ],
+        "properties": {
+          "chainId": {
+            "type": "number"
+          },
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "number"
+          },
+          "supportsBridging": {
+            "type": "boolean"
+          },
+          "logoUri": {
             "type": "string"
           }
         }
@@ -2423,6 +2564,13 @@
         "properties": {
           "intentId": {
             "type": "string"
+          },
+          "lastReceiptStates": {
+            "type": "array",
+            "description": "[]TransactionStatus",
+            "items": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
           }
         }
       },
@@ -2430,11 +2578,19 @@
         "type": "object",
         "required": [
           "intentReceipt",
+          "receiptStates",
           "done"
         ],
         "properties": {
           "intentReceipt": {
             "$ref": "#/components/schemas/IntentReceipt"
+          },
+          "receiptStates": {
+            "type": "array",
+            "description": "[]TransactionStatus",
+            "items": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
           },
           "done": {
             "type": "boolean"
@@ -2479,6 +2635,9 @@
             "type": "string"
           },
           "byOriginIntentAddress": {
+            "type": "string"
+          },
+          "byDestinationIntentAddress": {
             "type": "string"
           }
         }
@@ -2530,6 +2689,200 @@
           }
         }
       },
+      "GetTokenPricesRequest": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]Token",
+            "items": {
+              "$ref": "#/components/schemas/Token"
+            }
+          }
+        }
+      },
+      "GetTokenPricesResponse": {
+        "type": "object",
+        "required": [
+          "tokenPrices"
+        ],
+        "properties": {
+          "tokenPrices": {
+            "type": "array",
+            "description": "[]TokenPrice",
+            "items": {
+              "$ref": "#/components/schemas/TokenPrice"
+            }
+          }
+        }
+      },
+      "GetChainsRequest": {
+        "type": "object",
+        "properties": {
+          "routeProvider": {
+            "type": "string"
+          }
+        }
+      },
+      "GetChainsResponse": {
+        "type": "object",
+        "required": [
+          "chains"
+        ],
+        "properties": {
+          "chains": {
+            "type": "array",
+            "description": "[]ChainInfo",
+            "items": {
+              "$ref": "#/components/schemas/ChainInfo"
+            }
+          }
+        }
+      },
+      "GetExactOutputRoutesRequest": {
+        "type": "object",
+        "required": [
+          "destinationChainId",
+          "destinationTokenAddress"
+        ],
+        "properties": {
+          "destinationChainId": {
+            "type": "number"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "GetExactOutputRoutesResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "GetExactInputRoutesRequest": {
+        "type": "object",
+        "required": [
+          "originChainId",
+          "originTokenAddress"
+        ],
+        "properties": {
+          "originChainId": {
+            "type": "number"
+          },
+          "originTokenAddress": {
+            "type": "string"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "GetExactInputRoutesResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "GetPopularTokensRequest": {
+        "type": "object",
+        "properties": {
+          "routeProvider": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "chainIds": {
+            "type": "array",
+            "description": "[]uint64",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "GetPopularTokensResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "SearchTokensRequest": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "routeProvider": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "chainIds": {
+            "type": "array",
+            "description": "[]uint64",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "SearchTokensResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
       "Page": {
         "type": "object",
         "properties": {
@@ -2537,10 +2890,10 @@
             "type": "string"
           },
           "before": {
-            "type": "object"
+            "type": "number"
           },
           "after": {
-            "type": "object"
+            "type": "number"
           },
           "sort": {
             "type": "array",
@@ -2574,419 +2927,5 @@
       }
     }
   },
-  "paths": {
-    "/rpc/Trails/QuoteIntent": {
-      "post": {
-        "summary": "Quote Intent",
-        "description": "Request a quote for a cross-chain intent transaction",
-        "operationId": "quoteIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QuoteIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QuoteIntentResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/CommitIntent": {
-      "post": {
-        "summary": "Commit Intent",
-        "description": "Commit an intent to the Trails system",
-        "operationId": "commitIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CommitIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommitIntentResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/ExecuteIntent": {
-      "post": {
-        "summary": "Execute Intent",
-        "description": "Execute a committed intent transaction",
-        "operationId": "executeIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExecuteIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExecuteIntentResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetIntentReceipt": {
-      "post": {
-        "summary": "Get Intent Receipt",
-        "description": "Retrieve the receipt for an executed intent",
-        "operationId": "getIntentReceipt",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIntentReceiptRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetIntentReceiptResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/WaitIntentReceipt": {
-      "post": {
-        "summary": "Wait Intent Receipt",
-        "description": "Wait for an intent receipt to be ready",
-        "operationId": "waitIntentReceipt",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WaitIntentReceiptRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WaitIntentReceiptResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetIntent": {
-      "post": {
-        "summary": "Get Intent",
-        "description": "Retrieve a specific intent by ID",
-        "operationId": "getIntent",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetIntentResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/SearchIntents": {
-      "post": {
-        "summary": "Search Intents",
-        "description": "Search for intents by various criteria",
-        "operationId": "searchIntents",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SearchIntentsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchIntentsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetIntentTransactionHistory": {
-      "post": {
-        "summary": "Get Intent Transaction History",
-        "description": "Retrieve transaction history for an intent",
-        "operationId": "getIntentTransactionHistory",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIntentTransactionHistoryRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetIntentTransactionHistoryResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetTokenPrices": {
-      "post": {
-        "summary": "Get Token Prices",
-        "description": "Retrieve current USD prices for tokens",
-        "operationId": "getTokenPrices",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "tokens"
-                ],
-                "properties": {
-                  "tokens": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/Token"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "tokenPrices"
-                  ],
-                  "properties": {
-                    "tokenPrices": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/TokenPrice"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  "paths": null
 }
