@@ -43,6 +43,18 @@ import { getSupportedChains, useSupportedChains } from '0xtrails'
 - `getSupportedChains()`: `Promise<Chain[]>`
 - `useSupportedChains()`: `{ supportedChains: Chain[], isLoadingChains: boolean }`
 
+### Utility Functions
+
+```ts
+import { getChainInfo, getAllChains } from '0xtrails'
+
+// Get info for specific chain
+const chain = getChainInfo(8453) // Base chain info
+
+// Get all chains (including unsupported)
+const allChains = getAllChains()
+```
+
 ### Chain Type
 
 ```ts
@@ -61,19 +73,6 @@ type Chain = {
 }
 ```
 
-### Utility Functions
-
-```ts
-import { getChainInfo, getAllChains } from '0xtrails'
-
-// Get info for specific chain
-const chain = getChainInfo(8453) // Base chain info
-
-// Get all chains (including unsupported)
-const allChains = getAllChains()
-```
-
-
 ## Tokens
 
 ```ts
@@ -83,21 +82,6 @@ import { getSupportedTokens, useSupportedTokens, useTokenList } from '0xtrails'
 - `useTokenList()`: `{ tokens: SupportedToken[] | undefined, isLoadingTokens: boolean }`
 - `useSupportedTokens({ chainId?: number })`: `{ supportedTokens: SupportedToken[], isLoadingTokens: boolean }`
 - `getSupportedTokens()`: `Promise<SupportedToken[]>`
-
-### SupportedToken Type
-
-```ts
-type SupportedToken = {
-  id: string
-  symbol: string
-  name: string
-  contractAddress: string
-  decimals: number
-  chainId: number
-  chainName: string
-  imageUrl: string
-}
-```
 
 ### Additional Helpers
 
@@ -115,6 +99,21 @@ const tokenAddress = useTokenAddress({
   chainId: 8453,
   tokenSymbol: 'USDC'
 })
+```
+
+### SupportedToken Type
+
+```ts
+type SupportedToken = {
+  id: string
+  symbol: string
+  name: string
+  contractAddress: string
+  decimals: number
+  chainId: number
+  chainName: string
+  imageUrl: string
+}
 ```
 
 ## Balances
@@ -138,53 +137,23 @@ Balance hooks and utilities:
 - `useHasSufficientBalanceUsd(address, targetUsd)`: Check if account has sufficient USD balance
 - `useHasSufficientBalanceToken(address, tokenAddress, tokenAmount, chainId)`: Check token balance
 
-### TokenBalance Type
-
-```ts
-type TokenBalance = {
-  contractAddress: string
-  accountAddress: string
-  tokenID: string
-  balance: string
-  chainId: number
-  contractType: string
-  blockHash: string
-  blockNumber: number
-  updateID: number
-  contractInfo: {
-    chainId: number
-    contractAddress: string
-    contractType: string
-    decimals: number
-    logoURI: string
-    name: string
-    symbol: string
-    extensions?: {
-      link?: string
-      description?: string
-      ogImage?: string
-    }
-  }
-}
-```
-
 ### Example Usage
 
 ```tsx
 import { useTokenBalances, useAccountTotalBalanceUsd } from '0xtrails'
 
 const WalletBalance = ({ address }: { address: string }) => {
-  const { tokenBalances, isLoading } = useTokenBalances(address)
+  const { tokenBalancesData, isLoadingBalances } = useTokenBalances(address)
   const { totalBalanceUsd } = useAccountTotalBalanceUsd(address)
 
-  if (isLoading) return <div>Loading balances...</div>
+  if (isLoadingBalances) return <div>Loading balances...</div>
 
   return (
     <div>
       <h3>Total Balance: ${totalBalanceUsd}</h3>
-      {tokenBalances?.map((token) => (
+      {tokenBalancesData?.map((token: TokenBalance) => (
         <div key={`${token.chainId}-${token.contractAddress}`}>
-          {token.contractInfo.symbol}: {token.balance}
+          {token.contractInfo?.symbol}: {token.balance}
         </div>
       ))}
     </div>
@@ -192,11 +161,29 @@ const WalletBalance = ({ address }: { address: string }) => {
 }
 ```
 
+### TokenBalance Type
+
+```ts
+type TokenBalance = {
+  contractType: ContractType
+  contractAddress: string
+  accountAddress: string
+  tokenID?: string
+  balance: string
+  blockHash: string
+  blockNumber: number
+  chainId: number
+  uniqueCollectibles: string
+  isSummary: boolean
+  contractInfo?: ContractInfo
+  tokenMetadata?: TokenMetadata
+}
+```
+
 ## Quotes and Swapping
 
 ```ts
 import { 
-  prepareSend,
   useQuote, 
   TradeType,
   type UseQuoteReturn,
@@ -206,87 +193,18 @@ import {
 } from '0xtrails'
 ```
 
-### prepareSend
-
-Prepares a send transaction with optimal routing. This is a lower-level function for advanced use cases.
-
-**Signature**:
-```ts
-function prepareSend(params: {
-  fromTokenAddress: string
-  fromChainId: number
-  toTokenAddress: string
-  toChainId: number
-  amount: string | bigint
-  tradeType: TradeType
-  toRecipient?: string
-  slippageTolerance?: string | number
-}): Promise<PrepareSendResult>
-```
-
-**Usage**:
-```ts
-const result = await prepareSend({
-  fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  fromChainId: 1,
-  toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
-  toChainId: 8453,
-  amount: '1000000',
-  tradeType: TradeType.EXACT_INPUT,
-})
-```
-
 ### useQuote Hook
 
 The `useQuote` hook provides real-time quotes for token swaps and cross-chain transfers.
 
-#### Types
-
-```ts
-type UseQuoteProps = {
-  walletClient?: any 
-  fromTokenAddress?: string | null
-  fromChainId?: number | null
-  toTokenAddress?: string | null
-  toChainId?: number | null
-  toCalldata?: string | null
-  swapAmount?: string | bigint
-  toRecipient?: string | null
-  tradeType?: TradeType | null
-  slippageTolerance?: string | number | null
-  onStatusUpdate?: ((transactionStates: TransactionState[]) => void) | null
-  quoteProvider?: string | null
-  checkoutOnHandlers?: Partial<CheckoutOnHandlers>
-  paymasterUrl?: string
-  selectedFeeToken?: {
-    tokenAddress: string
-    tokenSymbol?: string
-  } | null
-  abortSignal?: AbortSignal
-  apiKey?: string | null
-}
-
-type UseQuoteReturn = {
-  quote: Quote | null
-  swap: (() => Promise<SwapReturn | null>) | null
-  isLoadingQuote: boolean
-  quoteError: unknown
-  refetchQuote: (() => Promise<void>) | null
-}
-
-enum TradeType {
-  EXACT_INPUT = 'EXACT_INPUT',  // User specifies exact input amount
-  EXACT_OUTPUT = 'EXACT_OUTPUT' // User specifies exact output amount
-}
-```
-
 #### Usage Example
 
 ```tsx
+import { useEffect } from 'react'
 import { useQuote, TradeType } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
 
-const SwapComponent = () => {
+export const SwapComponent = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
 
@@ -357,13 +275,13 @@ const SwapComponent = () => {
   return (
     <div>
       <div>
-        From: {quote.originAmountFormatted} {quote.originToken.symbol}
+        From: {quote.fromAmount} {quote.originToken.symbol}
       </div>
       <div>
-        To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol}
+          To: {quote.toAmount} {quote.destinationToken.symbol}
       </div>
       <div>
-        Fee: {quote.totalFeeAmountUsdDisplay}
+          Fee: {quote.fees?.totalFeeAmountUsdDisplay}
       </div>
       <button onClick={handleSwap}>
         Execute Swap
@@ -373,13 +291,53 @@ const SwapComponent = () => {
 }
 ```
 
+#### Types
+
+```ts
+type UseQuoteProps = {
+  walletClient?: any 
+  fromTokenAddress?: string | null
+  fromChainId?: number | null
+  toTokenAddress?: string | null
+  toChainId?: number | null
+  toCalldata?: string | null
+  swapAmount?: string | bigint
+  toRecipient?: string | null
+  tradeType?: TradeType | null
+  slippageTolerance?: string | number | null
+  onStatusUpdate?: ((transactionStates: TransactionState[]) => void) | null
+  quoteProvider?: string | null
+  checkoutOnHandlers?: Partial<CheckoutOnHandlers>
+  paymasterUrl?: string
+  selectedFeeToken?: {
+    tokenAddress: string
+    tokenSymbol?: string
+  } | null
+  abortSignal?: AbortSignal
+  apiKey?: string | null
+}
+
+type UseQuoteReturn = {
+  quote: Quote | null
+  swap: (() => Promise<SwapReturn | null>) | null
+  isLoadingQuote: boolean
+  quoteError: unknown
+  refetchQuote: (() => Promise<void>) | null
+}
+
+enum TradeType {
+  EXACT_INPUT = 'EXACT_INPUT',  // User specifies exact input amount
+  EXACT_OUTPUT = 'EXACT_OUTPUT' // User specifies exact output amount
+}
+```
+
 ## Constants
 
 ```ts
-import { TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 ```
 
-### TRAILS_CONTRACT_PLACEHOLDER_AMOUNT
+### TRAILS_ROUTER_PLACEHOLDER_AMOUNT
 
 This constant provides a placeholder value for amounts when encoding calldata in fund mode. It's used to replace dynamic output amounts during contract execution.
 
@@ -387,27 +345,32 @@ This constant provides a placeholder value for amounts when encoding calldata in
 
 **Example**:
 ```tsx
+import { TrailsWidget } from "0xtrails"
+
 import { encodeFunctionData } from 'viem'
-import { TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 
-// Encode calldata with placeholder amount
-const calldata = encodeFunctionData({
-  abi: stakingABI,
-  functionName: 'stake',
-  args: [TRAILS_CONTRACT_PLACEHOLDER_AMOUNT] // Will be replaced with actual amount
-})
+export const Example = () => {
+    const calldata = encodeFunctionData({
+        abi: stakingABI,
+        functionName: 'stake',
+        args: [TRAILS_ROUTER_PLACEHOLDER_AMOUNT] // Will be replaced with actual amount
+    })
 
-// Use in fund mode widget
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="fund"
-  toAddress="0x..." // Staking contract
-  toCalldata={calldata}
-  toChainId={1}
-  toToken="ETH"
->
-  <button>Stake ETH</button>
-</TrailsWidget>
+    return (
+        // Use in fund mode widget
+        <TrailsWidget
+            apiKey="YOUR_API_KEY"
+            mode="fund"
+            toAddress="0x..." // Staking contract
+            toCalldata={calldata}
+            toChainId={1}
+            toToken="ETH"
+        >
+            <button>Stake ETH</button>
+        </TrailsWidget >
+    )
+}
 ```
 
 This pattern is essential for fund mode transactions where users choose their input amount, but the contract needs to receive the exact output amount after any swaps or bridging operations. 
@@ -416,34 +379,12 @@ This pattern is essential for fund mode transactions where users choose their in
 
 ```ts
 import {
-  getIntentTransactionHistory,
+  useIntentTransactionHistory,
   getAccountTransactionHistory,
   useAccountTransactionHistory,
   useIntentTransactionHistory,
   getTxTimeDiff,
 } from '0xtrails'
-```
-
-### getIntentTransactionHistory
-
-Gets transaction history for a specific intent address.
-
-**Signature**:
-```ts
-function getIntentTransactionHistory(params: {
-  intentAddress: string
-  pageSize?: number
-  page?: number
-}): Promise<IntentTransactionHistoryResponse>
-```
-
-**Usage**:
-```ts
-const history = await getIntentTransactionHistory({
-  intentAddress: '0x...',
-  pageSize: 10,
-  page: 0,
-})
 ```
 
 ### getAccountTransactionHistory
@@ -472,49 +413,44 @@ const history = await getAccountTransactionHistory({
 
 ### useAccountTransactionHistory
 
-React hook for account transaction history with pagination.
-
-**Usage**:
-```tsx
-const { transactions, isLoading, error, hasMore, loadMore } = 
-  useAccountTransactionHistory({
-    chainId: 1,
-    accountAddress: address,
-  })
-```
-
-### useIntentTransactionHistory
-
-React hook for intent transaction history.
-
-**Usage**:
-```tsx
-const { transactions, isLoading, error } = useIntentTransactionHistory({
-  intentAddress: '0x...',
-})
-```
-
-### getTxTimeDiff
-
-Gets the time difference for a transaction in human-readable format.
-
-**Signature**: `(timestamp: string | number) => string`
-
-**Usage**:
-```ts
-const timeDiff = getTxTimeDiff(transaction.timestamp)
-console.log(timeDiff) // "5 minutes ago"
-```
-
-## useGetTransactionHistory
-
 Hook for fetching transaction history from a user's wallet address for a specific chain.
 
 ```tsx
-import { useGetTransactionHistory } from '0xtrails'
+import { useAccountTransactionHistory } from '0xtrails'
 ```
 
-### Types
+#### Usage
+
+```tsx
+import { useAccountTransactionHistory } from '0xtrails'
+
+export const TransactionList = () => {
+    const { data, isLoading, error } = useAccountTransactionHistory({
+        chainId: 1,
+        accountAddress: '0x123...',
+        // Optional:
+        // pageSize: 10,
+        // includeMetadata: true,
+        // page: 0,
+        // abortSignal: new AbortController().signal,
+    })
+
+    if (isLoading) return <div>Loading...</div>
+    if (error) return <div>Error: {String(error)}</div>
+
+    return (
+        <div>
+            {data?.transactions?.map(tx => (
+                <div key={tx.txnHash}>
+                    Transaction: {tx.txnHash} | Block: {tx.blockNumber} | Time: {tx.timestamp}
+                </div>
+            ))}
+        </div>
+    )
+}
+```
+
+#### Types
 
 ```ts
 type TransactionHistoryItemFromAPI = {
@@ -547,37 +483,38 @@ type GetAccountTransactionHistoryParams = {
   pageSize?: number
   includeMetadata?: boolean
   page?: number
+  abortSignal?: AbortSignal
 }
 ```
 
-### Usage
+### useIntentTransactionHistory
 
-```tsx
-import { useGetTransactionHistory } from '0xtrails'
+React hook for fetching transaction history for a specific intent address.
 
-function TransactionList() {
-  const { data, isLoading, error } = useGetTransactionHistory({
-    chainId: 1,
-    accountAddress: '0x123...',
-    // Optional:
-    // pageSize: 10,
-    // includeMetadata: true,
-    // page: 0,
+**Usage**:
+```ts
+const {
+    transactions: transactionHistory,
+    loading: isLoadingHistory,
+    error: historyError,
+    refetch: refetchIntentHistory,
+  } = useIntentTransactionHistory({
+      accountAddress: '0x123...',
+      pageSize: 10,
+      enabled: true,
   })
+```
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {String(error)}</div>
+### getTxTimeDiff
 
-  return (
-    <div>
-      {data?.transactions?.map(tx => (
-        <div key={tx.txnHash}>
-          Transaction: {tx.txnHash} | Block: {tx.blockNumber} | Time: {tx.timestamp}
-        </div>
-      ))}
-    </div>
-  )
-}
+Gets the time difference for a transaction in human-readable format.
+
+**Signature**: `(timestamp: string | number) => string`
+
+**Usage**:
+```ts
+const timeDiff = getTxTimeDiff(transaction.timestamp)
+console.log(timeDiff) // "5 minutes ago"
 ```
 
 ## Encoders
@@ -590,13 +527,15 @@ import { getERC20TransferData } from '0xtrails'
 
 Encodes ERC20 transfer calldata for token transfers.
 
-**Signature**: `(to: string, amount: bigint) => string`
+**Signature**: `(params: { recipient: string, amount: bigint }) => string`
 
 **Usage**:
 ```ts
 const transferData = getERC20TransferData(
-  '0x1234567890123456789012345678901234567890',
-  1000000n // 1 USDC (6 decimals)
+  {
+    recipient: '0x1234567890123456789012345678901234567890',
+    amount: 1000000n,
+  }
 )
 ```
 
@@ -668,7 +607,6 @@ import {
   calculateIntentAddress,
   calculateOriginAndDestinationIntentAddresses,
   commitIntent,
-  getIntent,
   sendOriginTransaction,
 } from '0xtrails'
 ```
@@ -738,17 +676,6 @@ const result = await commitIntent({
   toChainId: 8453,
   // ... other params
 })
-```
-
-### getIntent
-
-Retrieves an existing intent from the blockchain.
-
-**Signature**: `(intentAddress: string) => Promise<Intent>`
-
-**Usage**:
-```ts
-const intent = await getIntent('0x...')
 ```
 
 ### sendOriginTransaction

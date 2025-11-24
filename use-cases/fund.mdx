@@ -123,7 +123,7 @@ For example, a user can select any amount with any token to deposit into a USDC 
 <CodeGroup>
 ```tsx YearnDeposit.tsx
 import { TrailsWidget } from '0xtrails/widget'
-import { TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
 import { yearnVaultABI } from './abi.ts'
 
@@ -136,7 +136,7 @@ export const YearnDepositExample = () => {
     abi: yearnVaultABI,
     functionName: 'deposit',
     args: [
-      TRAILS_CONTRACT_PLACEHOLDER_AMOUNT, // amount (auto-filled at runtime based on user's input)
+      TRAILS_ROUTER_PLACEHOLDER_AMOUNT, // amount (auto-filled at runtime based on user's input)
       "0x...", // receiver address
     ],
   })

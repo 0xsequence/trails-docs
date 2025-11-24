@@ -63,23 +63,23 @@ const USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
 
 const supplyCalldata = encodeFunctionData({
   abi: [{
-    name: 'supply',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'asset', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-      { name: 'onBehalfOf', type: 'address' },
-      { name: 'referralCode', type: 'uint16' },
-    ],
-    outputs: [],
+      name: 'supply',
+      type: 'function',
+      stateMutability: 'nonpayable',
+      inputs: [
+          { name: 'asset', type: 'address' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'onBehalfOf', type: 'address' },
+          { name: 'referralCode', type: 'uint16' },
+      ],
+      outputs: [],
   }],
   functionName: 'supply',
   args: [
-    USDC_ADDRESS,
-    '1000000', // 1 USDC (6 decimals)
-    '0x97c4A952b46bEcaD0663f76357d3776ba11566E1', // User address
-    0, // No referral code
+      USDC_ADDRESS,
+      1000000n, // 1 USDC (6 decimals)
+      '0x97c4A952b46bEcaD0663f76357d3776ba11566E1', // User address
+      0, // No referral code
   ],
 })
 
@@ -101,7 +101,7 @@ const supplyCalldata = encodeFunctionData({
 Use placeholder amount for user-selected deposit amounts:
 
 ```tsx
-import { TrailsWidget, TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
 
 const STAKING_CONTRACT = '0x...'
@@ -116,7 +116,7 @@ const stakeCalldata = encodeFunctionData({
     outputs: [],
   }],
   functionName: 'stake',
-  args: [TRAILS_CONTRACT_PLACEHOLDER_AMOUNT], // Replaced at execution
+  args: [TRAILS_ROUTER_PLACEHOLDER_AMOUNT], // Replaced at execution
 })
 
 <TrailsWidget
@@ -136,7 +136,7 @@ const stakeCalldata = encodeFunctionData({
 Standard vault deposit pattern:
 
 ```tsx
-import { TrailsWidget, TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
 
 const VAULT_ADDRESS = '0x...'
@@ -155,7 +155,7 @@ const depositCalldata = encodeFunctionData({
   }],
   functionName: 'deposit',
   args: [
-    TRAILS_CONTRACT_PLACEHOLDER_AMOUNT,
+    TRAILS_ROUTER_PLACEHOLDER_AMOUNT,
     USER_ADDRESS,
   ],
 })
@@ -174,7 +174,7 @@ const depositCalldata = encodeFunctionData({
 
 ## Calldata Patterns
 
-### When to Use TRAILS_CONTRACT_PLACEHOLDER_AMOUNT
+### When to Use TRAILS_ROUTER_PLACEHOLDER_AMOUNT
 
 Use the placeholder when:
 - Deposit amount is a function parameter
@@ -185,7 +185,7 @@ Use the placeholder when:
 // ✅ Correct - dynamic amount in calldata
 encodeFunctionData({
   functionName: 'deposit',
-  args: [TRAILS_CONTRACT_PLACEHOLDER_AMOUNT, userAddress],
+  args: [TRAILS_ROUTER_PLACEHOLDER_AMOUNT, userAddress],
 })
 ```
 
@@ -319,7 +319,7 @@ Any protocol with a deposit/stake function can be integrated:
 - Supports both ERC-20 tokens and native tokens (ETH, MATIC, etc.)
 - All cross-chain swapping and bridging is handled
 - Calldata execution is atomic with the deposit
-- `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT` = `uint256.max` internally
+- `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` = `uint256.max` internally
 - Works with any contract that has `onBehalfOf` or `receiver` parameter
 
 ## Error Handling
@@ -350,6 +350,6 @@ import { getIsUserRejectionError, InsufficientBalanceError } from '0xtrails'
 ## See Also
 
 - [Use Case Examples](/use-cases/earn) - DeFi protocol integration examples
-- [Hooks Reference](/sdk/hooks) - `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT` constant
+- [Hooks Reference](/sdk/hooks) - `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` constant
 - [Fund Mode](/sdk/modes/fund) - Similar input-driven flow patterns
 - [Configuration](/sdk/configuration) - Full configuration options

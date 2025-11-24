@@ -41,55 +41,6 @@ export function retrieveTransactionHistory({ chainId = 137 }: { chainId?: number
 
 For more information, see:
 
-- [useGetTransactionHistory hook](/sdk/hooks#usegettransactionhistory)
-
-## Intent Transaction History
-
-While `getAccountTransactionHistory` retrieves all transactions for a wallet address on a specific chain, `getIntentTransactionHistory` retrieves the transaction history for a **specific intent** scoped to Trails.
-
-This is useful when you want to track the lifecycle of a particular intent across multiple chains, including deposit, settlement, and withdrawal transactions.
-
-```tsx
-import { useEffect, useState } from 'react'
-import { getIntentTransactionHistory } from '0xtrails'
-
-// Retrieve transaction history for a specific intent
-export function retrieveIntentHistory({ intentAddress }: { intentAddress: string }) {
-  const [txs, setTxs] = useState<any[]>([])
-
-  useEffect(() => {
-    if (!intentAddress) return
-    getIntentTransactionHistory({ intentAddress, pageSize: 10, page: 0 })
-      .then(r => setTxs(r.intents ?? []))
-  }, [intentAddress])
-
-  return (
-    <ul>
-      {txs.map((intent) => (
-        <li key={intent.intentId}>
-          Intent {intent.intentId} | {intent.originChainId} → {intent.destinationChainId} | Status: {intent.status}
-        </li>
-      ))}
-    </ul>
-  )
-}
-```
-
-### Key Differences
-
-| Feature | getAccountTransactionHistory | getIntentTransactionHistory |
-|---------|------------------------------|------------------------------|
-| **Purpose** | All transactions for a wallet address | All transactions for a specific intent flow |
-| **Scope** | Single chain | Cross-chain (origin + destination) |
-| **Parameters** | `chainId`, `accountAddress` | `intentAddress` |
-| **Use Case** | Wallet activity dashboard | Track or query specific cross-chain operation |
-| **Returns** | Individual transactions | Intent summaries with status |
-
-For more information, see:
-
-- [getIntentTransactionHistory](/sdk/hooks#getintenttransactionhistory)
-- [useIntentTransactionHistory hook](/sdk/hooks#useintenttransactionhistory)
-
 
 
 
