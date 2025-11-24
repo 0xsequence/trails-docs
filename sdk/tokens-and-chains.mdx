@@ -34,7 +34,7 @@ function ChainSelector() {
     <select>
       {supportedChains.map(chain => (
         <option key={chain.id} value={chain.id}>
-          {chain.name} (ID: {chain.chainId})
+          {chain.name} (ID: {chain.id})
         </option>
       ))}
     </select>
@@ -64,10 +64,11 @@ console.log(baseChain?.nativeCurrency.symbol) // "ETH"
 ### Chain Type
 
 ```ts
+import { type Chain } from 'viem'
+
 type Chain = {
   id: number
   name: string
-  chainId: number
   rpcUrls: string[]
   nativeCurrency: {
     name: string
@@ -76,6 +77,7 @@ type Chain = {
   }
   blockExplorerUrls?: string[]
   imageUrl?: string
+  ...
 }
 ```
 
@@ -179,7 +181,7 @@ function CrossChainSelector() {
       <select onChange={(e) => setSelectedChain(Number(e.target.value))}>
         <option value="">Select chain</option>
         {supportedChains.map(chain => (
-          <option key={chain.id} value={chain.chainId}>
+          <option key={chain.id} value={chain.id}>
             {chain.name}
           </option>
         ))}

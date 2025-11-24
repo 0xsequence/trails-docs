@@ -114,7 +114,7 @@ const aaveDepositCalldata = encodeFunctionData({
 Use placeholder amount for user-selected deposit amounts in calldata:
 
 ```tsx
-import { TrailsWidget, TRAILS_CONTRACT_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
 
 // Encode vault deposit with placeholder that gets replaced at execution
@@ -131,7 +131,7 @@ const vaultDepositCalldata = encodeFunctionData({
   }],
   functionName: 'deposit',
   args: [
-    TRAILS_CONTRACT_PLACEHOLDER_AMOUNT, // Replaced with actual bridged amount
+    TRAILS_ROUTER_PLACEHOLDER_AMOUNT, // Replaced with actual bridged amount
     '0x97c4A952b46bEcaD0663f76357d3776ba11566E1', // Receiver
   ],
 })
@@ -150,7 +150,7 @@ const vaultDepositCalldata = encodeFunctionData({
 
 ## Dynamic Calldata Pattern
 
-When the deposit amount is part of the calldata and user-selected, use `TRAILS_CONTRACT_PLACEHOLDER_AMOUNT`:
+When the deposit amount is part of the calldata and user-selected, use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT`:
 
 **Why it's needed**: In fund mode, the final output amount after swaps/bridging isn't known until execution. The placeholder gets replaced with the actual output amount.
 
