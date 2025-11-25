@@ -46,7 +46,7 @@ const searchResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/S
     'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
-    byOwnerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+    byOwnerAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1'
   })
 });
 
@@ -140,7 +140,7 @@ async function getTransactionHistory(userAddress: string) {
   }));
 }
 
-const history = await getTransactionHistory('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb');
+const history = await getTransactionHistory('0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1');
 console.table(history);
 ```
 
@@ -148,6 +148,7 @@ console.table(history);
 
 ```tsx
 import { useState, useEffect } from 'react';
+import type { Intent } from '0xtrails';
 
 function IntentHistory({ userAddress }: { userAddress: string }) {
   const [intents, setIntents] = useState<Intent[]>([]);
@@ -224,28 +225,32 @@ function IntentHistory({ userAddress }: { userAddress: string }) {
 ## Filtering and Analytics
 
 ```typescript
+import { TrailsApi, type Intent } from '@0xsequence/trails-api'
+
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+
 async function analyzeUserActivity(userAddress: string) {
-  const { intents } = await searchIntents({ byOwnerAddress: userAddress });
-  
-  const stats = {
-    total: intents.length,
-    succeeded: intents.filter(i => i.status === 'SUCCEEDED').length,
-    failed: intents.filter(i => i.status === 'FAILED').length,
-    pending: intents.filter(i => 
-      ['QUOTED', 'COMMITTED', 'EXECUTING'].includes(i.status)
-    ).length,
-    totalVolume: intents.reduce((sum, i) => sum + i.quote.fromAmount, 0),
-    totalFees: intents.reduce((sum, i) => sum + parseFloat(i.fees.totalFeeUsd), 0),
-    chains: [...new Set(intents.flatMap(i => 
-      [i.quoteRequest.originChainId, i.quoteRequest.destinationChainId]
-    ))],
-    providers: [...new Set(intents.map(i => i.quote.quoteProvider))]
-  };
-  
-  return stats;
+    const { intents } = await trailsApi.searchIntents({ byOwnerAddress: userAddress });
+
+    const stats = {
+        total: intents.length,
+        succeeded: intents.filter((i: Intent) => i.status === 'SUCCEEDED').length,
+        failed: intents.filter((i: Intent) => i.status === 'FAILED').length,
+        pending: intents.filter((i: Intent) =>
+            ['QUOTED', 'COMMITTED', 'EXECUTING'].includes(i.status)
+        ).length,
+        totalVolume: intents.reduce((sum: number, i: Intent) => sum + Number(i.quote.fromAmount), 0),
+        totalFees: intents.reduce((sum: number, i: Intent) => sum + (i.fees.totalFeeUsd), 0),
+        chains: [...new Set(intents.flatMap((i: Intent) =>
+            [i.quoteRequest.originChainId, i.quoteRequest.destinationChainId]
+        ))],
+        providers: [...new Set(intents.map((i: Intent) => i.quote.quoteProvider))]
+    };
+
+    return stats;
 }
 
-const stats = await analyzeUserActivity('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb');
+const stats = await analyzeUserActivity('0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1');
 console.log('User Activity:', stats);
 ```
 
@@ -265,17 +270,21 @@ The `SearchIntents` endpoint may return a large number of results for active add
 ## Example: Recent Active Intents
 
 ```typescript
+import { TrailsApi, type Intent } from '@0xsequence/trails-api'
+
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+
 async function getRecentActiveIntents(userAddress: string, hoursAgo: number = 24) {
-  const { intents } = await searchIntents({ byOwnerAddress: userAddress });
-  
-  const cutoff = Date.now() - (hoursAgo * 60 * 60 * 1000);
-  
-  return intents
-    .filter(i => new Date(i.createdAt).getTime() > cutoff)
-    .filter(i => ['COMMITTED', 'EXECUTING'].includes(i.status))
-    .sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    const { intents } = await trailsApi.searchIntents({ byOwnerAddress: userAddress });
+
+    const cutoff = Date.now() - (hoursAgo * 60 * 60 * 1000);
+
+    return intents
+        .filter((i: Intent) => i.createdAt && new Date(i.createdAt).getTime() > cutoff)
+        .filter((i: Intent) => ['COMMITTED', 'EXECUTING'].includes(i.status))
+        .sort((a, b) =>
+            new Date(b.createdAt ?? '').getTime() - new Date(a.createdAt ?? '').getTime()
+        );
 }
 
 const activeIntents = await getRecentActiveIntents(userAddress, 24);

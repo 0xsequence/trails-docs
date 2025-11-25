@@ -41,20 +41,22 @@ const trailsApi = new TrailsApi('YOUR_API_KEY')
 The SDK provides fully typed methods for all Trails API endpoints:
 
 ```typescript
+import { TradeType, TrailsApi } from '@0xsequence/trails-api'
+
 // Request a quote
 const quoteResponse = await trailsApi.quoteIntent({
-  ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-  originChainId: 42161, // Arbitrum One
-  originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
-  originTokenAmount: '100000000', // 100 USDC
-  destinationChainId: 8453, // Base
-  destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-  tradeType: 'EXACT_INPUT',
-  options: {
-    slippageTolerance: 0.5,
-    quoteProvider: 'RELAY'
-  }
+    ownerAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
+    originChainId: 42161, // Arbitrum One
+    originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
+    originTokenAmount: 100000000n, // 100 USDC
+    destinationChainId: 8453, // Base
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    destinationToAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
+    tradeType: TradeType.EXACT_INPUT,
+    options: {
+        slippageTolerance: 0.005,
+        quoteProvider: 'RELAY'
+    }
 })
 
 // Commit the intent
@@ -64,8 +66,7 @@ const { intentId } = await trailsApi.commitIntent({
 
 // Execute the intent
 await trailsApi.executeIntent({
-  intentId,
-  depositTransactionHash: txHash
+  intentId
 })
 
 // Monitor completion
