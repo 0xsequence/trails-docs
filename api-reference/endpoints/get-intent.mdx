@@ -117,7 +117,7 @@ console.log('Price Impact:', intent.quote.priceImpact);
 // Fee breakdown
 console.log('Total Fee (USD):', intent.fees.totalFeeUsd);
 console.log('Origin Gas Fee:', intent.fees.originGas.totalFeeUsd);
-console.log('Destination Gas Fee:', intent.fees.destinationGas.totalFeeUsd);
+console.log('Destination Gas Fee:', intent.fees.destinationGas?.totalFeeUsd);
 console.log('Provider Fee:', intent.fees.provider.totalFeeUsd);
 ```
 
@@ -139,12 +139,12 @@ function analyzeFees(intent: Intent) {
   console.log('  Network Status:', fees.originGas.chainGasUsageStatus);
   
   console.log('\nDestination Chain Gas:');
-  console.log('  Chain ID:', fees.destinationGas.chainId);
-  console.log('  Gas Limit:', fees.destinationGas.totalGasLimit);
-  console.log('  Gas Price:', fees.destinationGas.gasPrice);
-  console.log('  Native Token:', fees.destinationGas.nativeTokenSymbol);
-  console.log('  Cost (USD):', fees.destinationGas.totalFeeUsd);
-  console.log('  Network Status:', fees.destinationGas.chainGasUsageStatus);
+  console.log('  Chain ID:', fees.destinationGas?.chainId);
+  console.log('  Gas Limit:', fees.destinationGas?.totalGasLimit);
+  console.log('  Gas Price:', fees.destinationGas?.gasPrice);
+  console.log('  Native Token:', fees.destinationGas?.nativeTokenSymbol);
+  console.log('  Cost (USD):', fees.destinationGas?.totalFeeUsd);
+  console.log('  Network Status:', fees.destinationGas?.chainGasUsageStatus);
   
   // Provider fees
   console.log('\nProvider Fees:');
@@ -168,26 +168,37 @@ analyzeFees(intent);
 
 ```typescript
 function inspectCalls(intent: Intent) {
-  console.log('=== Transaction Calls ===\n');
-  
-  intent.calls.forEach((intentCall, index) => {
-    console.log(`Call Set ${index + 1}:`);
-    console.log('  Chain ID:', intentCall.chainId);
-    console.log('  Space:', intentCall.space);
-    console.log('  Nonce:', intentCall.nonce);
-    console.log('  Calls:', intentCall.calls.length);
-    
-    intentCall.calls.forEach((call, callIndex) => {
-      console.log(`\n  Call ${callIndex + 1}:`);
-      console.log('    To:', call.to);
-      console.log('    Value:', call.value);
-      console.log('    Data:', call.data);
-      console.log('    Gas Limit:', call.gasLimit);
-      console.log('    Delegate:', call.delegateCall);
+    console.log('=== Transaction Origin Calls ===\n');
+
+    console.log('Origin Chain ID:', intent.originCalls.chainId);
+    console.log('Origin Space:', intent.originCalls.space);
+    console.log('Origin Nonce:', intent.originCalls.nonce);
+    console.log('Origin Calls:', intent.originCalls.calls.length);
+
+    intent.originCalls.calls.forEach((call, callIndex) => {
+        console.log(`\n  Call ${callIndex + 1}:`);
+        console.log('    To:', call.to);
+        console.log('    Value:', call.value);
+        console.log('    Data:', call.data);
+        console.log('    Gas Limit:', call.gasLimit);
+        console.log('    Delegate:', call.delegateCall);
     });
-    
-    console.log('\n');
-  });
+
+    console.log('=== Transaction Destination Calls ===\n');
+
+    console.log('Destination Chain ID:', intent.destinationCalls?.chainId);
+    console.log('Destination Space:', intent.destinationCalls?.space);
+    console.log('Destination Nonce:', intent.destinationCalls?.nonce);
+    console.log('Destination Calls:', intent.destinationCalls?.calls.length);
+
+    intent.destinationCalls?.calls.forEach((call, callIndex) => {
+        console.log(`\n  Call ${callIndex + 1}:`);
+        console.log('    To:', call.to);
+        console.log('    Value:', call.value);
+        console.log('    Data:', call.data);
+        console.log('    Gas Limit:', call.gasLimit);
+        console.log('    Delegate:', call.delegateCall);
+    });
 }
 
 const { intent } = await getIntent('intent_123abc');
@@ -199,55 +210,64 @@ inspectCalls(intent);
 ### 1. Display Intent Summary in UI
 
 ```tsx
-function IntentSummary({ intentId }: { intentId: string }) {
-  const [intent, setIntent] = useState<Intent | null>(null);
-  
-  useEffect(() => {
-    getIntent(intentId).then(({ intent }) => setIntent(intent));
-  }, [intentId]);
-  
-  if (!intent) return <div>Loading...</div>;
-  
-  return (
-    <div>
-      <h2>Intent {intent.intentId}</h2>
-      <div>Status: {intent.status}</div>
-      <div>From: Chain {intent.quoteRequest.originChainId}</div>
-      <div>To: Chain {intent.quoteRequest.destinationChainId}</div>
-      <div>Amount: {intent.quote.fromAmount} → {intent.quote.toAmount}</div>
-      <div>Total Fee: ${intent.fees.totalFeeUsd}</div>
-      <div>Expires: {new Date(intent.expiresAt).toLocaleString()}</div>
-    </div>
-  );
+import { TrailsApi, type Intent } from "@0xsequence/trails-api";
+import { useEffect, useState } from "react";
+
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+
+export const IntentSummary = ({ intentId }: { intentId: string }) => {
+    const [intent, setIntent] = useState<Intent | null>(null);
+
+    useEffect(() => {
+        trailsApi.getIntent({ intentId }).then(({ intent }) => setIntent(intent));
+    }, [intentId]);
+
+    if (!intent) return <div>Loading...</div>;
+
+    return (
+        <div>
+            <h2>Intent {intent.intentId}</h2>
+            <div>Status: {intent.status}</div>
+            <div>From: Chain {intent.quoteRequest.originChainId}</div>
+            <div>To: Chain {intent.quoteRequest.destinationChainId}</div>
+            <div>Amount: {intent.quote.fromAmount} → {intent.quote.toAmount}</div>
+            <div>Total Fee: ${intent.fees.totalFeeUsd}</div>
+            <div>Expires: {new Date(intent.expiresAt).toLocaleString()}</div>
+        </div>
+    );
 }
 ```
 
 ### 2. Verify Intent Before Signing
 
 ```typescript
-async function verifyBeforeSigning(intentId: string) {
-  const { intent } = await getIntent(intentId);
-  
-  // Check expiration
-  const expiresAt = new Date(intent.expiresAt);
-  const now = new Date();
-  
-  if (expiresAt < now) {
-    throw new Error('Intent has expired');
-  }
-  
-  // Check fees are reasonable
-  if (intent.fees.totalFeeUsd > 10) {
-    console.warn('High fees detected:', intent.fees.totalFeeUsd);
-  }
-  
-  // Check slippage
-  const slippage = (intent.quote.fromAmount - intent.quote.fromAmountMin) / intent.quote.fromAmount;
-  if (slippage > 0.05) {
-    console.warn('High slippage:', slippage * 100, '%');
-  }
-  
-  return intent;
+import { TrailsApi } from "@0xsequence/trails-api";
+
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+
+export async function verifyBeforeSigning(intentId: string) {
+    const { intent } = await trailsApi.getIntent({ intentId });
+
+    // Check expiration
+    const expiresAt = new Date(intent.expiresAt);
+    const now = new Date();
+
+    if (expiresAt < now) {
+        throw new Error('Intent has expired');
+    }
+
+    // Check fees are reasonable
+    if (intent.fees.totalFeeUsd > 10) {
+        console.warn('High fees detected:', intent.fees.totalFeeUsd);
+    }
+
+    const slippage = (intent.quote.fromAmount - intent.quote.fromAmountMin) / intent.quote.fromAmount;
+    // Check if slippage is greater than 5%
+    if (slippage > 0.05) {
+        console.warn('High slippage:', slippage * BigInt(100), '%');
+    }
+
+    return intent;
 }
 ```
 

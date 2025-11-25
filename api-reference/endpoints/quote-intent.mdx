@@ -28,13 +28,13 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 ### Optional Fields
 
 - **tradeType** (TradeType): Either `EXACT_INPUT` or `EXACT_OUTPUT`
-- **destinationTokenAmount** (number): Amount of destination tokens (only for EXACT_OUTPUT)
-- **originTokenAmount** (number): Amount of origin tokens (only for EXACT_INPUT)
+- **destinationTokenAmount** (bigint): Amount of destination tokens (only for EXACT_OUTPUT)
+- **originTokenAmount** (bigint): Amount of origin tokens (only for EXACT_INPUT)
 - **destinationCallData** (string): Custom calldata for contract interactions on destination chain
 - **destinationCallValue** (string): Value to send with the destination call
 - **options** (QuoteIntentRequestOptions):
   - **quoteProvider** (QuoteProviderType): Preferred quote provider (`RELAY`, `CCTPV2`, or `LIFI`)
-  - **slippageTolerance** (number): Maximum acceptable slippage percentage
+  - **slippageTolerance** (number): Maximum acceptable slippage percentage as a fraction of 1 (e.g. 0.005 for 0.5%)
   - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses
 
 ## Response
@@ -59,16 +59,16 @@ The intent object contains:
 
 ```typescript
 const quoteRequest = {
-  ownerAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+  ownerAddress: "0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1",
   originChainId: 1, // Ethereum
   originTokenAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
   originTokenAmount: 100000000, // 100 USDC (6 decimals)
   destinationChainId: 8453, // Base
   destinationTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base
-  destinationToAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+  destinationToAddress: "0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1",
   tradeType: "EXACT_INPUT",
   options: {
-    slippageTolerance: 0.5, // 0.5%
+    slippageTolerance: 0.005, // 0.5%
     quoteProvider: "RELAY"
   }
 };

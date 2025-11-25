@@ -75,71 +75,79 @@ console.log('Updated:', tokenPrices[0].updatedAt);
 ### Multiple Token Prices
 
 ```typescript
+import type { TokenPrice } from "@0xsequence/trails-api";
+
 const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    tokens: [
-      {
-        chainId: 1,
-        tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH on Ethereum
-        tokenSymbol: 'WETH'
-      },
-      {
-        chainId: 1,
-        tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC on Ethereum
-        tokenSymbol: 'USDC'
-      },
-      {
-        chainId: 137,
-        tokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
-        tokenSymbol: 'USDC'
-      }
-    ]
-  })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        tokens: [
+            {
+                chainId: 1,
+                tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH on Ethereum
+                tokenSymbol: 'WETH'
+            },
+            {
+                chainId: 1,
+                tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC on Ethereum
+                tokenSymbol: 'USDC'
+            },
+            {
+                chainId: 137,
+                tokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
+                tokenSymbol: 'USDC'
+            }
+        ]
+    })
 });
 
 const { tokenPrices } = await response.json();
 
-tokenPrices.forEach(price => {
-  console.log(`${price.token.tokenSymbol} on Chain ${price.token.chainId}:`, 
-              `$${price.priceUsd}`);
+tokenPrices.forEach((price: TokenPrice) => {
+    console.log(`${price.token.tokenSymbol} on Chain ${price.token.chainId}:`,
+        `$${price.priceUsd}`);
 });
 ```
 
 ## Calculate Transaction Cost
 
 ```typescript
-async function calculateTransactionCost(intent: Intent) {
-  // Get price for the fee token
-  const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
+import type { TokenPrice } from "@0xsequence/trails-api";
+
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      tokens: [
-        {
-          chainId: intent.quoteRequest.originChainId,
-          tokenAddress: intent.fees.feeTokenAddress
-        }
-      ]
+        tokens: [
+            {
+                chainId: 1,
+                tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH on Ethereum
+                tokenSymbol: 'WETH'
+            },
+            {
+                chainId: 1,
+                tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC on Ethereum
+                tokenSymbol: 'USDC'
+            },
+            {
+                chainId: 137,
+                tokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
+                tokenSymbol: 'USDC'
+            }
+        ]
     })
-  });
+});
 
-  const { tokenPrices } = await response.json();
-  
-  if (tokenPrices.length > 0) {
-    const feeInUsd = intent.fees.totalFeeAmount * tokenPrices[0].priceUsd;
-    console.log(`Total Fee: ${intent.fees.totalFeeAmount} tokens`);
-    console.log(`Total Fee (USD): $${feeInUsd.toFixed(2)}`);
-    return feeInUsd;
-  }
-  
-  return null;
-}
+const { tokenPrices } = await response.json();
+
+tokenPrices.forEach((price: TokenPrice) => {
+    console.log(`${price.token.tokenSymbol} on Chain ${price.token.chainId}:`,
+        `$${price.priceUsd}`);
+});
 ```
 
 ## Common Token Addresses

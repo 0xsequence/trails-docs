@@ -96,9 +96,12 @@ console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
 For real-time updates, poll this endpoint:
 
 ```typescript
+import { TrailsApi } from '@0xsequence/trails-api'
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+
 async function pollReceipt(intentId: string, maxAttempts = 60) {
   for (let i = 0; i < maxAttempts; i++) {
-    const { intentReceipt } = await getIntentReceipt(intentId);
+    const { intentReceipt } = await trailsApi.getIntentReceipt({ intentId });
     
     console.log(`Attempt ${i + 1}: ${intentReceipt.status}`);
     
@@ -138,7 +141,7 @@ function getExplorerUrl(chainId: number, txHash: string) {
   return explorers[chainId] + txHash;
 }
 
-const { intentReceipt } = await getIntentReceipt(intentId);
+const { intentReceipt } = await trailsApi.getIntentReceipt({ intentId });
 console.log('Origin TX:', getExplorerUrl(
   intentReceipt.originChainId,
   intentReceipt.originTransaction.txnHash

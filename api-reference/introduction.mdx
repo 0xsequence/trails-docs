@@ -34,7 +34,7 @@ const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGa
     'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({
-    accountAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    accountAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
     includeMetadata: true
   })
 });
@@ -57,13 +57,13 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
     'X-Access-Key': 'YOUR_API_KEY'
   },
   body: JSON.stringify({
-    ownerAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // sender address
+    ownerAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1', // sender address
     originChainId: 42161, // Arbitrum One
     originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
     originTokenAmount: 100000000, // 100 USDC (6 decimals)
     destinationChainId: 8453, // Base
     destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-    destinationToAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', // recipient
+    destinationToAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1', // recipient
     tradeType: 'EXACT_INPUT',
     options: {
       slippageTolerance: 0.5, // 0.5%
