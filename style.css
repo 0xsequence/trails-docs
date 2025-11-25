@@ -17,3 +17,25 @@ div.sm\:flex:has(a[href*="utm_source=undefined"]) {
 #topbar-cta-button:hover .bg-primary-dark {
   opacity: 0.9 !important;
 } 
+
+.home-hero {
+  min-height: 26rem;
+  overflow: hidden;
+  background-image: url("/images/Trails - Pattern White.svg");
+  background-repeat: repeat;
+  background-size: 400px 400px;
+  background-color: #f8fafc;
+}
+
+.home-hero__overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.5)
+  );
+}
+
+.home-hero__content {
+  text-align: center;
+  padding: 0 1rem;
+}
