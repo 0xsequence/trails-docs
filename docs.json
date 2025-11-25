@@ -12,6 +12,23 @@
     "dark": "#15803D"
   },
   "favicon": "/favicon.ico",
+  "head": [
+    {
+      "tag": "link",
+      "attributes": {
+        "rel": "preconnect",
+        "href": "https://mintlify.b-cdn.net",
+        "crossorigin": "anonymous"
+      }
+    },
+    {
+      "tag": "link",
+      "attributes": {
+        "rel": "dns-prefetch",
+        "href": "https://mintlify.b-cdn.net"
+      }
+    }
+  ],
   
   "navigation": {
     "global": {
