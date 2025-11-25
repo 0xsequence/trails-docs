@@ -3,7 +3,7 @@
   "dependencies": {
     "@0xsequence/network": "latest",
     "js-yaml": "^4.1.0",
-    "mintlify": "4.2.103"
+    "mintlify": "4.2.213"
   },
   "description": "Documentation for Trails",
   "engines": {
