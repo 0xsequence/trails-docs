@@ -1286,6 +1286,18 @@
           "VERY_BUSY"
         ]
       },
+      "CCTPTransferStatus": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "PENDING",
+          "COMPLETE",
+          "FAILED",
+          "UNKNOWN",
+          "RELAYED",
+          "FINALIZED"
+        ]
+      },
       "QuoteIntentRequest": {
         "type": "object",
         "required": [
@@ -2085,11 +2097,14 @@
           "destinationChainId",
           "message",
           "attestation",
-          "status"
+          "status",
+          "retryCount",
+          "createdAt",
+          "updatedAt"
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "type": "number"
           },
           "sourceTxHash": {
             "type": "string"
@@ -2107,12 +2122,21 @@
             "type": "string"
           },
           "status": {
+            "type": "number"
+          },
+          "statusReason": {
+            "type": "string"
+          },
+          "processedAt": {
+            "type": "string"
+          },
+          "retryCount": {
+            "type": "number"
+          },
+          "createdAt": {
             "type": "string"
           },
           "updatedAt": {
-            "type": "string"
-          },
-          "createdAt": {
             "type": "string"
           }
         }
