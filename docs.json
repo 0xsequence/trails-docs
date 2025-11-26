@@ -29,10 +29,7 @@
       ]
     },
     "tabs": [
-      {
-        "tab": "Home",
-        "pages": ["home"]
-      },
+
       {
         "tab": "Documentation",
         "groups": [
@@ -146,5 +143,11 @@
       "chatgpt",
       "claude"
     ]
-  }
+  },
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/intro"
+    }
+  ]
 }
