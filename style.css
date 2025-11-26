@@ -16,26 +16,37 @@ div.sm\:flex:has(a[href*="utm_source=undefined"]) {
 
 #topbar-cta-button:hover .bg-primary-dark {
   opacity: 0.9 !important;
-} 
+}
 
 .home-hero {
-  min-height: 26rem;
-  overflow: hidden;
-  background-image: url("/images/Trails - Pattern White.svg");
+  background-image: url("/images/Trails-Pattern White.webp");
   background-repeat: repeat;
   background-size: 400px 400px;
   background-color: #f8fafc;
+  background-position: center;
 }
 
-.home-hero__overlay {
+.home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.85),
-    rgba(255, 255, 255, 0.5)
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.6)
   );
+  pointer-events: none;
 }
 
-.home-hero__content {
-  text-align: center;
-  padding: 0 1rem;
+:root.dark .home-hero {
+  background-color: #0f172a;
+  background-blend-mode: overlay;
+}
+
+:root.dark .home-hero::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.85),
+    rgba(15, 23, 42, 0.7)
+  );
 }
