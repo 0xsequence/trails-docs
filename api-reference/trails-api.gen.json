@@ -2405,6 +2405,7 @@
         "required": [
           "healthOK",
           "startTime",
+          "hostname",
           "uptime",
           "ver",
           "branch",
@@ -2417,6 +2418,9 @@
             "type": "boolean"
           },
           "startTime": {
+            "type": "string"
+          },
+          "hostname": {
             "type": "string"
           },
           "uptime": {
