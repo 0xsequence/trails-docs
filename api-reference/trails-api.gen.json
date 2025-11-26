@@ -2845,7 +2845,7 @@
           }
         }
       },
-      "GetPopularTokensRequest": {
+      "GetFeaturedTokensRequest": {
         "type": "object",
         "properties": {
           "routeProvider": {
@@ -2863,7 +2863,7 @@
           }
         }
       },
-      "GetPopularTokensResponse": {
+      "GetFeaturedTokensResponse": {
         "type": "object",
         "required": [
           "tokens"
