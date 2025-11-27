@@ -2367,7 +2367,8 @@
           "name",
           "symbol",
           "decimals",
-          "supportsBridging"
+          "featured",
+          "featureIndex"
         ],
         "properties": {
           "chainId": {
@@ -2390,6 +2391,12 @@
           },
           "logoUri": {
             "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "featureIndex": {
+            "type": "number"
           }
         }
       },
@@ -2847,19 +2854,22 @@
       },
       "GetFeaturedTokensRequest": {
         "type": "object",
+        "required": [
+          "chainIds"
+        ],
         "properties": {
-          "routeProvider": {
-            "type": "string"
-          },
-          "limit": {
-            "type": "number"
-          },
           "chainIds": {
             "type": "array",
             "description": "[]uint64",
             "items": {
               "type": "number"
             }
+          },
+          "limit": {
+            "type": "number"
+          },
+          "tokenAddress": {
+            "type": "string"
           }
         }
       },
@@ -2887,18 +2897,15 @@
           "query": {
             "type": "string"
           },
-          "routeProvider": {
-            "type": "string"
-          },
-          "limit": {
-            "type": "number"
-          },
           "chainIds": {
             "type": "array",
             "description": "[]uint64",
             "items": {
               "type": "number"
             }
+          },
+          "limit": {
+            "type": "number"
           }
         }
       },
