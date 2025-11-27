@@ -144,6 +144,11 @@
       "claude"
     ]
   },
+  "seo": {
+    "metatags": {
+        "canonical": "https://docs.trails.build"
+    }
+},
   "redirects": [
     {
       "source": "/home",
