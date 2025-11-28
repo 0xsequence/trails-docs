@@ -2918,6 +2918,9 @@
               "type": "number"
             }
           },
+          "searchQuery": {
+            "type": "string"
+          },
           "limit": {
             "type": "number"
           },
@@ -2933,42 +2936,6 @@
         }
       },
       "GetTokenListResponse": {
-        "type": "object",
-        "required": [
-          "tokens"
-        ],
-        "properties": {
-          "tokens": {
-            "type": "array",
-            "description": "[]TokenInfo",
-            "items": {
-              "$ref": "#/components/schemas/TokenInfo"
-            }
-          }
-        }
-      },
-      "SearchTokensRequest": {
-        "type": "object",
-        "required": [
-          "query"
-        ],
-        "properties": {
-          "query": {
-            "type": "string"
-          },
-          "chainIds": {
-            "type": "array",
-            "description": "[]uint64",
-            "items": {
-              "type": "number"
-            }
-          },
-          "limit": {
-            "type": "number"
-          }
-        }
-      },
-      "SearchTokensResponse": {
         "type": "object",
         "required": [
           "tokens"
