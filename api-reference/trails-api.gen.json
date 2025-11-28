@@ -1961,6 +1961,7 @@
           "destinationTokenAddress",
           "destinationTokenAmount",
           "destinationTokenMetadata",
+          "destinationToAddress",
           "createdAt"
         ],
         "properties": {
@@ -2023,6 +2024,9 @@
           },
           "destinationTokenMetadata": {
             "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "destinationToAddress": {
+            "type": "string"
           },
           "updatedAt": {
             "type": "string"
