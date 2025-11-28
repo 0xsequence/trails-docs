@@ -3252,7 +3252,7 @@
           }
         }
       },
-      "GetFeaturedTokensRequest": {
+      "GetTokenListRequest": {
         "type": "object",
         "required": [
           "chainIds"
@@ -3270,10 +3270,16 @@
           },
           "tokenAddress": {
             "type": "string"
+          },
+          "includeAllListed": {
+            "type": "boolean"
+          },
+          "includeExternal": {
+            "type": "boolean"
           }
         }
       },
-      "GetFeaturedTokensResponse": {
+      "GetTokenListResponse": {
         "type": "object",
         "required": [
           "tokens"
