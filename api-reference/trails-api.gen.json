@@ -1154,6 +1154,36 @@
           }
         }
       },
+      "ErrorClientOutdated": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "ClientOutdated"
+          },
+          "code": {
+            "type": "number",
+            "example": 8009
+          },
+          "msg": {
+            "type": "string",
+            "example": "Client is outdated"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 422
+          }
+        }
+      },
       "ErrorIntentsSkipped": {
         "type": "object",
         "required": [
@@ -2318,6 +2348,25 @@
           }
         }
       },
+      "TrailsContracts": {
+        "type": "object",
+        "required": [
+          "trailsIntentEntrypointAddress",
+          "trailsRouterAddress",
+          "trailsRouterShimAddress"
+        ],
+        "properties": {
+          "trailsIntentEntrypointAddress": {
+            "type": "string"
+          },
+          "trailsRouterAddress": {
+            "type": "string"
+          },
+          "trailsRouterShimAddress": {
+            "type": "string"
+          }
+        }
+      },
       "ChainInfo": {
         "type": "object",
         "required": [
@@ -2518,11 +2567,15 @@
       "CommitIntentRequest": {
         "type": "object",
         "required": [
-          "intent"
+          "intent",
+          "trailsContracts"
         ],
         "properties": {
           "intent": {
             "$ref": "#/components/schemas/Intent"
+          },
+          "trailsContracts": {
+            "$ref": "#/components/schemas/TrailsContracts"
           }
         }
       },
