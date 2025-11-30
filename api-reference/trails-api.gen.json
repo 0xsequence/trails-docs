@@ -1320,12 +1320,12 @@
         "type": "string",
         "description": "Represented as uint8 on the server side",
         "enum": [
-          "PENDING",
-          "COMPLETE",
-          "FAILED",
           "UNKNOWN",
-          "RELAYED",
-          "FINALIZED"
+          "ON_HOLD",
+          "PENDING",
+          "FETCHING",
+          "COMPLETE",
+          "FAILED"
         ]
       },
       "QuoteIntentRequest": {
@@ -2126,13 +2126,15 @@
         "type": "object",
         "required": [
           "id",
-          "sourceTxHash",
-          "sourceChainId",
+          "intentId",
+          "originChainId",
           "destinationChainId",
+          "originTxnId",
+          "originTxnHash",
+          "destinationTxnId",
           "message",
           "attestation",
           "status",
-          "retryCount",
           "createdAt",
           "updatedAt"
         ],
@@ -2140,13 +2142,22 @@
           "id": {
             "type": "number"
           },
-          "sourceTxHash": {
+          "intentId": {
             "type": "string"
           },
-          "sourceChainId": {
+          "originChainId": {
             "type": "number"
           },
           "destinationChainId": {
+            "type": "number"
+          },
+          "originTxnId": {
+            "type": "number"
+          },
+          "originTxnHash": {
+            "type": "string"
+          },
+          "destinationTxnId": {
             "type": "number"
           },
           "message": {
@@ -2160,12 +2171,6 @@
           },
           "statusReason": {
             "type": "string"
-          },
-          "processedAt": {
-            "type": "string"
-          },
-          "retryCount": {
-            "type": "number"
           },
           "createdAt": {
             "type": "string"
