@@ -38,14 +38,14 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          git diff --exit-code api-reference/trails-api.gen.json || echo "changes=true" >> $GITHUB_OUTPUT
+          git diff --exit-code api-reference/before-annotations-trails-api.gen.json || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push if changed
         if: steps.check_changes.outputs.changes == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add api-reference/trails-api.gen.json
+          git add api-reference/before-annotations-trails-api.gen.json
           git commit -m "chore: auto-convert OpenAPI YAML to JSON"
           git push
 
