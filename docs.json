@@ -149,6 +149,14 @@
     {
       "source": "/home",
       "destination": "/intro"
+    },
+    {
+      "source": "/overview/1-click-payments",
+      "destination": "/architecture/how-it-works"
+    },
+    {
+      "source": "/overview/chain-abstraction",
+      "destination": "/architecture/how-it-works"
     }
   ]
 }
