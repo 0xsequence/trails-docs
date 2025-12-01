@@ -1,6 +1,6 @@
 ---
 title: 'How Trails Works'
-description: 'Core architecture and design of the Trails transaction rails protocol'
+description: 'Learn more about how Trails works under the hood'
 icon: 'sitemap'
 ---
 
@@ -104,18 +104,11 @@ The protocol is designed to be extensible, with plans to support non-EVM chains 
 
 The Trails protocol leverages several key components:
 
-- **Intent Recognition**: Parses and understands user payment intentions
-- **Route Optimization**: Calculates optimal paths across supported chains
-- **Protocol Integration**: Interfaces with DEXs, bridges, and other protocols
+- **Intent Recognition**: Parses and understands user requested intent and calculates optimal paths across supported chains
+- **High-Performance Indexing**: Trails comes with a built-in, multichain indexer for low use cases requiring low-latency such as payment flows
+- **Liquidity Aggregation**: Composable with DEXs, bridges, aggregators, and other protocols to ensure deep liquidity at low slippage
 - **Transaction Orchestration**: Coordinates complex multi-step operations
-- **Execution Engine**: Handles the actual transaction execution and monitoring
-
-
-## Integration with External Protocols & Liquidity Networks
-
-- **Trails as an Orchestrator**: Trails does not custody funds or act as a bridge/DEX itself. It orchestrates flows across existing liquidity networks and chains, acting as the glue that connects them so they work seamlessly as one.
-- **Liquidity Providers (LPs) & DEXs**: Trails taps into AMMs, bridges, and LPs to source liquidity and pricing, selecting the optimal venue per step of the route, providing the best price and gas efficiency possible for the end-user.
-- **Pluggable Architecture**: New protocols, bridges, and networks can be added without changing integrator code. Trails evaluates options at runtime and selects the safest, most efficient path, giving the developer full control over the flow.
+- **Verifiable Execution Engine**: Handles the actual transaction execution and monitoring via cryptographic intent addresses executed via Relayers
 
 <Note>
   Trails is responsible for orchestrating the flow, not holding user assets. It coordinates protocols so users can transact with a single click (one transaction on the original chain), while assets move through underlying networks.
@@ -132,7 +125,6 @@ Trails has an automatic refund mechanism built in to protect your assets in the 
 
 ## Security & Validation
 
-- **Built on Sequence v3**: Trails is built on top of Sequence's audited v3 wallet contracts, leveraging mature account abstraction and battle-tested controls.
+- **Built on Sequence v3**: Trails is built on top of Sequence's audited v3 wallet contracts, enabling verifiable execution.
 - **Intent-Scoped Authorization**: Intent addresses are only used to trustlessly authorize the specific transaction calldata the user has explicitly permitted—nothing more.
-- **User “sudo” Control**: The user always retains control over their account and funds. In emergencies, they can take direct action at any time.
-- **Non-Custodial by Design**: Trails never takes custody; execution happens via the user's wallet permissions, preserving full control and auditability.
+- **Non-Custodial by Design**: Trails never takes custody; execution happens via the user's wallet permissions, preserving full control and auditability. This means the user always retains control over their account and funds. In emergencies, they can take direct action at any time.
