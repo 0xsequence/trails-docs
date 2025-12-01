@@ -38,10 +38,6 @@
             "pages": ["intro", "get-started"]
           },
           {
-            "group": "Overview",
-            "pages": ["overview/1-click-payments", "overview/chain-abstraction"]
-          },
-          {
             "group": "Use Cases",
             "pages": [
               "use-cases/pay",
