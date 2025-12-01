@@ -6,7 +6,7 @@ const yaml = require('js-yaml');
 
 // Paths (updated for .github/scripts location)
 const yamlPath = path.join(__dirname, '../../api-reference/trails-api.gen.yaml');
-const jsonPath = path.join(__dirname, '../../api-reference/trails-api.gen.json');
+const jsonPath = path.join(__dirname, '../../api-reference/before-annotations-trails-api.gen.json');
 
 try {
   // Read YAML file
