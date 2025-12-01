@@ -113,20 +113,26 @@ The Trails protocol leverages several key components:
 
 ## Integration with External Protocols & Liquidity Networks
 
-- **Trails as Orchestrator (Glue Layer)**: Trails does not custody funds or act as a bridge/DEX itself. It orchestrates flows across existing liquidity networks and chains, acting as the glue that connects them so they work seamlessly as one.
-- **Relayers & Cross-Chain Routers**: Trails composes best-in-class relayers and routers (e.g., Relay, LiFi, custom routers) to execute cross-chain legs when required.
-- **Liquidity Providers (LPs) & DEXs**: Trails taps into AMMs, RFQ makers, and LPs to source liquidity and pricing, selecting the optimal venue per step of the route, providing the best price and gas efficiency possible for the end-user.
+- **Trails as an Orchestrator**: Trails does not custody funds or act as a bridge/DEX itself. It orchestrates flows across existing liquidity networks and chains, acting as the glue that connects them so they work seamlessly as one.
+- **Liquidity Providers (LPs) & DEXs**: Trails taps into AMMs, bridges, and LPs to source liquidity and pricing, selecting the optimal venue per step of the route, providing the best price and gas efficiency possible for the end-user.
 - **Pluggable Architecture**: New protocols, bridges, and networks can be added without changing integrator code. Trails evaluates options at runtime and selects the safest, most efficient path, giving the developer full control over the flow.
 
 <Note>
   Trails is responsible for orchestrating the flow, not holding user assets. It coordinates protocols so users can transact with a single click (one transaction on the original chain), while assets move through underlying networks.
  </Note>
 
+## Refunds
+
+Trails has an automatic refund mechanism built in to protect your assets in the event of a transaction failure.
+
+| Failure Scenario | Refund Action |
+|------------------|---------------|
+| **Failure on the Source Chain** | If the transaction fails before your funds leave the initial blockchain, the user will receive a full refund (minus gas fees) on the source chain to the sender address. |
+| **Failure on the Destination Chain** | If the funds successfully bridged but the final step fails on the destination chain, the assets are refunded to your sender address on the destination chain. |
 
 ## Security & Validation
 
 - **Built on Sequence v3**: Trails is built on top of Sequence's audited v3 wallet contracts, leveraging mature account abstraction and battle-tested controls.
 - **Intent-Scoped Authorization**: Intent addresses are only used to trustlessly authorize the specific transaction calldata the user has explicitly permitted—nothing more.
 - **User “sudo” Control**: The user always retains control over their account and funds. In emergencies, they can take direct action at any time.
-- **Validation & Refunds**: Calls are simulated and expected to succeed. If a step cannot complete, Trails handles refunds and unwind flows automatically where applicable.
 - **Non-Custodial by Design**: Trails never takes custody; execution happens via the user's wallet permissions, preserving full control and auditability.
