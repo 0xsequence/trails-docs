@@ -29,10 +29,17 @@ import { TrailsProvider } from '0xtrails'
 
 ### Configuration Options
 
-- **`trailsApiKey`** (required): Your Trails API key. Join the [Trails Telegram group](https://t.me/build_with_trails) to request access.
-- **`trailsApiUrl`** (optional): Custom API endpoint URL if using a self-hosted instance.
-- **`sequenceIndexerUrl`** (optional): Custom Sequence indexer URL.
-- **`sequenceNodeGatewayUrl`** (optional): Custom Sequence node gateway URL.
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `trailsApiKey` | `string` | Yes | Your Trails API key. Join the [Trails Telegram group](https://t.me/build_with_trails) to request access. |
+| `trailsApiUrl` | `string` | No | Custom API endpoint URL if using a self-hosted instance. |
+| `sequenceIndexerUrl` | `string` | No | Custom Sequence indexer URL. |
+| `sequenceNodeGatewayUrl` | `string` | No | Custom Sequence node gateway URL. |
+| `sequenceMetadataUrl` | `string` | No | Custom Sequence metadata URL. |
+| `sequenceApiUrl` | `string` | No | Custom Sequence API URL. |
+| `walletConnectProjectId` | `string` | No | WalletConnect project ID for wallet connections. |
+| `slippageTolerance` | `string \| number` | No | Default slippage tolerance for swaps (e.g., `0.005` for 0.5%). |
+| `debug` | `boolean` | No | Enable debug logging (default: `false`). |
 
 ## Chains
 
@@ -214,7 +221,7 @@ import {
 
 ### useQuote Hook
 
-The `useQuote` hook provides real-time quotes for token swaps and cross-chain transfers.
+The `useQuote` hook provides real-time quotes for token swaps, cross-chain transfers and ability to pass in calldata for executions - enabling you to use Trails headlessly.
 
 #### Usage Example
 
@@ -325,15 +332,15 @@ type UseQuoteProps = {
   tradeType?: TradeType | null
   slippageTolerance?: string | number | null
   onStatusUpdate?: ((transactionStates: TransactionState[]) => void) | null
-  quoteProvider?: string | null
+  swapProvider?: RouteProvider | null
+  bridgeProvider?: RouteProvider | null
   checkoutOnHandlers?: Partial<CheckoutOnHandlers>
   paymasterUrl?: string
-  selectedFeeToken?: {
-    tokenAddress: string
-    tokenSymbol?: string
-  } | null
+  selectedFeeOption?: FeeOption | null
   abortSignal?: AbortSignal
   apiKey?: string | null
+  nodeGatewayEnv?: 'prod' | 'dev' | 'local' | 'cors-anywhere'
+  isSmartWallet?: boolean | null
 }
 
 type UseQuoteReturn = {
@@ -341,12 +348,23 @@ type UseQuoteReturn = {
   swap: (() => Promise<SwapReturn | null>) | null
   isLoadingQuote: boolean
   quoteError: unknown
-  refetchQuote: (() => Promise<void>) | null
+  quoteErrorPrettified: string
+  refetchQuote: () => void
+  abort: () => void
 }
 
 enum TradeType {
   EXACT_INPUT = 'EXACT_INPUT',  // User specifies exact input amount
   EXACT_OUTPUT = 'EXACT_OUTPUT' // User specifies exact output amount
+}
+
+enum RouteProvider {
+  AUTO = 'AUTO',
+  CCTP = 'CCTP',
+  LIFI = 'LIFI',
+  RELAY = 'RELAY',
+  SUSHI = 'SUSHI',
+  ZEROX = 'ZEROX'
 }
 ```
 
@@ -679,14 +697,26 @@ import {
   InsufficientBalanceError,
   UserRejectionError,
   getIsUserRejectionError,
+  getIsBalanceTooLowError,
+  getIsApiError,
+  getIsRateLimitedError,
+  getIsRequiredAmountNotMetError,
+  getIsNoAvailableQuoteError,
+  getIsQuoteFailedError,
+  getIsQuoteTokenError,
+  getIsQuoteInputError,
+  getIsInsufficientLiquidityError,
+  getIsWalletAlreadyConnectedError,
+  getPrettifiedErrorMessage,
 } from '0xtrails'
 ```
 
-### InsufficientBalanceError
+### Error Classes
+
+#### InsufficientBalanceError
 
 Error thrown when a user has insufficient balance to complete a transaction.
 
-**Usage**:
 ```ts
 try {
   await swap()
@@ -697,11 +727,10 @@ try {
 }
 ```
 
-### UserRejectionError
+#### UserRejectionError
 
 Error thrown when a user rejects a transaction in their wallet.
 
-**Usage**:
 ```ts
 try {
   await swap()
@@ -712,21 +741,310 @@ try {
 }
 ```
 
-### getIsUserRejectionError
+### Error Detection Utilities
 
-Utility function to check if an error is a user rejection error.
+All error detection functions have the same signature: `(error: unknown) => boolean`
 
-**Signature**: `(error: unknown) => boolean`
+| Function | Description |
+|----------|-------------|
+| `getIsUserRejectionError` | User rejected the transaction in their wallet |
+| `getIsBalanceTooLowError` | Insufficient balance for the transaction |
+| `getIsApiError` | API returned an error |
+| `getIsRateLimitedError` | Request was rate limited |
+| `getIsRequiredAmountNotMetError` | Required minimum amount not met |
+| `getIsNoAvailableQuoteError` | No quote available for the requested swap |
+| `getIsQuoteFailedError` | Quote request failed |
+| `getIsQuoteTokenError` | Invalid token in quote request |
+| `getIsQuoteInputError` | Invalid input parameters for quote |
+| `getIsInsufficientLiquidityError` | Insufficient liquidity for the swap |
+| `getIsWalletAlreadyConnectedError` | Wallet is already connected |
 
-**Usage**:
+### getPrettifiedErrorMessage
+
+Converts any error into a user-friendly message string.
+
+**Signature**: `(error: unknown) => string`
+
 ```ts
 try {
   await swap()
 } catch (error) {
-  if (getIsUserRejectionError(error)) {
-    console.log('User rejected the transaction')
+  const userMessage = getPrettifiedErrorMessage(error)
+  showNotification(userMessage)
+  // e.g., "Insufficient balance" instead of technical error details
+}
+```
+
+### Example: Comprehensive Error Handling
+
+```tsx
+import {
+  getIsUserRejectionError,
+  getIsBalanceTooLowError,
+  getIsNoAvailableQuoteError,
+  getIsRateLimitedError,
+  getPrettifiedErrorMessage,
+} from '0xtrails'
+
+async function handleSwap() {
+  try {
+    await swap()
+  } catch (error) {
+    if (getIsUserRejectionError(error)) {
+      // User cancelled - don't show error notification
+      return
+    }
+    
+    if (getIsBalanceTooLowError(error)) {
+      showNotification('Not enough balance. Please add funds.')
+      return
+    }
+    
+    if (getIsNoAvailableQuoteError(error)) {
+      showNotification('No route available for this swap. Try a different token pair.')
+      return
+    }
+    
+    if (getIsRateLimitedError(error)) {
+      showNotification('Too many requests. Please wait a moment.')
+      return
+    }
+    
+    // Fallback to prettified message
+    showNotification(getPrettifiedErrorMessage(error))
   }
 }
+```
+
+## useGetIntent
+
+Hook to fetch intent data from the Trails API.
+
+```ts
+import { useGetIntent, type UseGetIntentParams, type UseGetIntentReturn } from '0xtrails'
+```
+
+### Usage
+
+```tsx
+import { useGetIntent } from '0xtrails'
+
+export const IntentDetails = ({ intentId }: { intentId: string }) => {
+  const { intent, isLoading, isError, error, refetch } = useGetIntent({
+    intentId,
+    enabled: true,
+  })
+
+  if (isLoading) return <div>Loading intent...</div>
+  if (isError) return <div>Error: {error?.message}</div>
+  if (!intent) return <div>Intent not found</div>
+
+  return (
+    <div>
+      <p>Intent ID: {intent.intentId}</p>
+      <p>Status: {intent.status}</p>
+      <p>Origin Chain: {intent.quoteRequest.originChainId}</p>
+      <p>Destination Chain: {intent.quoteRequest.destinationChainId}</p>
+      <button onClick={refetch}>Refresh</button>
+    </div>
+  )
+}
+```
+
+### Types
+
+```ts
+type UseGetIntentParams = {
+  intentId: string | undefined
+  enabled?: boolean
+}
+
+type UseGetIntentReturn = {
+  intent: Intent | null
+  isLoading: boolean
+  isError: boolean
+  error: Error | null
+  refetch: () => void
+}
+```
+
+## useTrailsRefund
+
+Hook for handling refunds from stuck or failed intent transactions. This hook provides utilities to sign and execute refund transactions to recover funds from intent addresses.
+
+```ts
+import {
+  useTrailsRefund,
+  type UseTrailsRefundParams,
+  type UseTrailsRefundReturn,
+} from '0xtrails'
+```
+
+### Usage
+
+```tsx
+import { useTrailsRefund } from '0xtrails'
+import { useWalletClient, useAccount } from 'wagmi'
+
+export const RefundComponent = ({ intentId }: { intentId: string }) => {
+  const { data: walletClient } = useWalletClient()
+  const { address } = useAccount()
+
+  const {
+    intent,
+    isLoadingIntent,
+    hasIntentBalance,
+    signPayload,
+    getRefundTx,
+    intentError,
+  } = useTrailsRefund({
+    intentId,
+    walletClient,
+    refundToAddress: address, // Optional: defaults to connected wallet
+  })
+
+  const handleRefund = async () => {
+    try {
+      // Step 1: Sign the refund payload
+      const { signature, payload } = await signPayload()
+      
+      // Step 2: Get the refund transaction
+      const refundTx = await getRefundTx({
+        signedHash: signature,
+        payload,
+      })
+      
+      // Step 3: Execute the refund transaction
+      const txHash = await walletClient.sendTransaction({
+        to: refundTx.to,
+        data: refundTx.data,
+        chain: refundTx.chain,
+      })
+      
+      console.log('Refund transaction sent:', txHash)
+    } catch (error) {
+      console.error('Refund failed:', error)
+    }
+  }
+
+  if (isLoadingIntent) return <div>Loading intent...</div>
+  if (intentError) return <div>Error: {intentError.message}</div>
+  if (!hasIntentBalance) return <div>No balance to refund</div>
+
+  return (
+    <button onClick={handleRefund}>
+      Refund Funds
+    </button>
+  )
+}
+```
+
+### Types
+
+```ts
+type UseTrailsRefundParams = {
+  intentId: string | undefined
+  walletClient?: WalletClient
+  refundToAddress?: string // Optional: address to receive refund (defaults to wallet address)
+}
+
+type UseTrailsRefundReturn = {
+  intent: Intent | null
+  isLoadingIntent: boolean
+  isLoadingBalances: boolean
+  intentError: Error | null
+  balancesError: Error | null
+  hasIntentBalance: boolean
+  refetchIntent: () => void
+  signPayload: () => Promise<{
+    signature: string
+    payload: Payload
+    refundCall: PayloadCall
+  }>
+  getRefundTx: (params: {
+    signedHash: string
+    payload: Payload
+  }) => Promise<{
+    to: `0x${string}`
+    data: `0x${string}`
+    chainId: number
+    chain: Chain
+  }>
+}
+```
+
+## useCommitIntent / useExecuteIntent
+
+Mutation hooks for committing and executing intents. These are lower-level hooks for advanced users who need direct control over the intent lifecycle.
+
+```ts
+import { useCommitIntent, useExecuteIntent } from '0xtrails'
+```
+
+### useCommitIntent
+
+```tsx
+const { mutate: commitIntent, isPending, isError, error, data } = useCommitIntent()
+
+// Commit an intent
+commitIntent(intent)
+```
+
+### useExecuteIntent
+
+```tsx
+const { mutate: executeIntent, isPending, isError, error, data } = useExecuteIntent()
+
+// Execute an intent with deposit signature
+executeIntent({
+  intent,
+  depositSignature,
+})
+```
+
+## TrailsClient
+
+For advanced use cases, you can access the underlying Trails API client directly.
+
+```ts
+import { getTrailsClient, useTrailsClient, TrailsClient } from '0xtrails'
+```
+
+### useTrailsClient Hook
+
+```tsx
+import { useTrailsClient } from '0xtrails'
+
+function MyComponent() {
+  const trailsClient = useTrailsClient()
+
+  const fetchIntent = async (intentId: string) => {
+    const response = await trailsClient.getIntent({ intentId })
+    return response.intent
+  }
+
+  // Use client for direct API calls
+}
+```
+
+### getTrailsClient Function
+
+For non-React contexts:
+
+```ts
+import { getTrailsClient } from '0xtrails'
+
+const client = getTrailsClient({
+  apiKey: 'YOUR_API_KEY',
+  hostname: 'https://api.trails.xyz', // optional
+})
+
+// Direct API calls
+const quote = await client.quoteIntent({
+  originChainId: 1,
+  destinationChainId: 8453,
+  // ... other params
+})
 ```
 
 ## Advanced: Intent Functions
@@ -754,7 +1072,7 @@ type OriginCallParams = {
   chainId: number
 }
 
-type QuoteProvider = 'lifi' | 'relay' | 'cctp' | 'auto'
+type RouteProvider = 'AUTO' | 'CCTP' | 'LIFI' | 'RELAY' | 'SUSHI' | 'ZEROX'
 
 type TrailsFee = {
   amount: bigint

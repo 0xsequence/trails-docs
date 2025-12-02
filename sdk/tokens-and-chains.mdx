@@ -61,6 +61,22 @@ console.log(baseChain?.name) // "Base"
 console.log(baseChain?.nativeCurrency.symbol) // "ETH"
 ```
 
+### Chain Image URLs
+
+```ts
+import { getChainImageUrl, useChainImageUrl } from '0xtrails'
+
+// Get chain image URL directly
+const imageUrl = getChainImageUrl(8453)
+// Returns: "https://assets.sequence.info/images/networks/large/8453.webp"
+
+// As a React hook
+function ChainIcon({ chainId }: { chainId: number }) {
+  const imageUrl = useChainImageUrl(chainId)
+  return <img src={imageUrl} alt="Chain logo" />
+}
+```
+
 ### Chain Type
 
 ```ts

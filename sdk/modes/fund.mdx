@@ -28,7 +28,8 @@ Fund mode implements input-driven deposit flows where users select the amount th
 | `toToken` | `string` | Destination token symbol or address |
 | `toCalldata` | `string` | Calldata to execute on destination |
 | `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
-| `quoteProvider` | `QuoteProvider` | Specific quote provider |
+| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
+| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"` |
 
 ## Implementation
 
