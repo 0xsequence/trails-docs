@@ -9,16 +9,16 @@ Install the Trails API client SDK:
 
 <CodeGroup>
 ```shell pnpm
-pnpm install @0xsequence/trails-api
+pnpm install @0xtrails/api
 ```
 ```shell npm
-npm install @0xsequence/trails-api
+npm install @0xtrails/api
 ```
 ```shell yarn
-yarn add @0xsequence/trails-api
+yarn add @0xtrails/api
 ```
 ```shell bun
-bun add @0xsequence/trails-api
+bun add @0xtrails/api
 ```
 </CodeGroup>
 
@@ -27,7 +27,7 @@ bun add @0xsequence/trails-api
 Import and initialize the client with your API key:
 
 ```typescript
-import { TrailsApi } from '@0xsequence/trails-api'
+import { TrailsApi } from '@0xtrails/api'
 
 const trailsApi = new TrailsApi('YOUR_API_KEY')
 ```
@@ -41,7 +41,7 @@ const trailsApi = new TrailsApi('YOUR_API_KEY')
 The SDK provides fully typed methods for all Trails API endpoints:
 
 ```typescript
-import { TradeType, TrailsApi } from '@0xsequence/trails-api'
+import { TradeType, TrailsApi } from '@0xtrails/api'
 
 // Request a quote
 const quoteResponse = await trailsApi.quoteIntent({

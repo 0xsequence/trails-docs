@@ -79,9 +79,9 @@ type Chain = {
 import { getSupportedTokens, useSupportedTokens, useTokenList } from '0xtrails'
 ```
 
-- `useTokenList()`: `{ tokens: SupportedToken[] | undefined, isLoadingTokens: boolean }`
-- `useSupportedTokens({ chainId?: number })`: `{ supportedTokens: SupportedToken[], isLoadingTokens: boolean }`
-- `getSupportedTokens()`: `Promise<SupportedToken[]>`
+- `useTokenList()`: `{ tokens: Token[] | undefined, isLoadingTokens: boolean }`
+- `useSupportedTokens({ chainId?: number })`: `{ supportedTokens: Token[], isLoadingTokens: boolean }`
+- `getSupportedTokens()`: `Promise<Token[]>`
 
 ### Additional Helpers
 
@@ -101,18 +101,41 @@ const tokenAddress = useTokenAddress({
 })
 ```
 
-### SupportedToken Type
+### Token Type
+
+The unified `Token` type is used throughout the Trails SDK:
 
 ```ts
-type SupportedToken = {
-  id: string
+type Token = {
+  // Required properties
   symbol: string
   name: string
-  contractAddress: string
   decimals: number
-  chainId: number
-  chainName: string
-  imageUrl: string
+  contractAddress: string // Use zeroAddress for native tokens
+
+  // Optional properties
+  tokenId?: string
+  chainId?: number
+  chainName?: string
+  imageUrl?: string
+  isCustomToken?: boolean
+  isSufficientBalance?: boolean
+  isNativeToken?: boolean
+
+  // Balance fields (raw → formatted → display)
+  balance?: string // Raw big number string (e.g., "1000000000000000000")
+  balanceFormatted?: string // Formatted number without commas (e.g., "1.0")
+  balanceDisplay?: string // Formatted with commas (e.g., "1,000.00")
+
+  // USD Balance fields
+  balanceUsd?: number // Raw number (e.g., 1000.50)
+  balanceUsdFormatted?: string // Without commas/symbol (e.g., "1000.50")
+  balanceUsdDisplay?: string // With commas/symbol (e.g., "$1,000.50")
+
+  // Price fields (raw → formatted → display)
+  priceUsd?: number // Raw number (e.g., 1.50)
+  priceUsdFormatted?: string // Without commas/symbol (e.g., "1.50")
+  priceUsdDisplay?: string // With commas/symbol (e.g., "$1.50")
 }
 ```
 
@@ -141,19 +164,20 @@ Balance hooks and utilities:
 
 ```tsx
 import { useTokenBalances, useAccountTotalBalanceUsd } from '0xtrails'
+import type { Token } from '0xtrails'
 
 const WalletBalance = ({ address }: { address: string }) => {
-  const { tokenBalancesData, isLoadingBalances } = useTokenBalances(address)
-  const { totalBalanceUsd } = useAccountTotalBalanceUsd(address)
+  const { sortedTokens, isLoadingBalances } = useTokenBalances(address)
+  const { totalBalanceUsd, totalBalanceUsdFormatted } = useAccountTotalBalanceUsd(address)
 
   if (isLoadingBalances) return <div>Loading balances...</div>
 
   return (
     <div>
-      <h3>Total Balance: ${totalBalanceUsd}</h3>
-      {tokenBalancesData?.map((token: TokenBalance) => (
+      <h3>Total Balance: {totalBalanceUsdFormatted}</h3>
+      {sortedTokens.map((token: Token) => (
         <div key={`${token.chainId}-${token.contractAddress}`}>
-          {token.contractInfo?.symbol}: {token.balance}
+          {token.symbol}: {token.balanceDisplay} ({token.balanceUsdDisplay})
         </div>
       ))}
     </div>
@@ -161,24 +185,19 @@ const WalletBalance = ({ address }: { address: string }) => {
 }
 ```
 
-### TokenBalance Type
+### useTokenBalances Return Type
 
 ```ts
-type TokenBalance = {
-  contractType: ContractType
-  contractAddress: string
-  accountAddress: string
-  tokenID?: string
-  balance: string
-  blockHash: string
-  blockNumber: number
-  chainId: number
-  uniqueCollectibles: string
-  isSummary: boolean
-  contractInfo?: ContractInfo
-  tokenMetadata?: TokenMetadata
+type UseTokenBalancesReturn = {
+  sortedTokens: Token[] // Tokens sorted by USD balance (highest first)
+  isLoadingBalances: boolean
+  isLoadingPrices: boolean
+  isLoadingSortedTokens: boolean
+  balanceError: Error | null
 }
 ```
+
+Token balances are returned as `Token[]` with balance fields populated. See the [Token Type](#token-type) above for all available fields including `balance`, `balanceFormatted`, `balanceDisplay`, `balanceUsd`, etc.
 
 ## Quotes and Swapping
 
@@ -328,6 +347,120 @@ type UseQuoteReturn = {
 enum TradeType {
   EXACT_INPUT = 'EXACT_INPUT',  // User specifies exact input amount
   EXACT_OUTPUT = 'EXACT_OUTPUT' // User specifies exact output amount
+}
+```
+
+## useTrailsSendTransaction
+
+A powerful hook for creating, signing, and sending transactions using Trails SDK. Provides a wagmi-compatible API for sending transactions with automatic cross-chain orchestration.
+
+<Note>
+**Required Components**: When using `useTrailsSendTransaction`, you must render `TrailsHookModal` inside your `WagmiProvider` for the modal UI to work properly.
+</Note>
+
+### Setup
+
+```tsx
+import { TrailsProvider, TrailsHookModal } from '0xtrails'
+import { WagmiProvider } from 'wagmi'
+
+function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+        <TrailsHookModal />
+        <YourApp />
+      </TrailsProvider>
+    </WagmiProvider>
+  )
+}
+```
+
+### Usage Examples
+
+```tsx
+import { useTrailsSendTransaction } from '0xtrails'
+import { parseEther } from 'viem'
+
+export const SendTransaction = () => {
+  const { sendTransaction, isPending, isSuccess } = useTrailsSendTransaction({
+    onSuccess: (data) => console.log('Transaction successful:', data),
+    onError: (error) => console.error('Transaction failed:', error),
+  })
+
+  // Simple native token send (wagmi-compatible)
+  const handleSendNative = () => {
+    sendTransaction({
+      to: '0xd2135CfB216b74109775236E36d4b433F1DF507B',
+      value: parseEther('0.01'),
+    })
+  }
+
+  // Cross-chain transaction with specific destination token
+  // Modal opens for user to select origin token/chain
+  const handleCrossChain = () => {
+    sendTransaction({
+      to: '0xaavePoolAddress',
+      tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+      tokenAmount: '3000000', // 3 USDC (6 decimals)
+      data: '0x...', // Optional contract calldata
+    })
+  }
+
+  return (
+    <div>
+      <button onClick={handleSendNative} disabled={isPending}>
+        Send 0.01 ETH
+      </button>
+      <button onClick={handleCrossChain} disabled={isPending}>
+        Deposit 3 USDC to AAVE
+      </button>
+      {isSuccess && <p>Transaction completed!</p>}
+    </div>
+  )
+}
+```
+
+### Types
+
+```ts
+type TrailsSendTransactionVariables = {
+  to?: Address
+  value?: bigint // Native token amount (wagmi-compatible)
+  data?: Hex // Contract calldata
+  
+  // Destination token requirements
+  tokenAddress?: Address // Destination token address
+  tokenAmount?: string // Destination token amount (in smallest units)
+  
+  // Origin token parameters (optional - modal opens if not provided)
+  fromTokenAddress?: Address // Origin token address
+  fromChainId?: number // Origin chain ID
+  fromAmount?: string // Origin token amount
+}
+
+type UseTrailsSendTransactionParameters = {
+  onSuccess?: (data: SwapReturn, variables: TrailsSendTransactionVariables) => void
+  onError?: (error: Error, variables: TrailsSendTransactionVariables) => void
+  onSettled?: (data: SwapReturn | undefined, error: Error | null, variables: TrailsSendTransactionVariables) => void
+  receiptActionButtonText?: string // Custom text for receipt button (default: "Transact Again")
+  onReceiptAction?: () => void // Custom callback for receipt button
+  // ... plus all UseQuoteProps options (slippageTolerance, paymasterUrl, etc.)
+}
+
+type UseTrailsSendTransactionReturnType = {
+  sendTransaction: (variables: TrailsSendTransactionVariables, callbacks?: {...}) => void
+  sendTransactionAsync: (variables: TrailsSendTransactionVariables, callbacks?: {...}) => Promise<SwapReturn>
+  retry: () => void
+  data: SwapReturn | undefined
+  error: Error | null
+  isPending: boolean
+  isSuccess: boolean
+  isError: boolean
+  isIdle: boolean
+  status: 'idle' | 'pending' | 'error' | 'success'
+  reset: () => void
+  variables: TrailsSendTransactionVariables | undefined
 }
 ```
 
@@ -626,7 +759,7 @@ type QuoteProvider = 'lifi' | 'relay' | 'cctp' | 'auto'
 type TrailsFee = {
   amount: bigint
   amountUsd: number
-  token: SupportedToken
+  token: Token
 }
 ```
 

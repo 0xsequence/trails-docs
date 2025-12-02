@@ -88,7 +88,7 @@ import {
   getSupportedTokens,
   useSupportedTokens,
   useTokenList,
-  type SupportedToken,
+  type Token,
 } from '0xtrails'
 ```
 
@@ -106,7 +106,7 @@ function TokenList() {
   return (
     <ul>
       {tokens?.map(token => (
-        <li key={token.id}>
+        <li key={`${token.chainId}-${token.contractAddress}`}>
           {token.symbol} on {token.chainName}
         </li>
       ))}
@@ -127,7 +127,7 @@ function BaseTokens() {
   return (
     <select>
       {supportedTokens.map(token => (
-        <option key={token.id} value={token.contractAddress}>
+        <option key={`${token.chainId}-${token.contractAddress}`} value={token.contractAddress}>
           {token.symbol} - {token.name}
         </option>
       ))}
@@ -147,16 +147,36 @@ console.log('USDC available on:', usdcTokens.map(t => t.chainName))
 
 ### Token Type
 
+The unified `Token` type is used throughout the SDK:
+
 ```ts
-type SupportedToken = {
-  id: string
+type Token = {
+  // Required properties
   symbol: string
   name: string
-  contractAddress: string
   decimals: number
-  chainId: number
-  chainName: string
-  imageUrl: string
+  contractAddress: string // Use zeroAddress for native tokens
+
+  // Optional properties
+  tokenId?: string
+  chainId?: number
+  chainName?: string
+  imageUrl?: string
+  isCustomToken?: boolean
+  isNativeToken?: boolean
+
+  // Balance fields (populated when fetched with balances)
+  balance?: string
+  balanceFormatted?: string
+  balanceDisplay?: string
+  balanceUsd?: number
+  balanceUsdFormatted?: string
+  balanceUsdDisplay?: string
+
+  // Price fields
+  priceUsd?: number
+  priceUsdFormatted?: string
+  priceUsdDisplay?: string
 }
 ```
 
@@ -191,7 +211,7 @@ function CrossChainSelector() {
         <select>
           <option value="">Select token</option>
           {supportedTokens.map(token => (
-            <option key={token.id} value={token.contractAddress}>
+            <option key={`${token.chainId}-${token.contractAddress}`} value={token.contractAddress}>
               {token.symbol} - {token.name}
             </option>
           ))}
