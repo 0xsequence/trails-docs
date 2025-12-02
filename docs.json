@@ -38,10 +38,6 @@
             "pages": ["intro", "get-started"]
           },
           {
-            "group": "Overview",
-            "pages": ["overview/1-click-payments", "overview/chain-abstraction"]
-          },
-          {
             "group": "Use Cases",
             "pages": [
               "use-cases/pay",
@@ -152,6 +148,14 @@
     {
       "source": "/home",
       "destination": "/intro"
+    },
+    {
+      "source": "/overview/1-click-payments",
+      "destination": "/architecture/how-it-works"
+    },
+    {
+      "source": "/overview/chain-abstraction",
+      "destination": "/architecture/how-it-works"
     }
   ]
 }
