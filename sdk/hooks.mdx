@@ -870,7 +870,7 @@ type UseGetIntentReturn = {
 
 ## useTrailsRefund
 
-Hook for handling refunds from stuck or failed intent transactions. This hook provides utilities to sign and execute refund transactions to recover funds from intent addresses.
+Hook for handling refunds from stuck or failed intent transactions. Trails will automatically refund upon reverting, however this can be used in situations where funds are stuck without an explicit revert. This hook provides utilities to sign and execute refund transactions to recover funds from intent addresses.
 
 ```ts
 import {
