@@ -210,7 +210,7 @@ inspectCalls(intent);
 ### 1. Display Intent Summary in UI
 
 ```tsx
-import { TrailsApi, type Intent } from "@0xsequence/trails-api";
+import { TrailsApi, type Intent } from "@0xtrails/api";
 import { useEffect, useState } from "react";
 
 const trailsApi = new TrailsApi('YOUR_API_KEY')
@@ -241,7 +241,7 @@ export const IntentSummary = ({ intentId }: { intentId: string }) => {
 ### 2. Verify Intent Before Signing
 
 ```typescript
-import { TrailsApi } from "@0xsequence/trails-api";
+import { TrailsApi } from "@0xtrails/api";
 
 const trailsApi = new TrailsApi('YOUR_API_KEY')
 

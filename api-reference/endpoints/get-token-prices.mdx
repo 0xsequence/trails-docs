@@ -75,7 +75,7 @@ console.log('Updated:', tokenPrices[0].updatedAt);
 ### Multiple Token Prices
 
 ```typescript
-import type { TokenPrice } from "@0xsequence/trails-api";
+import type { TokenPrice } from "@0xtrails/api";
 
 const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
     method: 'POST',
@@ -114,7 +114,7 @@ tokenPrices.forEach((price: TokenPrice) => {
 ## Calculate Transaction Cost
 
 ```typescript
-import type { TokenPrice } from "@0xsequence/trails-api";
+import type { TokenPrice } from "@0xtrails/api";
 
 const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenPrices', {
     method: 'POST',

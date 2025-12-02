@@ -113,7 +113,7 @@ if (nextPage) {
 ### Paginated Loading
 
 ```typescript
-import { SortOrder, type IntentSummary, type Page } from "@0xsequence/trails-api";
+import { SortOrder, type IntentSummary, type Page } from "@0xtrails/api";
 
 async function loadAllHistory() {
     const allIntents: IntentSummary[] = [];
@@ -151,7 +151,7 @@ console.log(`Total intents: ${allHistory.length}`);
 ### Infinite Scroll Component
 
 ```tsx
-import { SortOrder, type IntentSummary, type Page } from '@0xsequence/trails-api';
+import { SortOrder, type IntentSummary, type Page } from '@0xtrails/api';
 import { useState, useEffect, useRef } from 'react';
 
 function getExplorerUrl(chainId: number, txHash: string) {

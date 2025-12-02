@@ -96,7 +96,7 @@ console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
 For real-time updates, poll this endpoint:
 
 ```typescript
-import { TrailsApi } from '@0xsequence/trails-api'
+import { TrailsApi } from '@0xtrails/api'
 const trailsApi = new TrailsApi('YOUR_API_KEY')
 
 async function pollReceipt(intentId: string, maxAttempts = 60) {
