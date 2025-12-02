@@ -17,66 +17,62 @@ The protocol is designed to be extensible, with plans to support non-EVM chains 
 ## Step-by-Step Flow
 
 <Steps>
-  <Step title="Define Intent">
-    **Create a payment transaction for any chain in any token**
+  <Step title="User Initiates Payment">
+    **Trigger any action requiring payment**
     
-    Users begin by defining their payment intent - whether it's a mint, deposit, swap, or any other transaction type. This intent can be created for any supported blockchain using any supported token.
+    The user clicks "Buy", "Mint", "Deposit", or initiates any action requiring payment on a dapp, triggering the Trails flow. The action can be priced in any token on any chain, and users can select any desired token from any chain from their balance to execute the payment.
 
   </Step>
 
-  <Step title="Trails Inspects">
-    **Determines if orchestration is needed**
+  <Step title="Intent Address Generation">
+    **Compute a unique intent contract address**
     
-    Trails's intelligent orchestration engine analyzes the defined intent to determine the optimal execution path:
-
-    - **Pass Through**: If the transaction can succeed without orchestration (same chain, sufficient balance, etc.), it passes through directly
-    - **Continue Orchestrating**: If cross-chain operations or token swaps are needed, the system continues to the orchestration process
+    A unique intent contract address is computed based on the full transaction orchestration across multiple chains. The intent address encodes the details of transactions on both the origin and destination chains enabling onchain cryptographic execution.
 
     <Note>
-      This inspection happens in milliseconds and considers factors like:
-      - Available token balances
-      - Gas requirements
-      - Chain compatibility
-      - Protocol availability
+      The user's wallet is the only party with control over this intent address.
     </Note>
   </Step>
 
-  <Step title="Select Route">
-    **Trails suggests optimal routing options**
+  <Step title="Origin Transfer">
+    **Single user confirmation to deposit tokens**
     
-    When orchestration is required, Trails analyzes available routes across chains and presents the optimal options:
-
-    - **Automated Suggestions**: The system suggests the most efficient token and chain combinations
-    - **User Customization**: Users can review and customize the suggested route
-    - **Cost Analysis**: Each route option includes gas costs, fees, and estimated execution time
+    The user sends a single transaction to deposit their tokens (from any chain they hold funds on) into the intent address on the origin chain. This is the **only transaction the user needs to sign**.
 
     <Tip>
-      Users maintain full control over the routing decision while benefiting from Trails's optimization algorithms.
+      Any bridges, swaps, and execution logic necessary to complete the payment are handled automatically from this point forward.
     </Tip>
   </Step>
 
-  <Step title="Orchestrate Payment">
-    **Intelligently combine operations for the selected route**
+  <Step title="Origin Chain Execution">
+    **Relayer executes the encoded origin transaction**
     
-    Once the route is confirmed, Trails orchestrates the necessary operations:
+    The Relayer automatically executes an operation on the origin intent address by submitting a merkle proof to execute the encoded origin transaction:
 
-    - **Swap Operations**: Convert tokens to the required format
-    - **Bridge Transactions**: Move assets between chains when needed
-    - **Execution Preparation**: Set up the final transaction parameters
+    - **Trustless Execution**: The Relayer is unable to modify the transaction contents
+    - **Permissionless**: Any party can safely trigger the intent transaction to move it forward
+    - **Automated**: Handles any required swaps or bridge operations on the origin chain
 
   </Step>
 
-  <Step title="Execute Transaction">
-    **User confirms and completes the end-to-end flow**
+  <Step title="Destination Chain Arrival">
+    **Bridged funds arrive at the destination intent address**
     
-    The final step puts control back in the user's hands:
+    The bridged funds arrive at the corresponding intent address on the destination chain, ready for the final execution.
 
-    - **Wallet Confirmation**: User reviews and confirms the transaction through their connected wallet
-    - **End-to-End Execution**: Trails executes the complete orchestrated flow
-    - **Transaction Completion**: The system handles all intermediate steps and delivers the final result
+  </Step>
+
+  <Step title="Final Settlement">
+    **Complete the payment on the destination chain**
+    
+    The Relayer executes the final wallet operation on the destination intent address by submitting a merkle proof to execute the encoded destination transaction:
+
+    - **Send funds to the recipient**
+    - **Execute any required contract calls**
+    - **Perform other specified actions (mint, deposit, etc.)**
 
     <Info>
-      Users only need to sign once, but Trails may execute multiple transactions behind the scenes to complete the orchestrated payment.
+      This intent-based approach ensures users only sign **one transaction** while the system handles all the complex routing, bridging, execution, and settlement logic automatically across multiple chains.
     </Info>
   </Step>
 </Steps>
@@ -113,9 +109,11 @@ The Trails protocol leverages several key components:
 
 ## Integration with External Protocols & Liquidity Networks
 
+Trails is a composable solution which is able to plug-in to virtually any existing cross or same-chain infrastructure to efficiently route transactions.
+
 - **Trails as an Orchestrator**: Trails does not custody funds or act as a bridge/DEX itself. It orchestrates flows across existing liquidity networks and chains, acting as the glue that connects them so they work seamlessly as one.
-- **Liquidity Providers (LPs) & DEXs**: Trails taps into AMMs, bridges, and LPs to source liquidity and pricing, selecting the optimal venue per step of the route, providing the best price and gas efficiency possible for the end-user.
-- **Pluggable Architecture**: New protocols, bridges, and networks can be added without changing integrator code. Trails evaluates options at runtime and selects the safest, most efficient path, giving the developer full control over the flow.
+- **Liquidity Providers (LPs) & DEXs**: Trails taps into AMMs, bridges, aggregators, and LPs to source liquidity and pricing, selecting the optimal venue per step of the route, providing the best price and gas efficiency possible for the end-user.
+- **Pluggable Architecture**: New protocols, bridges, and networks can be added without changing code. Trails evaluates options at runtime and selects the safest, most efficient path, giving the developer full control over the flow.
 
 <Note>
   Trails is responsible for orchestrating the flow, not holding user assets. It coordinates protocols so users can transact with a single click (one transaction on the original chain), while assets move through underlying networks.
