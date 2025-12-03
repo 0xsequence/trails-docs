@@ -4,4 +4,49 @@ description: 'How Trails integrates with Liquidity providers including solvers, 
 icon: 'droplet'
 ---
 
+## Overview
 
+Trails acts as an orchestration layer that connects to multiple liquidity sources to find optimal routes for cross-chain transactions. Rather than building its own liquidity pools, Trails aggregates existing infrastructure to provide the best pricing and execution for users.
+
+## Integrated Liquidity Providers
+
+Trails currently integrates with the following liquidity sources:
+
+| Provider | Type | Description |
+|----------|------|-------------|
+| **Circle CCTP** | Bridge | Native USDC bridging with fast finality and no slippage for stablecoin transfers |
+| **Relay** | Bridge/Solver | Fast cross-chain transfers with solver-based execution |
+| **LiFi** | Aggregator | Multi-bridge aggregator providing access to 15+ bridges and DEXs |
+
+## How Liquidity Routing Works
+
+When a user initiates a cross-chain transaction, Trails:
+
+1. **Queries all integrated providers** for available routes and pricing
+2. **Evaluates routes** based on speed, cost, and reliability
+3. **Selects the optimal path** considering gas costs, bridge fees, and slippage
+4. **Executes atomically** through the intent-based architecture
+
+<Tip>
+Trails automatically handles fallback routing. If a primary route fails, the system can reroute through alternative providers when possible.
+</Tip>
+
+## Adding New Liquidity Sources
+
+Trails is designed with a pluggable architecture that allows new bridges, DEXs, and solvers to be integrated without code changes. New protocols are evaluated based on:
+
+- Security track record and audit status
+- Liquidity depth and pricing competitiveness
+- Speed and reliability of execution
+- Chain coverage and token support
+
+<Note>
+Want to integrate your bridge or DEX with Trails? Contact the team via the [Trails Telegram group](https://t.me/build_with_trails).
+</Note>
+
+## Benefits of Aggregated Liquidity
+
+- **Best Execution**: Users always get competitive pricing across multiple sources
+- **Resilience**: No single point of failure for cross-chain transfers
+- **Broad Coverage**: Access to tokens and chains across all integrated providers
+- **Future-Proof**: New providers can be added as the ecosystem evolves

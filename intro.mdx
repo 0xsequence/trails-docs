@@ -6,7 +6,7 @@ description: The onchain transaction rails for every token from every chain with
 
 ## Overview
 
-Trails is a intent-powered, orchestration protocol that enables 1-click transactions from any wallet seamlessly with unified user liquidity across all chains.
+Trails is an intent-powered orchestration protocol that enables 1-click transactions from any wallet seamlessly with unified user liquidity across all chains.
 In contrast to typical cross-chain solutions, Trails sources onchain liquidity and aggregates all user balances for every token across every chain in a user's wallet
 as options for any transaction. Trails natively integrates and complements existing bridging, filler, or solver infrastructure by sourcing them as liquidity and contributing volume. 
 
@@ -55,16 +55,29 @@ whether cross or same chain. Developers can pass in calldata to execute any arbi
 
 For more details, please check out the dedicated page to [learn more](/architecture/how-it-works).
 
-### Working with Trails
+## Compatibility
 
-The Trails is complementary to existing cross-chain and chain abstraction infrastructure. It is highly pluggable and leverages various fillers, solvers, DEX's, and bridges for maximum liquidity and low-slippage across a wide variety of tokens and routes. In short, Trails enhances the flow of funds for the underlying infrastructure.
+Trails is complementary to existing cross-chain and chain abstraction infrastructure. It is highly pluggable and leverages various fillers, solvers, DEXs, and bridges for maximum liquidity and low-slippage across a wide variety of tokens and routes. In short, Trails enhances the flow of funds for the underlying infrastructure.
 
-Trails supports any wallets including: EOA wallets such as MetaMask, smart wallets like Coinbase Smart Wallet, and embedded wallets like Privy. Trails supports any EVM-compatible chain
-and does not require EIP-7702 enabled wallets. For more information please read our [architecture section](/architecture/how-it-works).
+**Wallet Support**: Trails works with any wallet including EOA wallets (MetaMask), smart wallets (Coinbase Smart Wallet), and embedded wallets (Privy). EIP-7702 is **not required**.
+
+**Chain Support**: Trails supports any EVM-compatible chain. See [supported chains](/resources/supported-chains) for the full list.
 
 ## Quickstart
 
 Looking to integrate? [Get started](/get-started) and build your app natively cross-chain in minutes.
+
+## Documentation Structure
+
+The Trails documentation is organized to help you find what you need:
+
+| Section | Purpose |
+|---------|---------|
+| **[Use Cases](/use-cases/pay)** | Business context, when to use each mode, and example scenarios |
+| **[SDK Modes](/sdk/modes/pay)** | Technical reference with configuration options and code examples |
+| **[SDK Hooks](/sdk/hooks)** | Headless implementation using React hooks for custom UIs |
+| **[API Reference](/api-reference/introduction)** | Direct API integration for server-side or non-React implementations |
+| **[Architecture](/architecture/how-it-works)** | Deep dive into how Trails works under the hood |
 
 ## Who Built Trails?
 
