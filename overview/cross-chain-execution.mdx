@@ -4,6 +4,134 @@ description: 'Overview of cross-chain execution capabilities, transaction routin
 icon: 'shuffle'
 ---
 
-## Calling functions cross-chain
+## Overview
 
-Trails is also great for executing arbitrary function calls cross-chain, etc etc.
+Trails doesn't just move tokens cross-chain—it can execute arbitrary smart contract functions on the destination chain as part of the same transaction flow. This enables powerful use cases like cross-chain NFT mints, DeFi deposits, and protocol interactions.
+
+## How It Works
+
+When you include `toCalldata` in your Trails transaction, the protocol:
+
+1. **Routes funds** from the user's selected source chain/token
+2. **Bridges and swaps** as needed to the destination chain/token
+3. **Executes your calldata** on the destination contract with the funds attached
+
+All of this happens atomically from the user's perspective—one confirmation, one transaction.
+
+## Example: Cross-Chain NFT Mint
+
+A user on Arbitrum wants to mint an NFT on Base that costs 0.01 ETH. They only have USDC:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+import { encodeFunctionData } from 'viem'
+
+const mintCalldata = encodeFunctionData({
+  abi: [{
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [{ name: 'to', type: 'address' }],
+    outputs: [],
+  }],
+  functionName: 'mint',
+  args: ['0xUserAddress'],
+})
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="pay"
+  toAddress="0xNFTContract"
+  toAmount="0.01"
+  toChainId={8453} // Base
+  toToken="ETH"
+  toCalldata={mintCalldata}
+>
+  <button>Mint NFT</button>
+</TrailsWidget>
+```
+
+**What happens:**
+1. User confirms a single transaction on Arbitrum
+2. Trails swaps USDC → ETH and bridges to Base
+3. On Base, Trails calls `mint()` on the NFT contract with 0.01 ETH attached
+4. User receives their NFT
+
+## Example: Cross-Chain DeFi Deposit
+
+Deposit into an Aave lending pool on Arbitrum using tokens from any chain:
+
+```tsx
+import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { encodeFunctionData } from 'viem'
+
+const supplyCalldata = encodeFunctionData({
+  abi: [{
+    name: 'supply',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'asset', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'onBehalfOf', type: 'address' },
+      { name: 'referralCode', type: 'uint16' },
+    ],
+    outputs: [],
+  }],
+  functionName: 'supply',
+  args: [
+    '0xUSDCAddress',
+    TRAILS_ROUTER_PLACEHOLDER_AMOUNT, // Replaced with actual amount at execution
+    '0xUserAddress',
+    0,
+  ],
+})
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="fund"
+  toAddress="0xAavePool"
+  toChainId={42161} // Arbitrum
+  toToken="USDC"
+  toCalldata={supplyCalldata}
+>
+  <button>Deposit to Aave</button>
+</TrailsWidget>
+```
+
+## Supported Calldata Patterns
+
+### Static Calldata
+When the function parameters are known in advance:
+- NFT mints with fixed recipient
+- Staking with fixed parameters
+- Any function where amount isn't a parameter
+
+### Dynamic Calldata
+When the amount needs to be determined at execution time, use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT`:
+- ERC-4626 vault deposits
+- Lending protocol supplies
+- Any function with an `amount` parameter that should match bridged funds
+
+## Key Benefits
+
+- **Single Transaction**: Users confirm once, regardless of complexity
+- **Any Token → Any Function**: Pay with USDC, execute with ETH
+- **Atomic Execution**: Calldata executes only if funds arrive successfully
+- **No Contract Changes**: Works with existing smart contracts
+
+## Use Cases
+
+| Use Case | Example |
+|----------|---------|
+| **NFT Minting** | Mint on any chain with any token |
+| **DeFi Deposits** | Supply to lending protocols cross-chain |
+| **Staking** | Stake tokens on any chain |
+| **Gaming** | Purchase in-game items across chains |
+| **DAO Interactions** | Vote or participate with any token |
+
+## See Also
+
+- [Pay Mode](/sdk/modes/pay) - Configuration for payment with calldata
+- [Fund Mode](/sdk/modes/fund) - Configuration for deposits with calldata
+- [How It Works](/architecture/how-it-works) - Detailed protocol architecture

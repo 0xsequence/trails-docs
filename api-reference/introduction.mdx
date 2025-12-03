@@ -130,16 +130,16 @@ Committed intents expire after a set period (check `intent.expiresAt`). Execute 
 <Accordion title="Setup: Instantiate viem">
 ```typescript
 import { createWalletClient, createPublicClient, http } from 'viem';
-import { base, arbitrum, mainnet } from 'viem/chains'; // add other chains to support
+import { base, arbitrum, mainnet } from 'viem/chains';
 
 // Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
 const walletClient = createWalletClient({
-  chain: mainnet, base, arbitrum
+  chain: arbitrum, // Set to the origin chain
   transport: http()
 });
 
 const publicClient = createPublicClient({
-  chain: mainnet, base, arbitrum
+  chain: arbitrum, // Set to the origin chain
   transport: http()
 });
 ```
@@ -190,16 +190,16 @@ console.log('Execution started:', intentStatus);
 <Accordion title="Setup: Instantiate viem">
 ```typescript
 import { createWalletClient, createPublicClient, http } from 'viem';
-import { base, arbitrum, mainnet } from 'viem/chains'; // add other chains to support
+import { base, arbitrum, mainnet } from 'viem/chains';
 
 // Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
 const walletClient = createWalletClient({
-  chain: mainnet, base, arbitrum
+  chain: arbitrum, // Set to the origin chain
   transport: http()
 });
 
 const publicClient = createPublicClient({
-  chain: mainnet, base, arbitrum
+  chain: arbitrum, // Set to the origin chain
   transport: http()
 });
 ```

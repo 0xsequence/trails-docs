@@ -52,6 +52,9 @@ export const BaseDeposit = () => {
       toChainId={8453} // Base
       toToken="USDC"
       toAmount="100" // 100 USDC
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('Deposit completed:', sessionId)
+      }}
     />
   )
 }
@@ -86,12 +89,16 @@ export const AaveDepositExample = () => {
   return (
     <TrailsWidget
       apiKey="YOUR_API_KEY"
+      mode="fund"
       toAddress={AAVE_POOL_CONTRACT}
       toAmount="100" // 100 USDC
       toChainId={8453} // Base
       toToken="USDC"
       toCalldata={depositCalldata}
       theme="auto"
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('Aave deposit completed:', sessionId)
+      }}
     />
   )
 }
@@ -150,6 +157,9 @@ export const YearnDepositExample = () => {
       toToken="USDC"
       toCalldata={depositCalldata}
       theme="auto"
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('Vault deposit completed:', sessionId)
+      }}
     />
   )
 }

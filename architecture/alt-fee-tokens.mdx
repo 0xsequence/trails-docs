@@ -4,10 +4,32 @@ description: 'Users can pay gas in any permit-compatible, non-native token'
 icon: 'wind'
 ---
 
-## Pay Gas with non-native tokens
+## Overview
 
-Trails is able to support paying gas in any permit-compatible (EIP-2612) token which includes popular options and many stablecoins such as USDC and USDT.
+Trails supports paying gas fees in any permit-compatible (EIP-2612) token, including popular stablecoins like USDC and USDT. This removes the friction of needing native tokens on each chain.
 
-This prevents such scenarios when bridging to a new chain and not having any gas tokens to actually interact with apps. Additionally, Trails is able to bring more utility for your token seamlessly by enabling it as a end to end payment & gas option.
+## Why This Matters
 
-During the Trails flow, a user will be by default prompted with the native gas token, however can select other options. This will initially require an approval for the token, then every subsequent transaction will be a single confirmation.
+Common problems this solves:
+
+- **New chain onboarding**: Users bridge to a new chain but have no native tokens for gas
+- **Stablecoin-first users**: Users who hold primarily stablecoins don't need to manage gas tokens
+- **Simplified UX**: One token type for both payment and gas fees
+
+## How It Works
+
+1. User initiates a transaction in the Trails widget
+2. By default, native gas token is shown as the fee option
+3. User can select alternative fee tokens (USDC, USDT, etc.)
+4. First time: User signs an EIP-2612 permit (gasless signature)
+5. Subsequent transactions: Single confirmation only
+
+## Supported Fee Tokens
+
+Any token implementing EIP-2612 (permit) can be used as a fee token. 
+
+See the [API Integration Guide](/api-reference/introduction) for the complete permit flow implementation at an API level.
+
+## Widget Behavior
+
+In the Trails widget, alternative fee tokens are automatically presented to users when available. No additional configuration is required—the widget handles permit signatures and fee selection automatically.

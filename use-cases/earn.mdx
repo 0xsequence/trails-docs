@@ -13,6 +13,14 @@ Trails simplifies this by natively integrating with various DeFi protocols for e
 
 For users, all the complexity is handled for them including swapping and bridging to the corresponding vault or pool token in a single transaction to immediately begin earning yield.
 
+## Use Cases
+
+Ideal for a variety of yield-generating and staking scenarios:
+
+- Deposit into lending protocols like Aave or Morpho
+- Fund yield aggregator vaults like Yearn Finance
+- Fund auto-compounding yield strategies
+
 ## Examples
 
 ### Deposit into a user-selected Aave or Morpho vault
@@ -30,6 +38,9 @@ export const App = () => {
       mode="earn"
       renderInline={true}
       theme="auto"
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('Deposit completed:', sessionId)
+      }}
     />
   )
 }
@@ -73,6 +84,9 @@ export const AaveDepositExample = () => {
       toToken="USDC"
       toCalldata={depositCalldata}
       theme="auto"
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('Aave deposit completed:', sessionId)
+      }}
     />
   )
 }
