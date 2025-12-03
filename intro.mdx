@@ -42,13 +42,13 @@ Trails is free to integrate and is optimized for a variety of use cases for the 
 
 ## How Trails Works
 
-Trails introduces a novel 'intent address' primitive powered by account abstraction tech that enables onchain verifiable execution trustlessly. Here's the flow on how it works:
+Trails introduces a novel 'intent address' primitive powered by account abstraction tech that enables onchain verifiable execution trustlessly in 1-click from the user. Here's a simplified view on how Trails works:
 
 1. **App Defines Intent**: Create a payment transaction (mint, deposit, swap, etc) for any chain in any token.
-2. **Trails SDK Inspects**: Can this succeed with the assets held on current chain? Yes = Pass through. No = Continue Orchestration.
+2. **Trails Inspects**: Can this succeed with the assets held on current chain? Yes = Direct Call. No = Continue Orchestration.
 3. **User Selects Route**: Trails presents an aggregated balance of the user's assets across all chains for the user to select from.
 4. **Trails Orchestrates Transaction**: Intelligently combines and optimizes swap + bridge + execute for the selected route to fulfill the transaction.
-5. **Execute Transaction**: User confirms the transaction via their wallet which deposits the amount from their balance into a Trails 'intent address' - Trails handles the rest automatically!
+5. **Execute Transaction**: User confirms the transaction via their wallet which deposits the amount requested into a Trails 'intent address'. Trails handles any swaps, bridges, or executions automatically!
 
 This architecture enables developers to build sophisticated transaction experiences while abstracting the underlying complexity of multichain operations. All you have to do is specify what transaction and any payment options to execute
 whether cross or same chain. Developers can pass in calldata to execute any arbitrary smart contract functions.
