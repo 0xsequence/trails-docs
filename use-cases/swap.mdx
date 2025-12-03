@@ -86,7 +86,7 @@ export const AdvancedSwap = () => {
     <TrailsWidget
       apiKey="YOUR_API_KEY"
       mode="swap"
-      quoteProvider="cctp"
+      bridgeProvider="CCTP"
       onCheckoutComplete={({ sessionId }) => {
         console.log('Advanced swap completed:', sessionId)
         // Handle post-swap logic

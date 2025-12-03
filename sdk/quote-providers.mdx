@@ -1,24 +1,26 @@
 ---
-title: Quote Providers
-description: "Configure and optimize quote providers for cross-chain interactions"
+title: Route Providers
+description: "Configure and optimize route providers for cross-chain interactions"
 ---
 
-## Quote Providers
+## Route Providers
 
-Trails integrates with multiple liquidity sources and bridge providers to find the best routes for your cross-chain transactions. You can specify a preferred provider or let Trails automatically select the optimal one.
+Trails integrates with multiple liquidity sources and bridge providers to find the best routes for your cross-chain transactions. You can specify preferred providers for swapping and bridging, or let Trails automatically select the optimal ones.
 
 ## Available Providers
 
-- **`auto`** (recommended): Automatically selects the best provider based on the route
-- **`lifi`**: Uses LiFi aggregator for cross-chain swaps
-- **`relay`**: Uses Relay for bridging operations
-- **`cctp`**: Uses Circle's Cross-Chain Transfer Protocol for USDC transfers
+- **`AUTO`** (recommended): Automatically selects the best provider based on the route
+- **`LIFI`**: Uses LiFi aggregator for cross-chain swaps and bridging
+- **`RELAY`**: Uses Relay for fast bridging operations
+- **`CCTP`**: Uses Circle's Cross-Chain Transfer Protocol for USDC transfers
+- **`SUSHI`**: Uses SushiSwap for on-chain swaps
+- **`ZEROX`**: Uses 0x protocol for DEX aggregation
 
 ## Configuration
 
 ### Widget-Level Configuration
 
-Specify a quote provider when initializing the widget:
+Specify route providers when initializing the widget:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
@@ -26,7 +28,8 @@ import { TrailsWidget } from '0xtrails/widget'
 <TrailsWidget
   apiKey="YOUR_API_KEY"
   mode="swap"
-  quoteProvider="lifi" // Use LiFi as the quote provider
+  swapProvider="LIFI"    // Provider for on-chain swaps
+  bridgeProvider="RELAY" // Provider for cross-chain bridging
   toAddress="0x..."
   toChainId={8453}
   toToken="USDC"
@@ -35,10 +38,10 @@ import { TrailsWidget } from '0xtrails/widget'
 
 ### Hook-Level Configuration
 
-When using the `useQuote` hook, the quote provider is determined by the SDK's default settings and route optimization.
+When using the `useQuote` hook, you can specify both swap and bridge providers:
 
 ```tsx
-import { useQuote, TradeType } from '0xtrails'
+import { useQuote, TradeType, RouteProvider } from '0xtrails'
 
 const { quote, swap } = useQuote({
   walletClient,
@@ -48,7 +51,8 @@ const { quote, swap } = useQuote({
   toChainId: 8453,
   swapAmount: '1000000',
   tradeType: TradeType.EXACT_INPUT,
-  // Quote provider is automatically optimized
+  swapProvider: 'AUTO',    // Optional: defaults to AUTO
+  bridgeProvider: 'RELAY', // Optional: specify preferred bridge
 })
 ```
 
@@ -56,7 +60,7 @@ const { quote, swap } = useQuote({
 
 ### Auto (Recommended)
 
-The `auto` setting allows Trails to intelligently select the best provider for each transaction based on:
+The `AUTO` setting allows Trails to intelligently select the best provider for each transaction based on:
 
 - **Cost efficiency**: Lowest fees and gas costs
 - **Speed**: Fastest execution time
@@ -65,7 +69,8 @@ The `auto` setting allows Trails to intelligently select the best provider for e
 
 ```tsx
 <TrailsWidget
-  quoteProvider="auto" // Default - recommended for most cases
+  swapProvider="AUTO"   // Default - recommended
+  bridgeProvider="AUTO" // Default - recommended
   // ... other props
 />
 ```
@@ -80,7 +85,8 @@ LiFi is a cross-chain liquidity aggregator that sources routes from multiple bri
 
 ```tsx
 <TrailsWidget
-  quoteProvider="lifi"
+  swapProvider="LIFI"
+  bridgeProvider="LIFI"
   // ... other props
 />
 ```
@@ -95,7 +101,7 @@ Relay provides fast cross-chain transfers with competitive fees:
 
 ```tsx
 <TrailsWidget
-  quoteProvider="relay"
+  bridgeProvider="RELAY"
   // ... other props
 />
 ```
@@ -110,17 +116,46 @@ Circle's Cross-Chain Transfer Protocol for native USDC transfers:
 
 ```tsx
 <TrailsWidget
-  quoteProvider="cctp"
+  bridgeProvider="CCTP"
   toToken="USDC" // Best for USDC transfers
+  // ... other props
+/>
+```
+
+### SushiSwap
+
+SushiSwap provides on-chain swaps across multiple chains:
+
+- **Multi-chain**: Available on many EVM chains
+- **DEX liquidity**: Access to Sushi's liquidity pools
+
+```tsx
+<TrailsWidget
+  swapProvider="SUSHI"
+  // ... other props
+/>
+```
+
+### 0x Protocol
+
+0x provides DEX aggregation for optimal swap rates:
+
+- **Aggregated liquidity**: Sources from multiple DEXs
+- **Best execution**: Optimizes for price and gas
+
+```tsx
+<TrailsWidget
+  swapProvider="ZEROX"
   // ... other props
 />
 ```
 
 ## Best Practices
 
-1. **Use `auto` by default**: Let Trails optimize the route for you
-2. **Specify for USDC**: Use `cctp` for USDC-specific transfers if you want guaranteed 1:1 transfers
+1. **Use `AUTO` by default**: Let Trails optimize the route for you
+2. **Specify for USDC**: Use `CCTP` bridge provider for USDC-specific transfers if you want guaranteed 1:1 transfers
 3. **Consider your use case**: 
-   - High volume? Use `relay` for speed
-   - Need best rates? Use `lifi` for aggregation
-   - USDC transfers? Use `cctp` for native transfers
+   - Fast bridging? Use `RELAY` as bridge provider
+   - Need best rates? Use `LIFI` for aggregation
+   - USDC transfers? Use `CCTP` for native transfers
+4. **Separate concerns**: Use `swapProvider` for same-chain swaps and `bridgeProvider` for cross-chain transfers

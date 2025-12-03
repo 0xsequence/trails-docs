@@ -28,20 +28,61 @@ Trails is easy to get started, however we have deep configuration options to add
 | `buttonText` | `string` | No | Custom text for the trigger button (auto-generated if not provided) |
 | `theme` | `"light" \| "dark" \| "auto"` | No | Color theme; `auto` follows system preference (default: `"auto"`) |
 | `customCss` | `string \| Record<string, string>` | No | Custom CSS styles to apply to the component |
+| `disableCss` | `boolean` | No | Disable default CSS injection (for custom styling) |
+| `toast` | `boolean` | No | Show toast notifications for transaction updates |
+| `hideDisconnect` | `boolean` | No | Hide the disconnect button in the widget |
+| `payMessage` | `string` | No | Custom message to display during payment flow |
 
 ### Wallet & Connection Options
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `walletConnectProjectId` | `string` | No | WalletConnect project ID for WalletConnect integration |
+| `walletOptions` | `string[]` | No | Array of wallet connector IDs to show (e.g., `["metamask", "walletconnect"]`) |
+| `isSmartWallet` | `boolean` | No | Indicate if the connected wallet is a smart wallet (for ERC-4337 support) |
+| `decoupleWagmi` | `boolean` | No | Decouple from wagmi provider (use external wagmi config) |
+| `wagmiConnectors` | `Connector[]` | No | Custom wagmi connectors to use |
 
 ### Transaction Options
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
-| `quoteProvider` | `"auto" \| "lifi" \| "relay" \| "cctp"` | No | Preferred quote provider (default: `"auto"`). `"auto"` automatically selects best provider, `"lifi"` uses LiFi aggregator for multi-source routing, `"relay"` uses Relay for fast direct transfers, `"cctp"` uses Circle's CCTP for native USDC transfers |
+| `swapProvider` | `RouteProvider` | No | Preferred swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, or `"CCTP"`. Default: `"AUTO"` automatically selects best provider |
+| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"`. Default: `"AUTO"` automatically selects best provider for cross-chain transfers |
 | `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |
+| `priceImpactWarningThresholdBps` | `number` | No | Price impact threshold in basis points before showing a warning (e.g., `500` for 5%) |
+| `priceImpactWarningMessage` | `string` | No | Custom message to display when price impact exceeds threshold |
+| `priceImpactFallbackBridgeUrl` | `string` | No | URL to redirect users when price impact is too high |
+
+### App Metadata (for WalletConnect)
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `appName` | `string` | No | Your app's name (shown in wallet connect dialogs) |
+| `appUrl` | `string` | No | Your app's URL |
+| `appImageUrl` | `string` | No | Your app's logo URL |
+| `appDescription` | `string` | No | Short description of your app |
+
+### Onramp Integration
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `onramp` | `OnrampFactory` | No | Onramp factory function from `@0xtrails/onramp` for fiat-to-crypto funding |
+
+```tsx
+import { trailsOnramp } from "@0xtrails/onramp"
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="fund"
+  onramp={trailsOnramp({ 
+    config: { 
+      exchanges: ['coinbase', 'moonpay'] 
+    } 
+  })}
+/>
+```
 
 ### Event Handlers
 
@@ -51,9 +92,17 @@ Trails is easy to get started, however we have deep configuration options to add
 | `onDestinationConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | Called when destination transaction is confirmed |
 | `onCheckoutStart` | `(data: { sessionId: string }) => void` | No | Called when checkout process starts |
 | `onCheckoutQuote` | `(data: { sessionId: string; quote: any }) => void` | No | Called when quote is received |
+| `onCheckoutSignatureRequest` | `(data: { sessionId: string }) => void` | No | Called when signature is requested from wallet |
+| `onCheckoutSignatureConfirmed` | `(data: { sessionId: string }) => void` | No | Called when user confirms signature |
+| `onCheckoutSignatureRejected` | `(data: { sessionId: string; error: unknown }) => void` | No | Called when user rejects signature |
 | `onCheckoutComplete` | `(data: { sessionId: string }) => void` | No | Called when checkout completes successfully |
-| `onCheckoutError` | `(data: { sessionId: string; error: string }) => void` | No | Called when checkout encounters an error (including user rejection) |
+| `onCheckoutError` | `(data: { sessionId: string; error: unknown }) => void` | No | Called when checkout encounters an error (including user rejection) |
 | `onCheckoutStatusUpdate` | `(data: { sessionId: string; transactionStates: TransactionState[] }) => void` | No | Called when transaction status updates |
+| `onCheckoutApprovalRequest` | `(data: { sessionId: string }) => void` | No | Called when token approval is requested |
+| `onCheckoutApprovalConfirmed` | `(data: { sessionId: string; transactionHash: string }) => void` | No | Called when token approval is confirmed |
+| `onCheckoutApprovalRejected` | `(data: { sessionId: string; error: unknown }) => void` | No | Called when token approval is rejected |
+| `onOpen` | `() => void` | No | Called when the widget modal opens |
+| `onClose` | `() => void` | No | Called when the widget modal closes |
 
 ## Smart Contract Interactions
 

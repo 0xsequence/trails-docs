@@ -1154,6 +1154,66 @@
           }
         }
       },
+      "ErrorClientOutdated": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "ClientOutdated"
+          },
+          "code": {
+            "type": "number",
+            "example": 8009
+          },
+          "msg": {
+            "type": "string",
+            "example": "Client is outdated"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 422
+          }
+        }
+      },
+      "ErrorIntentsSkipped": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "IntentsSkipped"
+          },
+          "code": {
+            "type": "number",
+            "example": 7000
+          },
+          "msg": {
+            "type": "string",
+            "example": "Intents skipped as client is attempting a transaction that does not require intents"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 400
+          }
+        }
+      },
       "ErrorIntentsDisabled": {
         "type": "object",
         "required": [
@@ -1192,13 +1252,46 @@
           "EXACT_OUTPUT"
         ]
       },
-      "QuoteProviderType": {
+      "RouteProvider": {
         "type": "string",
         "description": "Represented as string on the server side",
         "enum": [
+          "AUTO",
+          "CCTP",
+          "LIFI",
           "RELAY",
-          "CCTPV2",
-          "LIFI"
+          "SUSHI",
+          "ZEROX"
+        ]
+      },
+      "IntentStatus": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "QUOTED",
+          "COMMITTED",
+          "EXECUTING",
+          "FAILED",
+          "SUCCEEDED"
+        ]
+      },
+      "TransactionType": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "UNKNOWN",
+          "DEPOSIT",
+          "ORIGIN",
+          "DESTINATION",
+          "ROUTE"
+        ]
+      },
+      "TransactionContext": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "NONE",
+          "CCTPV2_MESSAGE"
         ]
       },
       "TransactionStatus": {
@@ -1217,17 +1310,6 @@
           "ABORTED"
         ]
       },
-      "IntentStatus": {
-        "type": "string",
-        "description": "Represented as uint8 on the server side",
-        "enum": [
-          "QUOTED",
-          "COMMITTED",
-          "EXECUTING",
-          "FAILED",
-          "SUCCEEDED"
-        ]
-      },
       "ChainGasUsageStatus": {
         "type": "string",
         "description": "Represented as string on the server side",
@@ -1237,6 +1319,18 @@
           "VERY_BUSY"
         ]
       },
+      "CCTPTransferStatus": {
+        "type": "string",
+        "description": "Represented as uint8 on the server side",
+        "enum": [
+          "UNKNOWN",
+          "ON_HOLD",
+          "PENDING",
+          "FETCHING",
+          "COMPLETE",
+          "FAILED"
+        ]
+      },
       "QuoteIntentRequest": {
         "type": "object",
         "required": [
@@ -1244,8 +1338,7 @@
           "originChainId",
           "originTokenAddress",
           "destinationChainId",
-          "destinationTokenAddress",
-          "destinationToAddress"
+          "destinationTokenAddress"
         ],
         "properties": {
           "ownerAddress": {
@@ -1270,7 +1363,7 @@
             "type": "string"
           },
           "destinationCallValue": {
-            "type": "string"
+            "type": "number"
           },
           "originTokenAmount": {
             "type": "number"
@@ -1281,6 +1374,9 @@
           "tradeType": {
             "$ref": "#/components/schemas/TradeType"
           },
+          "onlyNativeGasFee": {
+            "type": "boolean"
+          },
           "options": {
             "$ref": "#/components/schemas/QuoteIntentRequestOptions"
           }
@@ -1289,8 +1385,11 @@
       "QuoteIntentRequestOptions": {
         "type": "object",
         "properties": {
-          "quoteProvider": {
-            "$ref": "#/components/schemas/QuoteProviderType"
+          "swapProvider": {
+            "$ref": "#/components/schemas/RouteProvider"
+          },
+          "bridgeProvider": {
+            "$ref": "#/components/schemas/RouteProvider"
           },
           "slippageTolerance": {
             "type": "number"
@@ -1309,13 +1408,14 @@
           "status",
           "quoteRequest",
           "ownerAddress",
+          "originChainId",
+          "destinationChainId",
           "originIntentAddress",
-          "destinationIntentAddress",
-          "destinationSalt",
+          "salt",
           "depositTransaction",
-          "calls",
-          "preconditions",
-          "metaTxns",
+          "originCalls",
+          "originPrecondition",
+          "originMetaTxn",
           "quote",
           "fees",
           "trailsVersion",
@@ -1340,38 +1440,41 @@
           "ownerAddress": {
             "type": "string"
           },
+          "originChainId": {
+            "type": "number"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
           "originIntentAddress": {
             "type": "string"
           },
           "destinationIntentAddress": {
             "type": "string"
           },
-          "destinationSalt": {
+          "salt": {
             "type": "number"
           },
           "depositTransaction": {
             "$ref": "#/components/schemas/DepositTransaction"
           },
-          "calls": {
-            "type": "array",
-            "description": "[]IntentCalls",
-            "items": {
-              "$ref": "#/components/schemas/IntentCalls"
-            }
+          "originCalls": {
+            "$ref": "#/components/schemas/IntentCalls"
           },
-          "preconditions": {
-            "type": "array",
-            "description": "[]TransactionPrecondition",
-            "items": {
-              "$ref": "#/components/schemas/TransactionPrecondition"
-            }
+          "destinationCalls": {
+            "$ref": "#/components/schemas/IntentCalls"
           },
-          "metaTxns": {
-            "type": "array",
-            "description": "[]MetaTxn",
-            "items": {
-              "$ref": "#/components/schemas/MetaTxn"
-            }
+          "originPrecondition": {
+            "$ref": "#/components/schemas/TransactionPrecondition"
+          },
+          "destinationPrecondition": {
+            "$ref": "#/components/schemas/TransactionPrecondition"
+          },
+          "originMetaTxn": {
+            "$ref": "#/components/schemas/MetaTxn"
+          },
+          "destinationMetaTxn": {
+            "$ref": "#/components/schemas/MetaTxn"
           },
           "quote": {
             "$ref": "#/components/schemas/IntentProviderQuote"
@@ -1592,6 +1695,8 @@
           "id",
           "intentId",
           "chainId",
+          "type",
+          "context",
           "fromAddress",
           "toAddress",
           "tokenAddress",
@@ -1607,6 +1712,12 @@
           },
           "chainId": {
             "type": "number"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "context": {
+            "$ref": "#/components/schemas/TransactionContext"
           },
           "fromAddress": {
             "type": "string"
@@ -1658,6 +1769,9 @@
       "IntentProviderQuote": {
         "type": "object",
         "required": [
+          "routeProviders",
+          "routeProvidersRequestIds",
+          "routeProvidersFeeUsd",
           "quoteProvider",
           "quoteProviderRequestId",
           "quoteProviderFeeUsd",
@@ -1670,6 +1784,27 @@
           "priceImpactUsd"
         ],
         "properties": {
+          "routeProviders": {
+            "type": "array",
+            "description": "[]RouteProvider",
+            "items": {
+              "$ref": "#/components/schemas/RouteProvider"
+            }
+          },
+          "routeProvidersRequestIds": {
+            "type": "array",
+            "description": "[]string",
+            "items": {
+              "type": "string"
+            }
+          },
+          "routeProvidersFeeUsd": {
+            "type": "array",
+            "description": "[]float64",
+            "items": {
+              "type": "number"
+            }
+          },
           "quoteProvider": {
             "type": "string"
           },
@@ -1706,7 +1841,6 @@
         "type": "object",
         "required": [
           "originGas",
-          "destinationGas",
           "provider",
           "feeTokenAddress",
           "feeTokenTotal",
@@ -1857,6 +1991,7 @@
           "destinationTokenAddress",
           "destinationTokenAmount",
           "destinationTokenMetadata",
+          "destinationToAddress",
           "createdAt"
         ],
         "properties": {
@@ -1919,6 +2054,9 @@
           },
           "destinationTokenMetadata": {
             "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "destinationToAddress": {
+            "type": "string"
           },
           "updatedAt": {
             "type": "string"
@@ -2018,24 +2156,38 @@
         "type": "object",
         "required": [
           "id",
-          "sourceTxHash",
-          "sourceChainId",
+          "intentId",
+          "originChainId",
           "destinationChainId",
+          "originTxnId",
+          "originTxnHash",
+          "destinationTxnId",
           "message",
           "attestation",
-          "status"
+          "status",
+          "createdAt",
+          "updatedAt"
         ],
         "properties": {
           "id": {
+            "type": "number"
+          },
+          "intentId": {
             "type": "string"
           },
-          "sourceTxHash": {
-            "type": "string"
-          },
-          "sourceChainId": {
+          "originChainId": {
             "type": "number"
           },
           "destinationChainId": {
+            "type": "number"
+          },
+          "originTxnId": {
+            "type": "number"
+          },
+          "originTxnHash": {
+            "type": "string"
+          },
+          "destinationTxnId": {
             "type": "number"
           },
           "message": {
@@ -2045,12 +2197,15 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "type": "number"
           },
-          "updatedAt": {
+          "statusReason": {
             "type": "string"
           },
           "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
             "type": "string"
           }
         }
@@ -2113,7 +2268,8 @@
           "tokenDecimals",
           "amount",
           "amountUsd",
-          "feeCollectorAddress"
+          "feeCollectorAddress",
+          "is2612"
         ],
         "properties": {
           "tokenAddress": {
@@ -2133,6 +2289,9 @@
           },
           "feeCollectorAddress": {
             "type": "string"
+          },
+          "is2612": {
+            "type": "boolean"
           }
         }
       },
@@ -2228,6 +2387,107 @@
           }
         }
       },
+      "TrailsContracts": {
+        "type": "object",
+        "required": [
+          "trailsIntentEntrypointAddress",
+          "trailsRouterAddress",
+          "trailsRouterShimAddress"
+        ],
+        "properties": {
+          "trailsIntentEntrypointAddress": {
+            "type": "string"
+          },
+          "trailsRouterAddress": {
+            "type": "string"
+          },
+          "trailsRouterShimAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "ChainInfo": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "tokenName",
+          "tokenSymbol",
+          "tokenDecimals",
+          "isTestnet",
+          "supportsBridging"
+        ],
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tokenName": {
+            "type": "string"
+          },
+          "tokenSymbol": {
+            "type": "string"
+          },
+          "tokenDecimals": {
+            "type": "number"
+          },
+          "isTestnet": {
+            "type": "boolean"
+          },
+          "supportsBridging": {
+            "type": "boolean"
+          },
+          "logoUri": {
+            "type": "string"
+          },
+          "blockExplorerUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "TokenInfo": {
+        "type": "object",
+        "required": [
+          "chainId",
+          "address",
+          "name",
+          "symbol",
+          "decimals",
+          "featured",
+          "featureIndex"
+        ],
+        "properties": {
+          "chainId": {
+            "type": "number"
+          },
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "number"
+          },
+          "supportsBridging": {
+            "type": "boolean"
+          },
+          "logoUri": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "featureIndex": {
+            "type": "number"
+          }
+        }
+      },
       "SortOrder": {
         "type": "string",
         "description": "Represented as uint32 on the server side",
@@ -2264,6 +2524,7 @@
         "required": [
           "healthOK",
           "startTime",
+          "hostname",
           "uptime",
           "ver",
           "branch",
@@ -2276,6 +2537,9 @@
             "type": "boolean"
           },
           "startTime": {
+            "type": "string"
+          },
+          "hostname": {
             "type": "string"
           },
           "uptime": {
@@ -2342,11 +2606,15 @@
       "CommitIntentRequest": {
         "type": "object",
         "required": [
-          "intent"
+          "intent",
+          "trailsContracts"
         ],
         "properties": {
           "intent": {
             "$ref": "#/components/schemas/Intent"
+          },
+          "trailsContracts": {
+            "$ref": "#/components/schemas/TrailsContracts"
           }
         }
       },
@@ -2423,6 +2691,13 @@
         "properties": {
           "intentId": {
             "type": "string"
+          },
+          "lastReceiptStates": {
+            "type": "array",
+            "description": "[]TransactionStatus",
+            "items": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
           }
         }
       },
@@ -2430,11 +2705,19 @@
         "type": "object",
         "required": [
           "intentReceipt",
+          "receiptStates",
           "done"
         ],
         "properties": {
           "intentReceipt": {
             "$ref": "#/components/schemas/IntentReceipt"
+          },
+          "receiptStates": {
+            "type": "array",
+            "description": "[]TransactionStatus",
+            "items": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
           },
           "done": {
             "type": "boolean"
@@ -2479,6 +2762,9 @@
             "type": "string"
           },
           "byOriginIntentAddress": {
+            "type": "string"
+          },
+          "byDestinationIntentAddress": {
             "type": "string"
           }
         }
@@ -2537,10 +2823,10 @@
             "type": "string"
           },
           "before": {
-            "type": "object"
+            "type": "number"
           },
           "after": {
-            "type": "object"
+            "type": "number"
           },
           "sort": {
             "type": "array",
@@ -2569,6 +2855,186 @@
           },
           "order": {
             "$ref": "#/components/schemas/SortOrder"
+          }
+        }
+      },
+      "GetTokenPricesRequest": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]Token",
+            "items": {
+              "$ref": "#/components/schemas/Token"
+            }
+          }
+        }
+      },
+      "GetTokenPricesResponse": {
+        "type": "object",
+        "required": [
+          "tokenPrices"
+        ],
+        "properties": {
+          "tokenPrices": {
+            "type": "array",
+            "description": "[]TokenPrice",
+            "items": {
+              "$ref": "#/components/schemas/TokenPrice"
+            }
+          }
+        }
+      },
+      "GetChainsRequest": {
+        "type": "object",
+        "properties": {
+          "routeProvider": {
+            "type": "string"
+          }
+        }
+      },
+      "GetChainsResponse": {
+        "type": "object",
+        "required": [
+          "chains"
+        ],
+        "properties": {
+          "chains": {
+            "type": "array",
+            "description": "[]ChainInfo",
+            "items": {
+              "$ref": "#/components/schemas/ChainInfo"
+            }
+          }
+        }
+      },
+      "GetExactOutputRoutesRequest": {
+        "type": "object",
+        "required": [
+          "destinationChainId",
+          "destinationTokenAddress"
+        ],
+        "properties": {
+          "destinationChainId": {
+            "type": "number"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          },
+          "originChainId": {
+            "type": "number"
+          },
+          "originTokenAddress": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "GetExactOutputRoutesResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "GetExactInputRoutesRequest": {
+        "type": "object",
+        "required": [
+          "originChainId",
+          "originTokenAddress"
+        ],
+        "properties": {
+          "originChainId": {
+            "type": "number"
+          },
+          "originTokenAddress": {
+            "type": "string"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "GetExactInputRoutesResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        }
+      },
+      "GetTokenListRequest": {
+        "type": "object",
+        "required": [
+          "chainIds"
+        ],
+        "properties": {
+          "chainIds": {
+            "type": "array",
+            "description": "[]uint64",
+            "items": {
+              "type": "number"
+            }
+          },
+          "searchQuery": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "tokenAddress": {
+            "type": "string"
+          },
+          "includeAllListed": {
+            "type": "boolean"
+          },
+          "includeExternal": {
+            "type": "boolean"
+          },
+          "excludeTokens": {
+            "type": "array",
+            "description": "[]string",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GetTokenListResponse": {
+        "type": "object",
+        "required": [
+          "tokens"
+        ],
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "description": "[]TokenInfo",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
           }
         }
       }
@@ -2937,18 +3403,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "tokens"
-                ],
-                "properties": {
-                  "tokens": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/Token"
-                    }
-                  }
-                }
+                "$ref": "#/components/schemas/GetTokenPricesRequest"
               }
             }
           }
@@ -2959,18 +3414,183 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "tokenPrices"
-                  ],
-                  "properties": {
-                    "tokenPrices": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/TokenPrice"
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/GetTokenPricesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Trails/GetChains": {
+      "post": {
+        "summary": "Get Chains",
+        "description": "Retrieve list of supported chains",
+        "operationId": "getChains",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetChainsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetChainsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Trails/GetExactOutputRoutes": {
+      "post": {
+        "summary": "Get Exact Output Routes",
+        "description": "Retrieve available routes for exact output token swaps",
+        "operationId": "getExactOutputRoutes",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetExactOutputRoutesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetExactOutputRoutesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Trails/GetExactInputRoutes": {
+      "post": {
+        "summary": "Get Exact Input Routes",
+        "description": "Retrieve available routes for exact input token swaps",
+        "operationId": "getExactInputRoutes",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetExactInputRoutesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetExactInputRoutesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Trails/GetTokenList": {
+      "post": {
+        "summary": "Get Token List",
+        "description": "Retrieve list of tokens for specified chains",
+        "operationId": "getTokenList",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTokenListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTokenListResponse"
                 }
               }
             }

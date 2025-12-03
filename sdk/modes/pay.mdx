@@ -28,7 +28,8 @@ Pay mode implements exact-output trade flows where you specify the precise amoun
 |------|------|-------------|
 | `toCalldata` | `string` | Calldata to execute on destination |
 | `slippageTolerance` | `string \| number` | Slippage tolerance (e.g., `"0.005"` for 0.5%) |
-| `quoteProvider` | `QuoteProvider` | Specific quote provider: `"auto"` \| `"lifi"` \| `"relay"` \| `"cctp"` |
+| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
+| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"` |
 
 ## Implementation
 
@@ -90,9 +91,9 @@ const nftMintCalldata = encodeFunctionData({
 </TrailsWidget>
 ```
 
-### Payment with Custom Quote Provider
+### Payment with Custom Route Provider
 
-Specify a particular quote provider for routing:
+Specify particular providers for routing:
 
 ```tsx
 <TrailsWidget
@@ -102,7 +103,7 @@ Specify a particular quote provider for routing:
   toAmount="100"
   toChainId={8453}
   toToken="USDC"
-  quoteProvider="cctp" // Use Circle's CCTP
+  bridgeProvider="CCTP" // Use Circle's CCTP for cross-chain
   slippageTolerance="0.01" // 1% slippage
 />
 ```
