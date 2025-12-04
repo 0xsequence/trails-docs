@@ -4,6 +4,12 @@
     "title": "Trails API",
     "version": ""
   },
+  "servers": [
+    {
+      "url": "https://trails-api.sequence.app",
+      "description": "Trails API"
+    }
+  ],
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": {
