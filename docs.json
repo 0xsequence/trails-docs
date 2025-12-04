@@ -131,6 +131,10 @@
   "navbar": {
     "links": [
       {
+        "label": "Dashboard",
+        "href": "https://dashboard.trails.build"
+      },
+      {
         "label": "Support",
         "href": "https://t.me/build_with_trails"
       }
