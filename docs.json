@@ -116,8 +116,7 @@
               "api-reference/endpoints/get-chains",
               "api-reference/endpoints/get-exact-output-routes",
               "api-reference/endpoints/get-exact-input-routes",
-              "api-reference/endpoints/get-token-list",
-              "api-reference/endpoints/get-trails-contracts"
+              "api-reference/endpoints/get-token-list"
             ]
           }
         ]

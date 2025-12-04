@@ -3037,21 +3037,6 @@
             }
           }
         }
-      },
-      "GetTrailsContractsRequest": {
-        "type": "object",
-        "properties": {}
-      },
-      "GetTrailsContractsResponse": {
-        "type": "object",
-        "required": [
-          "trailsContracts"
-        ],
-        "properties": {
-          "trailsContracts": {
-            "$ref": "#/components/schemas/TrailsContracts"
-          }
-        }
       }
     }
   },
@@ -3606,50 +3591,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetTokenListResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rpc/Trails/GetTrailsContracts": {
-      "post": {
-        "summary": "Get Trails Contracts",
-        "description": "Retrieve current Trails protocol contract addresses",
-        "operationId": "getTrailsContracts",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetTrailsContractsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetTrailsContractsResponse"
                 }
               }
             }

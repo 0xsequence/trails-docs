@@ -98,35 +98,6 @@ Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` w
   </Step>
 
   <Step>
-    ### Get Trails Contracts
-    Fetch the current protocol contract addresses. These addresses are required for committing an intent.
-
-```typescript
-const contractsResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTrailsContracts', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
-  },
-  body: JSON.stringify({})
-});
-
-const { trailsContracts } = await contractsResponse.json();
-
-console.log('Trails contracts:', trailsContracts);
-// {
-//   trailsIntentEntrypointAddress: "0x91E9e3Fe369CF005dB2857Ef24955A66d1E692Cf",
-//   trailsRouterAddress: "0xF8A739B9F24E297a98b7aba7A9cdFDBD457F6fF8",
-//   trailsRouterShimAddress: "0x1306aF05bA556839885B9B8c758f1d2F33d3571E"
-// }
-```
-
-<Tip>
-Contract addresses don't change frequently. You can cache them for up to an hour to reduce API calls.
-</Tip>
-  </Step>
-
-  <Step>
     ### Commit the Intent
     Lock in the quote by committing the intent with the fetched contract addresses. This reserves the rates.
 
@@ -137,7 +108,7 @@ const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/C
     'Content-Type': 'application/json',
     'X-Access-Key': 'YOUR_API_KEY'
   },
-  body: JSON.stringify({ intent, trailsContracts })
+  body: JSON.stringify({ intent })
 });
 
 const { intentId } = await commitResponse.json();
@@ -493,10 +464,6 @@ Explore additional endpoints to enhance your integration:
 - **[GetTokenList](/api-reference/endpoints/get-token-list)** - Get available tokens for specified chains
 - **[GetExactInputRoutes](/api-reference/endpoints/get-exact-input-routes)** - Find destination tokens from a source token
 - **[GetExactOutputRoutes](/api-reference/endpoints/get-exact-output-routes)** - Find source tokens that route to a destination
-
-### Protocol Configuration
-
-- **[GetTrailsContracts](/api-reference/endpoints/get-trails-contracts)** - Get current protocol contract addresses
 
 ## Support
 
