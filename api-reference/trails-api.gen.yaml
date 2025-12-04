@@ -2384,12 +2384,9 @@ components:
       type: object
       required:
         - intent
-        - trailsContracts
       properties:
         intent:
           $ref: '#/components/schemas/Intent'
-        trailsContracts:
-          $ref: '#/components/schemas/TrailsContracts'
     CommitIntentResponse:
       type: object
       required:
