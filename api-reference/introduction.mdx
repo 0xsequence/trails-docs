@@ -23,7 +23,8 @@ flowchart LR
 ```
 
 <Steps>
-  <Step title="Get Wallet Balance">
+  <Step>
+    ### Get Wallet Balance
     Before requesting a quote, fetch the user's token balances using a multichain Indexer to display total available tokens and amounts for the user to select:
 
 ```typescript
@@ -46,7 +47,8 @@ console.log('Available tokens:', balances);
 ```
   </Step>
 
-  <Step title="Get a Quote">
+  <Step>
+    ### Get a Quote
     Request a quote to see rates, fees, and routing options for your transaction.
 
 ```typescript
@@ -66,8 +68,8 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
     destinationToAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1', // recipient
     tradeType: 'EXACT_INPUT',
     options: {
-      slippageTolerance: 0.5, // 0.5%
-      quoteProvider: 'RELAY'
+      slippageTolerance: 0.005, // 0.5%
+      bridgeProvider: 'RELAY'
     }
   })
 });
@@ -95,17 +97,24 @@ Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` w
 </Tip>
   </Step>
 
-  <Step title="Commit the Intent">
+  <Step>
+    ### Commit the Intent
     Lock in the quote by committing the intent from the previous response which will reserve the rates.
 
 ```typescript
+const TRAILS_CONTRACTS = {
+  trailsIntentEntrypointAddress: "0x91E9e3Fe369CF005dB2857Ef24955A66d1E692Cf",
+  trailsRouterAddress: "0xF8A739B9F24E297a98b7aba7A9cdFDBD457F6fF8",
+  trailsRouterShimAddress: "0x1306aF05bA556839885B9B8c758f1d2F33d3571E",
+}
+
 const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
     'X-Access-Key': 'YOUR_API_KEY'
   },
-  body: JSON.stringify({ intent })
+  body: JSON.stringify({ intent, trailsContracts })
 });
 
 const { intentId } = await commitResponse.json();
@@ -120,7 +129,8 @@ Committed intents expire after a set period (check `intent.expiresAt`). Execute 
 </Warning>
   </Step>
 
-  <Step title="Execute the Transaction">
+  <Step>
+    ### Execute the Transaction
     Execute the intent using one of two mutually exclusive methods - either a normal transfer to the intent address or a permit operation if a user wants to pay in a non-native gas token:
 
 <Tabs>
@@ -129,11 +139,13 @@ Committed intents expire after a set period (check `intent.expiresAt`). Execute 
 
 <Accordion title="Setup: Instantiate viem">
 ```typescript
-import { createWalletClient, createPublicClient, http } from 'viem';
+import { createWalletClient, createPublicClient, http, encodeFunctionData, erc20Abi } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { base, arbitrum, mainnet } from 'viem/chains';
 
 // Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
 const walletClient = createWalletClient({
+  account: privateKeyToAccount('0x...'),
   chain: arbitrum, // Set to the origin chain
   transport: http()
 });
@@ -152,12 +164,13 @@ const tokenAddress = intent.depositTransaction.tokenAddress;
 const amount = intent.depositTransaction.amount;
 
 const depositTxHash = await walletClient.sendTransaction({
-  to: intentAddress,
-  value: 0n, // No native ETH sent (0 for ERC20 transfers, or ETH amount if sending native token)
-  data: encodeERC20Transfer( // Use your favorite library such as viem to encode ERC20 transfer
-    tokenAddress,
-    intentAddress,
-    amount
+  to: tokenAddress,
+  data: encodeFunctionData( 
+      {
+          abi: erc20Abi,
+          functionName: 'transfer',
+          args: [intentAddress, amount]
+      }
   )
 });
 
@@ -189,11 +202,13 @@ console.log('Execution started:', intentStatus);
 
 <Accordion title="Setup: Instantiate viem">
 ```typescript
-import { createWalletClient, createPublicClient, http } from 'viem';
+import { createWalletClient, createPublicClient, http, encodeFunctionData, erc20Abi, parseAbi } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { base, arbitrum, mainnet } from 'viem/chains';
 
 // Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
 const walletClient = createWalletClient({
+  account: privateKeyToAccount('0x...'),
   chain: arbitrum, // Set to the origin chain
   transport: http()
 });
@@ -206,8 +221,6 @@ const publicClient = createPublicClient({
 </Accordion>
 
 ```typescript
-import { erc20Abi, parseAbi } from 'viem';
-
 // Select a gas fee option from the quote response
 const selectedGasFeeOption = gasFeeOptions.feeOptions[0]; // Choose based on user preference
 
@@ -283,9 +296,9 @@ if (needsApproval) {
     message: {
       owner: intent.ownerAddress,
       spender: INTENT_ENTRYPOINT_ADDRESS,
-      value: permitAmount,
+      value: BigInt(permitAmount),
       nonce: tokenNonce,
-      deadline: permitDeadline
+      deadline: BigInt(permitDeadline)
     }
   });
 }
@@ -385,7 +398,8 @@ console.log('Execution started:', intentStatus);
 </Tabs>
   </Step>
 
-  <Step title="Monitor Completion">
+  <Step>
+    ### Monitor Completion
     Wait for the transaction to complete using the streaming endpoint:
 
 ```typescript

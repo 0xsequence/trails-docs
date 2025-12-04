@@ -41,7 +41,7 @@ const trailsApi = new TrailsApi('YOUR_API_KEY')
 The SDK provides fully typed methods for all Trails API endpoints:
 
 ```typescript
-import { TradeType, TrailsApi } from '@0xtrails/api'
+import { TradeType, TrailsApi, RouteProvider } from '@0xtrails/api'
 
 // Request a quote
 const quoteResponse = await trailsApi.quoteIntent({
@@ -55,7 +55,7 @@ const quoteResponse = await trailsApi.quoteIntent({
     tradeType: TradeType.EXACT_INPUT,
     options: {
         slippageTolerance: 0.005,
-        quoteProvider: 'RELAY'
+        bridgeProvider: RouteProvider.RELAY
     }
 })
 
