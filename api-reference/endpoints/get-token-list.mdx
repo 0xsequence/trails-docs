@@ -1,0 +1,300 @@
+---
+title: GetTokenList
+openapi: ../trails-api.gen.json post /rpc/Trails/GetTokenList
+---
+
+## Overview
+
+The `GetTokenList` endpoint retrieves a list of tokens available on specified chains. This is useful for building token selection UIs, searching for tokens, and discovering available assets for swaps and transfers.
+
+## Use Cases
+
+- Build token selector dropdowns
+- Implement token search functionality
+- Display featured/popular tokens
+- Filter tokens by chain
+- Look up specific token addresses
+- Exclude certain tokens from selection
+
+## Request Parameters
+
+### Required Fields
+
+- **chainIds** (number[]): Array of chain IDs to get tokens for
+
+### Optional Fields
+
+- **searchQuery** (string): Search tokens by name, symbol, or address
+- **limit** (number): Maximum number of tokens to return
+- **tokenAddress** (string): Filter to a specific token address
+- **includeAllListed** (boolean): Include all listed tokens, not just featured
+- **includeExternal** (boolean): Include external/non-native tokens
+- **excludeTokens** (string[]): Array of token addresses to exclude
+
+## Response
+
+The response includes:
+
+- **tokens** (TokenInfo[]): Array of token information
+
+### TokenInfo Object Structure
+
+Each token object contains:
+- **chainId** (number): Chain where the token exists
+- **address** (string): Token contract address
+- **name** (string): Token name
+- **symbol** (string): Token symbol
+- **decimals** (number): Token decimals
+- **supportsBridging** (boolean, optional): Whether the token supports bridging
+- **logoUri** (string, optional): URL to token logo
+- **featured** (boolean): Whether this is a featured/popular token
+- **featureIndex** (number): Sort order for featured tokens
+
+## Examples
+
+### Get Featured Tokens for Multiple Chains
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenList', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    chainIds: [1, 8453, 42161], // Ethereum, Base, Arbitrum
+    limit: 20
+  })
+});
+
+const { tokens } = await response.json();
+
+console.log('Featured tokens:');
+tokens.forEach(token => {
+  console.log(`${token.symbol} on chain ${token.chainId}: ${token.address}`);
+});
+```
+
+### Search for a Token
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenList', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    chainIds: [1, 8453, 42161, 137, 10],
+    searchQuery: 'USDC',
+    includeAllListed: true
+  })
+});
+
+const { tokens } = await response.json();
+
+console.log('USDC tokens found:');
+tokens.forEach(token => {
+  console.log(`Chain ${token.chainId}: ${token.address}`);
+});
+```
+
+### Look Up Specific Token
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenList', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    chainIds: [8453], // Base
+    tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC
+  })
+});
+
+const { tokens } = await response.json();
+
+if (tokens.length > 0) {
+  const token = tokens[0];
+  console.log(`Found: ${token.name} (${token.symbol})`);
+  console.log(`Decimals: ${token.decimals}`);
+  console.log(`Supports bridging: ${token.supportsBridging}`);
+}
+```
+
+### Build Token Selector with Search
+
+```tsx
+import { useEffect, useState, useCallback } from 'react';
+import { debounce } from 'lodash';
+
+interface TokenInfo {
+  chainId: number;
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoUri?: string;
+  featured: boolean;
+}
+
+interface TokenSelectorProps {
+  chainIds: number[];
+  onSelect: (token: TokenInfo) => void;
+  excludeAddresses?: string[];
+}
+
+export const TokenSelector = ({
+  chainIds,
+  onSelect,
+  excludeAddresses = []
+}: TokenSelectorProps) => {
+  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchTokens = useCallback(async (query: string) => {
+    setLoading(true);
+    
+    const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenList', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': 'YOUR_API_KEY'
+      },
+      body: JSON.stringify({
+        chainIds,
+        searchQuery: query || undefined,
+        includeAllListed: !!query,
+        excludeTokens: excludeAddresses,
+        limit: 50
+      })
+    });
+
+    const { tokens } = await response.json();
+    setTokens(tokens);
+    setLoading(false);
+  }, [chainIds, excludeAddresses]);
+
+  // Debounced search
+  const debouncedSearch = useCallback(
+    debounce((query: string) => fetchTokens(query), 300),
+    [fetchTokens]
+  );
+
+  useEffect(() => {
+    fetchTokens('');
+  }, [fetchTokens]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      debouncedSearch(searchQuery);
+    }
+  }, [searchQuery, debouncedSearch]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search tokens..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+      
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <ul>
+          {tokens.map(token => (
+            <li
+              key={`${token.chainId}-${token.address}`}
+              onClick={() => onSelect(token)}
+            >
+              {token.logoUri && (
+                <img src={token.logoUri} alt={token.symbol} width={24} />
+              )}
+              <span>{token.symbol}</span>
+              <span>{token.name}</span>
+              <span>Chain {token.chainId}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+```
+
+### Get All Tokens Including External
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenList', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    chainIds: [8453], // Base
+    includeAllListed: true,
+    includeExternal: true,
+    limit: 100
+  })
+});
+
+const { tokens } = await response.json();
+
+console.log(`Found ${tokens.length} tokens on Base`);
+```
+
+### Exclude Specific Tokens
+
+```typescript
+// Exclude native tokens from the list
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTokenList', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    chainIds: [1],
+    excludeTokens: [
+      '0x0000000000000000000000000000000000000000', // Native ETH
+      '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'  // WETH
+    ],
+    limit: 20
+  })
+});
+
+const { tokens } = await response.json();
+```
+
+## Filtering Tips
+
+| Use Case | Parameters |
+|----------|------------|
+| Featured tokens only | Default (no extra params) |
+| All tokens | `includeAllListed: true` |
+| Search by name/symbol | `searchQuery: "USDC"` |
+| Specific token lookup | `tokenAddress: "0x..."` |
+| Exclude tokens | `excludeTokens: ["0x...", "0x..."]` |
+
+<Info>
+Featured tokens are curated for popularity and liquidity. Use `includeAllListed` for comprehensive token lists.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetChains" icon="link" href="/api-reference/endpoints/get-chains">
+    Get supported chains for token selection
+  </Card>
+  
+  <Card title="GetTokenPrices" icon="dollar-sign" href="/api-reference/endpoints/get-token-prices">
+    Get USD prices for selected tokens
+  </Card>
+</CardGroup>
+

@@ -1,0 +1,139 @@
+---
+title: GetTrailsContracts
+openapi: ../trails-api.gen.json post /rpc/Trails/GetTrailsContracts
+---
+
+## Overview
+
+The `GetTrailsContracts` endpoint retrieves the current Trails protocol contract addresses. These addresses are required when committing an intent and should be fetched dynamically rather than hardcoded to ensure compatibility with protocol upgrades.
+
+## Use Cases
+
+- Get current contract addresses before committing intents
+- Ensure you're using the latest protocol version
+- Build chain-agnostic integrations
+- Avoid hardcoding addresses that may change
+
+## Request Parameters
+
+This endpoint requires no parameters.
+
+## Response
+
+The response includes:
+
+- **trailsContracts** (TrailsContracts): The current contract addresses
+
+### TrailsContracts Object Structure
+
+- **trailsIntentEntrypointAddress** (string): The Intent Entrypoint contract address used for signature verification and permit operations
+- **trailsRouterAddress** (string): The main Router contract address for executing swaps and transfers
+- **trailsRouterShimAddress** (string): The Router Shim contract address for calldata manipulation
+
+## Example
+
+### Basic Usage
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTrailsContracts', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { trailsContracts } = await response.json();
+
+console.log('Trails Contracts:', trailsContracts);
+// {
+//   trailsIntentEntrypointAddress: "0x91E9e3Fe369CF005dB2857Ef24955A66d1E692Cf",
+//   trailsRouterAddress: "0xF8A739B9F24E297a98b7aba7A9cdFDBD457F6fF8",
+//   trailsRouterShimAddress: "0x1306aF05bA556839885B9B8c758f1d2F33d3571E"
+// }
+```
+
+### Integration with CommitIntent
+
+```typescript
+// Step 1: Get a quote
+const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    ownerAddress: '0x...',
+    originChainId: 42161,
+    originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+    originTokenAmount: 100000000,
+    destinationChainId: 8453,
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    tradeType: 'EXACT_INPUT'
+  })
+});
+
+const { intent, gasFeeOptions } = await quoteResponse.json();
+
+// Step 2: Get current contract addresses
+const contractsResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/GetTrailsContracts', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { trailsContracts } = await contractsResponse.json();
+
+// Step 3: Commit with the fetched contracts
+const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    intent,
+    trailsContracts
+  })
+});
+
+const { intentId } = await commitResponse.json();
+console.log('Intent committed:', intentId);
+```
+
+
+## Contract Addresses
+
+The returned contracts serve different purposes in the Trails protocol:
+
+| Contract | Purpose |
+|----------|---------|
+| **Intent Entrypoint** | Handles user signatures, permit operations, and fee collection for gasless flows |
+| **Router** | Executes the actual swap/bridge operations and manages token transfers |
+| **Router Shim** | Provides calldata manipulation for dynamic amount injection |
+
+<Warning>
+Always fetch contract addresses dynamically using this endpoint rather than hardcoding them. This ensures your integration remains compatible with protocol upgrades.
+</Warning>
+
+<Info>
+Contract addresses are consistent across all supported chains - the same addresses work on Ethereum, Base, Arbitrum, and all other networks.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="QuoteIntent" icon="calculator" href="/api-reference/endpoints/quote-intent">
+    Get a quote for your transaction
+  </Card>
+  
+  <Card title="CommitIntent" icon="lock" href="/api-reference/endpoints/commit-intent">
+    Commit your intent with contract addresses
+  </Card>
+</CardGroup>
+

@@ -112,7 +112,12 @@
               "api-reference/endpoints/get-intent",
               "api-reference/endpoints/search-intents",
               "api-reference/endpoints/get-intent-transaction-history",
-              "api-reference/endpoints/get-token-prices"
+              "api-reference/endpoints/get-token-prices",
+              "api-reference/endpoints/get-chains",
+              "api-reference/endpoints/get-exact-output-routes",
+              "api-reference/endpoints/get-exact-input-routes",
+              "api-reference/endpoints/get-token-list",
+              "api-reference/endpoints/get-trails-contracts"
             ]
           }
         ]

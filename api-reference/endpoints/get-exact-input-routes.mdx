@@ -1,0 +1,292 @@
+---
+title: GetExactInputRoutes
+openapi: ../trails-api.gen.json post /rpc/Trails/GetExactInputRoutes
+---
+
+## Overview
+
+The `GetExactInputRoutes` endpoint retrieves available token routes for exact input swaps. Given a source token, it returns all destination tokens that can be received. This is essential for building UIs where users specify exactly how much they want to spend.
+
+## Use Cases
+
+- Build "I want to spend exactly X tokens" interfaces
+- Find which destination tokens are available from a source
+- "Swap all" functionality where user empties a token balance
+- Portfolio rebalancing flows
+- Cross-chain token migration
+
+## Request Parameters
+
+### Required Fields
+
+- **originChainId** (number): The chain ID of the source token
+- **originTokenAddress** (string): The token address to swap from
+
+### Optional Fields
+
+- **destinationChainId** (number): Filter routes to a specific destination chain
+- **destinationTokenAddress** (string): Check if a specific route exists
+
+## Response
+
+The response includes:
+
+- **tokens** (TokenInfo[]): Array of destination tokens that can be received
+
+### TokenInfo Object Structure
+
+Each token object contains:
+- **chainId** (number): Chain where the token exists
+- **address** (string): Token contract address
+- **name** (string): Token name
+- **symbol** (string): Token symbol
+- **decimals** (number): Token decimals
+- **supportsBridging** (boolean, optional): Whether the token supports cross-chain bridging
+- **logoUri** (string, optional): URL to token logo
+- **featured** (boolean): Whether this is a featured/popular token
+- **featureIndex** (number): Sort order for featured tokens
+
+## Examples
+
+### Find Destination Tokens for ETH on Ethereum
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetExactInputRoutes', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    originChainId: 1, // Ethereum
+    originTokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' // WETH
+  })
+});
+
+const { tokens } = await response.json();
+
+console.log('Tokens you can receive from WETH:');
+tokens.forEach(token => {
+  console.log(`- ${token.symbol} on chain ${token.chainId}`);
+});
+```
+
+### Filter by Destination Chain
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetExactInputRoutes', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    originChainId: 42161, // Arbitrum
+    originTokenAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC on Arbitrum
+    destinationChainId: 8453 // Only show tokens on Base
+  })
+});
+
+const { tokens } = await response.json();
+
+console.log('Base tokens you can receive from Arbitrum USDC:');
+tokens.forEach(token => {
+  console.log(`- ${token.symbol}: ${token.address}`);
+});
+```
+
+### Build Destination Token Selector
+
+```tsx
+import { useEffect, useState } from 'react';
+
+interface TokenInfo {
+  chainId: number;
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoUri?: string;
+  featured: boolean;
+  featureIndex: number;
+}
+
+interface DestinationSelectorProps {
+  sourceChainId: number;
+  sourceTokenAddress: string;
+  onSelect: (token: TokenInfo) => void;
+}
+
+export const DestinationSelector = ({
+  sourceChainId,
+  sourceTokenAddress,
+  onSelect
+}: DestinationSelectorProps) => {
+  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedChain, setSelectedChain] = useState<number | null>(null);
+
+  useEffect(() => {
+    const params: Record<string, unknown> = {
+      originChainId: sourceChainId,
+      originTokenAddress: sourceTokenAddress
+    };
+    
+    if (selectedChain) {
+      params.destinationChainId = selectedChain;
+    }
+
+    fetch('https://trails-api.sequence.app/rpc/Trails/GetExactInputRoutes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': 'YOUR_API_KEY'
+      },
+      body: JSON.stringify(params)
+    })
+      .then(res => res.json())
+      .then(({ tokens }) => {
+        // Sort by featured first, then by feature index
+        const sorted = tokens.sort((a: TokenInfo, b: TokenInfo) => {
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          return a.featureIndex - b.featureIndex;
+        });
+        setTokens(sorted);
+        setLoading(false);
+      });
+  }, [sourceChainId, sourceTokenAddress, selectedChain]);
+
+  if (loading) return <div>Loading destinations...</div>;
+
+  // Group tokens by chain
+  const byChain = tokens.reduce((acc, token) => {
+    if (!acc[token.chainId]) acc[token.chainId] = [];
+    acc[token.chainId].push(token);
+    return acc;
+  }, {} as Record<number, TokenInfo[]>);
+
+  return (
+    <div>
+      <h3>Receive:</h3>
+      {Object.entries(byChain).map(([chainId, chainTokens]) => (
+        <div key={chainId}>
+          <h4>Chain {chainId}</h4>
+          {chainTokens.map(token => (
+            <button
+              key={`${token.chainId}-${token.address}`}
+              onClick={() => onSelect(token)}
+            >
+              {token.logoUri && <img src={token.logoUri} alt={token.symbol} />}
+              {token.symbol}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+```
+
+### Check Route Availability
+
+```typescript
+async function checkRoute(
+  fromChain: number,
+  fromToken: string,
+  toChain: number,
+  toToken: string
+): Promise<boolean> {
+  const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetExactInputRoutes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Access-Key': 'YOUR_API_KEY'
+    },
+    body: JSON.stringify({
+      originChainId: fromChain,
+      originTokenAddress: fromToken,
+      destinationChainId: toChain,
+      destinationTokenAddress: toToken
+    })
+  });
+
+  const { tokens } = await response.json();
+  return tokens.length > 0;
+}
+
+// Usage
+const canSwap = await checkRoute(
+  42161, // Arbitrum
+  '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // USDC
+  8453, // Base
+  '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC
+);
+
+console.log('Route available:', canSwap);
+```
+
+### Swap All Flow
+
+```typescript
+import { formatUnits } from 'viem';
+
+async function buildSwapAllOptions(
+  userAddress: string,
+  sourceChainId: number,
+  sourceToken: { address: string; symbol: string; decimals: number; balance: bigint }
+) {
+  // Get available destinations
+  const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetExactInputRoutes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Access-Key': 'YOUR_API_KEY'
+    },
+    body: JSON.stringify({
+      originChainId: sourceChainId,
+      originTokenAddress: sourceToken.address
+    })
+  });
+
+  const { tokens } = await response.json();
+
+  console.log(`Swap all ${formatUnits(sourceToken.balance, sourceToken.decimals)} ${sourceToken.symbol} to:`);
+  
+  tokens.forEach(token => {
+    console.log(`- ${token.symbol} on chain ${token.chainId}`);
+  });
+
+  return tokens;
+}
+```
+
+## When to Use Exact Input
+
+Use `GetExactInputRoutes` when:
+- User wants to spend a specific amount
+- "Swap all" or "Max" button functionality
+- User specifies the source amount
+- Portfolio liquidation flows
+
+Use `GetExactOutputRoutes` when:
+- User needs to receive a specific amount
+- Payment flows with fixed prices
+- Invoice payments
+
+<Tip>
+Combine this endpoint with user balance data to show only routes for tokens they actually hold.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetExactOutputRoutes" icon="arrow-left" href="/api-reference/endpoints/get-exact-output-routes">
+    Find routes based on output amount
+  </Card>
+  
+  <Card title="QuoteIntent" icon="calculator" href="/api-reference/endpoints/quote-intent">
+    Get a quote with EXACT_INPUT trade type
+  </Card>
+</CardGroup>
+
