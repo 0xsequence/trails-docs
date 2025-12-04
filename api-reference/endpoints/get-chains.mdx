@@ -1,0 +1,193 @@
+---
+title: GetChains
+openapi: ../trails-api.gen.json post /rpc/Trails/GetChains
+---
+
+## Overview
+
+The `GetChains` endpoint retrieves a list of all blockchain networks supported by Trails. This is useful for building chain selection UIs, validating user inputs, and discovering which networks are available for cross-chain transactions.
+
+## Use Cases
+
+- Build chain selection dropdowns in your UI
+- Validate that user-selected chains are supported
+- Display chain metadata (name, logo, native token)
+- Filter chains by bridging support
+- Identify testnet vs mainnet networks
+- Get block explorer URLs for transaction links
+
+## Request Parameters
+
+### Optional Fields
+
+- **routeProvider** (string): Filter chains by a specific route provider (e.g., "CCTP", "LIFI", "RELAY")
+
+## Response
+
+The response includes:
+
+- **chains** (ChainInfo[]): Array of supported chain information
+
+### ChainInfo Object Structure
+
+Each chain object contains:
+- **id** (number): The chain ID
+- **name** (string): Human-readable chain name
+- **tokenName** (string): Native token name (e.g., "Ether")
+- **tokenSymbol** (string): Native token symbol (e.g., "ETH")
+- **tokenDecimals** (number): Native token decimals
+- **isTestnet** (boolean): Whether this is a testnet
+- **supportsBridging** (boolean): Whether bridging is supported on this chain
+- **logoUri** (string, optional): URL to chain logo
+- **blockExplorerUrl** (string, optional): Block explorer base URL
+
+## Examples
+
+### Get All Supported Chains
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetChains', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { chains } = await response.json();
+
+console.log('Supported chains:', chains.length);
+chains.forEach(chain => {
+  console.log(`${chain.name} (${chain.id}): ${chain.tokenSymbol}`);
+});
+```
+
+### Filter by Route Provider
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetChains', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    routeProvider: 'CCTP' // Get chains supported by Circle's CCTP
+  })
+});
+
+const { chains } = await response.json();
+
+console.log('CCTP-supported chains:', chains.map(c => c.name));
+```
+
+### Build Chain Selector UI
+
+```tsx
+import { useEffect, useState } from 'react';
+
+interface ChainInfo {
+  id: number;
+  name: string;
+  tokenSymbol: string;
+  logoUri?: string;
+  isTestnet: boolean;
+  supportsBridging: boolean;
+}
+
+export const ChainSelector = ({ 
+  onSelect, 
+  excludeTestnets = true 
+}: { 
+  onSelect: (chainId: number) => void;
+  excludeTestnets?: boolean;
+}) => {
+  const [chains, setChains] = useState<ChainInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://trails-api.sequence.app/rpc/Trails/GetChains', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': 'YOUR_API_KEY'
+      },
+      body: JSON.stringify({})
+    })
+      .then(res => res.json())
+      .then(({ chains }) => {
+        const filtered = excludeTestnets 
+          ? chains.filter((c: ChainInfo) => !c.isTestnet)
+          : chains;
+        setChains(filtered);
+        setLoading(false);
+      });
+  }, [excludeTestnets]);
+
+  if (loading) return <div>Loading chains...</div>;
+
+  return (
+    <select onChange={(e) => onSelect(Number(e.target.value))}>
+      <option value="">Select a chain</option>
+      {chains.map(chain => (
+        <option key={chain.id} value={chain.id}>
+          {chain.name} ({chain.tokenSymbol})
+        </option>
+      ))}
+    </select>
+  );
+};
+```
+
+### Get Chains with Bridging Support
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetChains', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { chains } = await response.json();
+
+// Filter to only chains that support bridging
+const bridgableChains = chains.filter(chain => chain.supportsBridging);
+
+console.log('Chains with bridging support:');
+bridgableChains.forEach(chain => {
+  console.log(`- ${chain.name} (${chain.id})`);
+});
+```
+
+## Common Chain IDs
+
+| Chain | Chain ID | Native Token |
+|-------|----------|--------------|
+| Ethereum | 1 | ETH |
+| Polygon | 137 | MATIC |
+| Arbitrum One | 42161 | ETH |
+| Optimism | 10 | ETH |
+| Base | 8453 | ETH |
+| Avalanche | 43114 | AVAX |
+| BNB Chain | 56 | BNB |
+
+<Info>
+Chain support is continuously expanding. Use this endpoint to get the current list rather than hardcoding chain IDs.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetTokenList" icon="coins" href="/api-reference/endpoints/get-token-list">
+    Get available tokens for selected chains
+  </Card>
+  
+  <Card title="QuoteIntent" icon="dollar-sign" href="/api-reference/endpoints/quote-intent">
+    Request a quote for cross-chain transactions
+  </Card>
+</CardGroup>
+

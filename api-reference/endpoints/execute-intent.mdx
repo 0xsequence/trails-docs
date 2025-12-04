@@ -54,26 +54,17 @@ First, deposit tokens to the intent address, then call ExecuteIntent with the tr
 import { encodeFunctionData } from 'viem';
 
 // Step 1: Send tokens to the intent address
-const depositTx = await walletClient.sendTransaction({
-  to: intent.depositTransaction.toAddress, // Intent address from quote
-  value: 0n, // 0 for ERC20 tokens, or native ETH amount
-  data: encodeFunctionData({
-    abi: [{
-      name: 'transfer',
-      type: 'function',
-      stateMutability: 'nonpayable',
-      inputs: [
-        { name: 'to', type: 'address' },
-        { name: 'amount', type: 'uint256' }
-      ],
-      outputs: [{ name: '', type: 'bool' }]
-    }],
-    functionName: 'transfer',
-    args: [
-      intent.depositTransaction.toAddress as `0x${string}`,
-      BigInt(intent.depositTransaction.amount)
-    ]
-  })
+ const depositTx = await walletClient.sendTransaction({
+    to: intent.depositTransaction.tokenAddress, // Intent address from quote
+    value: 0n, // 0 for ERC20 tokens, or native ETH amount
+    data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [
+            intent.depositTransaction.toAddress as `0x${string}`,
+            BigInt(intent.depositTransaction.amount)
+        ]
+    })
 });
 
 // Step 2: Wait for confirmation
