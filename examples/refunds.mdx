@@ -1,0 +1,122 @@
+---
+title: 'Refunds & Recovery'
+description: 'How Trails handles automatic refunds and how users retain full control over their funds'
+icon: 'rotate-left'
+---
+
+Trails is designed with user sovereignty at its core. While the protocol includes automatic refund mechanisms for failed transactions, users always retain full control over their funds and can initiate manual recovery at any time.
+
+## Automatic Refunds
+
+Trails has an automatic refund mechanism built in to protect your assets in the event of a transaction failure. The protocol handles refunds automatically without requiring user intervention:
+
+| Failure Scenario | Refund Action |
+|------------------|---------------|
+| **Failure on the Source Chain** | If the transaction fails before your funds leave the initial blockchain, the user receives a full refund (minus gas fees) on the source chain to the sender address. |
+| **Failure on the Destination Chain** | If the funds successfully bridged but the final step fails on the destination chain, the assets are refunded to your sender address on the destination chain. |
+
+<Info>
+For more details on how refunds work within the Trails architecture, see the [How Trails Works](/architecture/how-it-works#refunds) documentation.
+</Info>
+
+## User Control & Ownership
+
+Trails is **non-custodial by design**. Only the user always retains control over their account and funds:
+
+- **Intent-Scoped Authorization**: Intent addresses only authorize the specific transaction calldata the user has explicitly permitted—nothing more
+- **User "sudo" Control**: Users can take direct action over their funds at any time, even in emergencies
+- **Non-Custodial**: Trails never takes custody; execution happens via the user's wallet permissions, preserving full control and auditability
+
+<Note>
+The user's wallet is the only party with control over the intent address. This cryptographic guarantee ensures the funds are always recoverable.
+</Note>
+
+## Manual Fund Recovery with useTrailsRefund
+
+While Trails automatically refunds upon transaction failures, there may be edge cases where funds are stuck without an explicit revert. The `useTrailsRefund` hook provides utilities to manually sign and execute refund transactions to recover funds from intent addresses.
+
+### Basic Usage
+
+```tsx
+import { useTrailsRefund } from '0xtrails'
+import { useWalletClient, useAccount } from 'wagmi'
+
+export const RefundComponent = ({ intentId }: { intentId: string }) => {
+  const { data: walletClient } = useWalletClient()
+  const { address } = useAccount()
+
+  const {
+    intent,
+    isLoadingIntent,
+    hasIntentBalance,
+    signPayload,
+    getRefundTx,
+    intentError,
+  } = useTrailsRefund({
+    intentId,
+    walletClient,
+    refundToAddress: address, // Optional: defaults to connected wallet
+  })
+
+  const handleRefund = async () => {
+    try {
+      // Step 1: Sign the refund payload
+      const { signature, payload } = await signPayload()
+      
+      // Step 2: Get the refund transaction
+      const refundTx = await getRefundTx({
+        signedHash: signature,
+        payload,
+      })
+      
+      // Step 3: Execute the refund transaction
+      const txHash = await walletClient.sendTransaction({
+        to: refundTx.to,
+        data: refundTx.data,
+        chain: refundTx.chain,
+      })
+      
+      console.log('Refund transaction sent:', txHash)
+    } catch (error) {
+      console.error('Refund failed:', error)
+    }
+  }
+
+  if (isLoadingIntent) return <div>Loading intent...</div>
+  if (intentError) return <div>Error: {intentError.message}</div>
+  if (!hasIntentBalance) return <div>No balance to refund</div>
+
+  return (
+    <button onClick={handleRefund}>
+      Recover Funds
+    </button>
+  )
+}
+```
+
+## When to Use Manual Refunds
+
+<CardGroup cols={2}>
+  <Card title="Automatic Refunds" icon="wand-magic-sparkles">
+    **Most common scenario** — Trails automatically handles refunds when transactions explicitly fail or revert. No user action required.
+  </Card>
+  <Card title="Manual Recovery" icon="hand">
+    **Edge cases only** — Use `useTrailsRefund` when funds are stuck without an explicit revert, or when you want to proactively recover funds from a pending intent.
+  </Card>
+</CardGroup>
+
+## Security Guarantees
+
+The refund mechanism maintains Trails' security principles:
+
+- **Only the original sender** can authorize refunds via wallet signature
+- **Cryptographic verification** ensures refund transactions are valid
+- **Non-custodial** — Trails cannot access or move your funds without your signature
+- **Onchain execution** — All refund operations are verifiable onchain
+
+For more information, see:
+
+- [**Hooks Reference**](/sdk/hooks#usetrailsrefund) — Full documentation for `useTrailsRefund`
+- [**How Trails Works**](/architecture/how-it-works) — Architecture overview including refund mechanisms
+- [**Protocol Architecture**](/architecture/protocol) — Deep dive into security and trust model
+
