@@ -1,0 +1,109 @@
+---
+title: 'Tokens, Chains & Prices'
+description: 'Use Trails built-in indexer and methods to retrieve supported tokens, chains, and live prices'
+icon: 'coins'
+---
+
+Retrieve supported chains, tokens, and live USD prices using the SDK.
+
+## Chains
+
+```tsx
+import { useSupportedChains, getSupportedChains, getChainInfo } from '0xtrails'
+
+// Hook: Get all supported chains
+const { supportedChains, isLoadingChains } = useSupportedChains()
+
+// Async function (non-React)
+const chains = await getSupportedChains()
+
+// Utility: Get specific chain info
+const base = getChainInfo(8453)
+console.log(base?.name) // "Base"
+```
+
+## Tokens
+
+```tsx
+import { useTokenList, useSupportedTokens, getSupportedTokens } from '0xtrails'
+
+// All tokens across chains
+const { tokens, isLoadingTokens } = useTokenList()
+
+// Tokens for a specific chain
+const { supportedTokens } = useSupportedTokens({ chainId: 8453 })
+
+// Async function (non-React)
+const allTokens = await getSupportedTokens()
+```
+
+## Prices
+
+Token prices are included when fetching balances:
+
+```tsx
+import { useTokenBalances } from '0xtrails'
+
+const { sortedTokens } = useTokenBalances(address)
+
+sortedTokens.forEach(token => {
+  console.log(`${token.symbol}: ${token.priceUsdDisplay}`)
+})
+```
+
+<Note>
+For fetching prices without balances, use the [GetTokenPrices API](/api-reference/endpoints/get-token-prices) directly.
+</Note>
+
+## Combined Example
+
+Build a chain/token selector with live prices:
+
+```tsx
+import { useState } from 'react'
+import { useSupportedChains, useSupportedTokens, useTokenBalances } from '0xtrails'
+import { useAccount } from 'wagmi'
+
+export const AssetSelector = () => {
+  const { address } = useAccount()
+  const [chainId, setChainId] = useState<number>()
+  
+  const { supportedChains } = useSupportedChains()
+  const { supportedTokens } = useSupportedTokens({ chainId })
+  const { sortedTokens } = useTokenBalances(address)
+
+  return (
+    <div>
+      {/* Chain selector */}
+      <select onChange={(e) => setChainId(Number(e.target.value))}>
+        <option value="">Select chain</option>
+        {supportedChains.map(chain => (
+          <option key={chain.id} value={chain.id}>{chain.name}</option>
+        ))}
+      </select>
+
+      {/* Token list with balances */}
+      {chainId && (
+        <ul>
+          {supportedTokens.map(token => {
+            const withBalance = sortedTokens.find(
+              t => t.contractAddress === token.contractAddress && t.chainId === chainId
+            )
+            return (
+              <li key={token.contractAddress}>
+                {token.symbol} — {withBalance?.balanceDisplay ?? '0'} ({withBalance?.priceUsdDisplay ?? '$0'})
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+```
+
+For more details, see:
+
+- [**Tokens & Chains SDK Guide**](/sdk/tokens-and-chains) — Full SDK reference
+- [**Hooks Reference**](/sdk/hooks) — All available hooks
+- [**GetTokenPrices API**](/api-reference/endpoints/get-token-prices) — Fetch prices without balances

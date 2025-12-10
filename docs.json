@@ -51,6 +51,7 @@
             "pages": [
               "examples/wallet-compatibility",
               "examples/transaction-history",
+              "examples/tokens-chains-prices",
               "examples/refunds",
               "examples/x402"
             ]
