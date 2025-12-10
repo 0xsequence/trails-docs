@@ -24,16 +24,20 @@ For more details on how refunds work within the Trails architecture, see the [Ho
 Trails is **non-custodial by design**. Only the user always retains control over their account and funds:
 
 - **Intent-Scoped Authorization**: Intent addresses only authorize the specific transaction calldata the user has explicitly permitted—nothing more
-- **User "sudo" Control**: Users can take direct action over their funds at any time, even in emergencies
+- **User Control**: Users can take direct action over their funds at any time, even in emergencies
 - **Non-Custodial**: Trails never takes custody; execution happens via the user's wallet permissions, preserving full control and auditability
 
 <Note>
 The user's wallet is the only party with control over the intent address. This cryptographic guarantee ensures the funds are always recoverable.
 </Note>
 
+Recovery is implemented in the [Trails Explorer](https://app.trails.build/explorer) as well as in the Transaction History within the Trails Widget which will automatically detect intents that are eligible for a recovery.
+
 ## Manual Fund Recovery with useTrailsRefund
 
-While Trails automatically refunds upon transaction failures, there may be edge cases where funds are stuck without an explicit revert. The `useTrailsRefund` hook provides utilities to manually sign and execute refund transactions to recover funds from intent addresses.
+While Trails automatically refunds upon transaction failures, there may be edge cases where funds are stuck without an explicit revert. 
+
+ The `useTrailsRefund` hook provides utilities to manually sign and execute refund transactions to recover funds from intent addresses if you'd like to add to your own app.
 
 ### Basic Usage
 
