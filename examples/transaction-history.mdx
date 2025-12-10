@@ -1,37 +1,34 @@
 ---
-title: 'Query Transaction History'
-description: 'Retrieve account transaction history for an address with the Trails SDK.'
+title: 'Intent & Transaction History'
+description: 'Retrieve account & intent transaction history for an address with the Trails SDK.'
 icon: 'clock'
 ---
 
 Trails comes with a built in high-performant indexer which you can leverage seamlessly to retrieve information about a user's transaction history.
 
-
 ## Wallet Transaction History
 
-For example, querying a user's transaction history for a specific chain using their connected wallet address:
+Query a user's transaction history for a specific chain using their connected wallet address:
 
 ```tsx
-import { useEffect, useState } from 'react'
+import { useAccountTransactionHistory } from '0xtrails'
 import { useAccount } from 'wagmi'
-import { getAccountTransactionHistory } from '0xtrails'
 
-// Retrieve a user's transaction history on Polygon
-export function retrieveTransactionHistory({ chainId = 137 }: { chainId?: number }) {
+export const TransactionList = () => {
   const { address } = useAccount()
-  const [txs, setTxs] = useState<any[]>([])
+  
+  const { data, isLoading } = useAccountTransactionHistory({
+    chainId: 137,
+    accountAddress: address,
+  })
 
-  useEffect(() => {
-    if (!address) return
-    getAccountTransactionHistory({ chainId, accountAddress: address })
-      .then(r => setTxs(r.transactions ?? []))
-  }, [address, chainId])
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <ul>
-      {txs.map((tx) => (
+      {data?.transactions?.map((tx) => (
         <li key={tx.txnHash}>
-          {tx.txnHash} | chain {tx.chainId} | block #{tx.blockNumber} | {tx.timestamp}
+          {tx.txnHash} | chain {tx.chainId} | block #{tx.blockNumber}
         </li>
       ))}
     </ul>
@@ -39,8 +36,47 @@ export function retrieveTransactionHistory({ chainId = 137 }: { chainId?: number
 }
 ```
 
+## Intent Transaction History
+
+Retrieve the full transaction history for a specific intent:
+
+```tsx
+import { useIntentTransactionHistory } from '0xtrails'
+import { useAccount } from 'wagmi'
+
+export const IntentHistory = ({ intentId }: { intentId: string }) => {
+  const { address } = useAccount()
+
+  const {
+    transactions,
+    loading,
+    error,
+    refetch,
+  } = useIntentTransactionHistory({
+    accountAddress: address,
+    pageSize: 10,
+    enabled: true,
+  })
+
+  if (loading) return <div>Loading intent history...</div>
+  if (error) return <div>Error: {String(error)}</div>
+
+  return (
+    <div>
+      <button onClick={refetch}>Refresh</button>
+      <ul>
+        {transactions?.map((tx) => (
+          <li key={tx.txnHash}>
+            {tx.txnHash} | {tx.timestamp}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
 For more information, see:
 
-- [**Hooks Reference**](/sdk/hooks) - Full API documentation for `getAccountTransactionHistory` and other SDK methods
-- [**API Reference**](/api-reference/introduction) - Direct API access for transaction history queries
-- [**Get Intent Transaction History**](/api-reference/endpoints/get-intent-transaction-history) - API endpoint for intent-specific transaction history
+- [**Hooks Reference**](/sdk/hooks) — Full documentation for transaction history hooks
+- [**Get Intent Transaction History API**](/api-reference/endpoints/get-intent-transaction-history) — API endpoint reference
