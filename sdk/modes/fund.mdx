@@ -16,6 +16,7 @@ Fund mode implements input-driven deposit flows where users select the amount th
 
 | Prop | Type | Description |
 |------|------|-------------|
+| `apiKey` | `string` | Your project access key provided by Trails |
 | `mode` | `"fund"` | Sets the widget to fund mode |
 
 ### Optional Props
@@ -46,6 +47,26 @@ import { TrailsWidget } from '0xtrails/widget'
   toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
   toChainId={8453} // Base
   toToken="USDC"
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Deposit completed:', sessionId)
+  }}
+>
+  <button>Deposit to Base</button>
+</TrailsWidget>
+```
+
+### Deposit with Fiat Onramp
+
+Simply set the `fundOnRamp` prop to `true` to enable fiat onramps.
+
+```tsx
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="fund"
+  toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
+  toChainId={8453} // Base
+  toToken="USDC"
+  fundOnRamp={true}
   onCheckoutComplete={({ sessionId }) => {
     console.log('Deposit completed:', sessionId)
   }}
