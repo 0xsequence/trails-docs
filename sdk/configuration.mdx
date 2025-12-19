@@ -64,46 +64,6 @@ Trails is easy to get started, however we have deep configuration options to add
 | `appImageUrl` | `string` | No | Your app's logo URL |
 | `appDescription` | `string` | No | Short description of your app |
 
-### Onramp Integration
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `onramp` | `OnrampFactory` | No | Onramp factory function from `@0xtrails/onramp` for fiat-to-crypto funding |
-
-```tsx
-import { trailsOnramp } from "@0xtrails/onramp"
-
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="fund"
-  onramp={trailsOnramp({ 
-    config: { 
-      exchanges: ['coinbase', 'moonpay'] 
-    } 
-  })}
-/>
-```
-
-### Event Handlers
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `onOriginConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | Called when origin transaction is confirmed |
-| `onDestinationConfirmation` | `(data: { txHash: string; chainId: number; sessionId: string }) => void` | No | Called when destination transaction is confirmed |
-| `onCheckoutStart` | `(data: { sessionId: string }) => void` | No | Called when checkout process starts |
-| `onCheckoutQuote` | `(data: { sessionId: string; quote: any }) => void` | No | Called when quote is received |
-| `onCheckoutSignatureRequest` | `(data: { sessionId: string }) => void` | No | Called when signature is requested from wallet |
-| `onCheckoutSignatureConfirmed` | `(data: { sessionId: string }) => void` | No | Called when user confirms signature |
-| `onCheckoutSignatureRejected` | `(data: { sessionId: string; error: unknown }) => void` | No | Called when user rejects signature |
-| `onCheckoutComplete` | `(data: { sessionId: string }) => void` | No | Called when checkout completes successfully |
-| `onCheckoutError` | `(data: { sessionId: string; error: unknown }) => void` | No | Called when checkout encounters an error (including user rejection) |
-| `onCheckoutStatusUpdate` | `(data: { sessionId: string; transactionStates: TransactionState[] }) => void` | No | Called when transaction status updates |
-| `onCheckoutApprovalRequest` | `(data: { sessionId: string }) => void` | No | Called when token approval is requested |
-| `onCheckoutApprovalConfirmed` | `(data: { sessionId: string; transactionHash: string }) => void` | No | Called when token approval is confirmed |
-| `onCheckoutApprovalRejected` | `(data: { sessionId: string; error: unknown }) => void` | No | Called when token approval is rejected |
-| `onOpen` | `() => void` | No | Called when the widget modal opens |
-| `onClose` | `() => void` | No | Called when the widget modal closes |
-
 ## Smart Contract Interactions
 
 Execute custom contract calls with payments:
