@@ -1067,6 +1067,7 @@ components:
         - SUCCEEDED
         - FAILED
         - ABORTED
+        - REVERTED
     ChainGasUsageStatus:
       type: string
       description: Represented as string on the server side
