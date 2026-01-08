@@ -1250,6 +1250,36 @@
           }
         }
       },
+      "ErrorQuoteExpired": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "QuoteExpired"
+          },
+          "code": {
+            "type": "number",
+            "example": 7001
+          },
+          "msg": {
+            "type": "string",
+            "example": "Intent quote has expired. Please try again."
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 400
+          }
+        }
+      },
       "TradeType": {
         "type": "string",
         "description": "Represented as string on the server side",
@@ -1278,7 +1308,9 @@
           "COMMITTED",
           "EXECUTING",
           "FAILED",
-          "SUCCEEDED"
+          "SUCCEEDED",
+          "ABORTED",
+          "REFUNDED"
         ]
       },
       "TransactionType": {
@@ -1313,7 +1345,8 @@
           "MINING",
           "SUCCEEDED",
           "FAILED",
-          "ABORTED"
+          "ABORTED",
+          "REVERTED"
         ]
       },
       "ChainGasUsageStatus": {
@@ -1425,6 +1458,7 @@
           "quote",
           "fees",
           "trailsVersion",
+          "trailsContracts",
           "expiresAt"
         ],
         "properties": {
@@ -1490,6 +1524,9 @@
           },
           "trailsVersion": {
             "type": "string"
+          },
+          "trailsContracts": {
+            "$ref": "#/components/schemas/TrailsContracts"
           },
           "expiresAt": {
             "type": "string"
@@ -1645,7 +1682,8 @@
           "depositTransactionId",
           "depositTransaction",
           "originTransactionId",
-          "originTransaction"
+          "originTransaction",
+          "summary"
         ],
         "properties": {
           "id": {
@@ -1686,6 +1724,9 @@
           },
           "destinationTransaction": {
             "$ref": "#/components/schemas/IntentTransaction"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/IntentReceiptSummary"
           },
           "updatedAt": {
             "type": "string"
@@ -1772,22 +1813,192 @@
           }
         }
       },
+      "IntentHistory": {
+        "type": "object",
+        "required": [
+          "intentId",
+          "status",
+          "expiresAt",
+          "receipt"
+        ],
+        "properties": {
+          "intentId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IntentStatus"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/IntentReceipt"
+          }
+        }
+      },
+      "IntentReceiptSummary": {
+        "type": "object",
+        "required": [
+          "intentId",
+          "status",
+          "ownerAddress",
+          "originChainId",
+          "destinationChainId",
+          "tradeType",
+          "routeProviders",
+          "originIntentAddress",
+          "originTokenAddress",
+          "originTokenAmount",
+          "originTokenMetadata",
+          "destinationIntentAddress",
+          "destinationTokenMetadata",
+          "destinationHasCallData",
+          "destinationHasCallValue",
+          "createdAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "intentId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IntentStatus"
+          },
+          "ownerAddress": {
+            "type": "string"
+          },
+          "originChainId": {
+            "type": "number"
+          },
+          "destinationChainId": {
+            "type": "number"
+          },
+          "tradeType": {
+            "$ref": "#/components/schemas/TradeType"
+          },
+          "routeProviders": {
+            "type": "array",
+            "description": "[]RouteProvider",
+            "items": {
+              "$ref": "#/components/schemas/RouteProvider"
+            }
+          },
+          "originIntentAddress": {
+            "type": "string"
+          },
+          "originTokenAddress": {
+            "type": "string"
+          },
+          "originTokenAmount": {
+            "type": "number"
+          },
+          "originTokenMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "destinationIntentAddress": {
+            "type": "string"
+          },
+          "destinationTokenAddress": {
+            "type": "string"
+          },
+          "destinationTokenAmount": {
+            "type": "number"
+          },
+          "destinationToAddress": {
+            "type": "string"
+          },
+          "destinationTokenMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "destinationHasCallData": {
+            "type": "boolean"
+          },
+          "destinationHasCallValue": {
+            "type": "boolean"
+          },
+          "memo": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "PriceImpact": {
+        "type": "object",
+        "required": [
+          "priceImpact",
+          "priceImpactUsd"
+        ],
+        "properties": {
+          "priceImpact": {
+            "type": "number"
+          },
+          "priceImpactUsd": {
+            "type": "number"
+          }
+        }
+      },
+      "PriceImpactDetails": {
+        "type": "object",
+        "required": [
+          "executionPriceImpact",
+          "marketPriceImpact",
+          "providerFeesPriceImpact",
+          "trailsFeesPriceImpact",
+          "netPriceImpact"
+        ],
+        "properties": {
+          "executionPriceImpact": {
+            "$ref": "#/components/schemas/PriceImpact"
+          },
+          "marketPriceImpact": {
+            "$ref": "#/components/schemas/PriceImpact"
+          },
+          "providerFeesPriceImpact": {
+            "$ref": "#/components/schemas/PriceImpact"
+          },
+          "trailsFeesPriceImpact": {
+            "$ref": "#/components/schemas/PriceImpact"
+          },
+          "netPriceImpact": {
+            "$ref": "#/components/schemas/PriceImpact"
+          }
+        }
+      },
       "IntentProviderQuote": {
         "type": "object",
         "required": [
           "routeProviders",
           "routeProvidersRequestIds",
           "routeProvidersFeeUsd",
-          "quoteProvider",
-          "quoteProviderRequestId",
-          "quoteProviderFeeUsd",
           "fromAmount",
           "fromAmountMin",
+          "fromAmountUsd",
+          "fromAmountMinUsd",
           "toAmount",
           "toAmountMin",
+          "toAmountUsd",
+          "toAmountMinUsd",
           "maxSlippage",
           "priceImpact",
-          "priceImpactUsd"
+          "priceImpactUsd",
+          "priceImpactDetails"
         ],
         "properties": {
           "routeProviders": {
@@ -1811,25 +2022,28 @@
               "type": "number"
             }
           },
-          "quoteProvider": {
-            "type": "string"
-          },
-          "quoteProviderRequestId": {
-            "type": "string"
-          },
-          "quoteProviderFeeUsd": {
-            "type": "number"
-          },
           "fromAmount": {
             "type": "number"
           },
           "fromAmountMin": {
             "type": "number"
           },
+          "fromAmountUsd": {
+            "type": "number"
+          },
+          "fromAmountMinUsd": {
+            "type": "number"
+          },
           "toAmount": {
             "type": "number"
           },
           "toAmountMin": {
+            "type": "number"
+          },
+          "toAmountUsd": {
+            "type": "number"
+          },
+          "toAmountMinUsd": {
             "type": "number"
           },
           "maxSlippage": {
@@ -1840,6 +2054,9 @@
           },
           "priceImpactUsd": {
             "type": "number"
+          },
+          "priceImpactDetails": {
+            "$ref": "#/components/schemas/PriceImpactDetails"
           }
         }
       },
@@ -1849,7 +2066,17 @@
           "originGas",
           "provider",
           "feeTokenAddress",
+          "feeTokenAmount",
+          "feeTokenUsd",
           "feeTokenTotal",
+          "gasFeeTotal",
+          "gasFeeUsd",
+          "trailsFeeTotal",
+          "trailsFeeUsd",
+          "collectorFeeTotal",
+          "collectorFeeUsd",
+          "providerFeeTotal",
+          "providerFeeUsd",
           "totalFeeAmount",
           "totalFeeUsd"
         ],
@@ -1866,7 +2093,37 @@
           "feeTokenAddress": {
             "type": "string"
           },
+          "feeTokenAmount": {
+            "type": "number"
+          },
+          "feeTokenUsd": {
+            "type": "number"
+          },
           "feeTokenTotal": {
+            "type": "number"
+          },
+          "gasFeeTotal": {
+            "type": "number"
+          },
+          "gasFeeUsd": {
+            "type": "number"
+          },
+          "trailsFeeTotal": {
+            "type": "number"
+          },
+          "trailsFeeUsd": {
+            "type": "number"
+          },
+          "collectorFeeTotal": {
+            "type": "number"
+          },
+          "collectorFeeUsd": {
+            "type": "number"
+          },
+          "providerFeeTotal": {
+            "type": "number"
+          },
+          "providerFeeUsd": {
             "type": "number"
           },
           "totalFeeAmount": {
@@ -1885,6 +2142,8 @@
           "quoteProviderFeeUsd",
           "trailsFee",
           "trailsFeeUsd",
+          "quoteProviderWithTrailsFee",
+          "providerWithTrailsFeeUsd",
           "totalFeeAmount",
           "totalFeeUsd"
         ],
@@ -1902,6 +2161,12 @@
             "type": "number"
           },
           "trailsFeeUsd": {
+            "type": "number"
+          },
+          "quoteProviderWithTrailsFee": {
+            "type": "number"
+          },
+          "providerWithTrailsFeeUsd": {
             "type": "number"
           },
           "totalFeeAmount": {
@@ -1998,6 +2263,7 @@
           "destinationTokenAmount",
           "destinationTokenMetadata",
           "destinationToAddress",
+          "expiresAt",
           "createdAt"
         ],
         "properties": {
@@ -2062,6 +2328,9 @@
             "$ref": "#/components/schemas/TokenMetadata"
           },
           "destinationToAddress": {
+            "type": "string"
+          },
+          "expiresAt": {
             "type": "string"
           },
           "updatedAt": {
@@ -2772,6 +3041,9 @@
           },
           "byDestinationIntentAddress": {
             "type": "string"
+          },
+          "byQueryString": {
+            "type": "string"
           }
         }
       },
@@ -2790,7 +3062,7 @@
           }
         }
       },
-      "GetIntentTransactionHistoryRequest": {
+      "GetIntentHistoryRequest": {
         "type": "object",
         "properties": {
           "page": {
@@ -2804,7 +3076,7 @@
           }
         }
       },
-      "GetIntentTransactionHistoryResponse": {
+      "GetIntentHistoryResponse": {
         "type": "object",
         "required": [
           "intents"
@@ -2812,9 +3084,9 @@
         "properties": {
           "intents": {
             "type": "array",
-            "description": "[]IntentSummary",
+            "description": "[]IntentHistory",
             "items": {
-              "$ref": "#/components/schemas/IntentSummary"
+              "$ref": "#/components/schemas/IntentHistory"
             }
           },
           "nextPage": {
@@ -3355,11 +3627,11 @@
         }
       }
     },
-    "/rpc/Trails/GetIntentTransactionHistory": {
+    "/rpc/Trails/GetIntentHistory": {
       "post": {
-        "summary": "Get Intent Transaction History",
-        "description": "Retrieve transaction history for an intent",
-        "operationId": "getIntentTransactionHistory",
+        "summary": "Get Intent History",
+        "description": "Retrieve paginated intent history with receipt information",
+        "operationId": "getIntentHistory",
         "security": [
           {
             "ApiKeyAuth": []
@@ -3370,7 +3642,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GetIntentTransactionHistoryRequest"
+                "$ref": "#/components/schemas/GetIntentHistoryRequest"
               }
             }
           }
@@ -3381,7 +3653,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetIntentTransactionHistoryResponse"
+                  "$ref": "#/components/schemas/GetIntentHistoryResponse"
                 }
               }
             }

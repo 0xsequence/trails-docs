@@ -257,7 +257,7 @@ console.log('User Activity:', stats);
 ## Pagination Considerations
 
 <Warning>
-The `SearchIntents` endpoint may return a large number of results for active addresses. Consider implementing client-side pagination or using `GetIntentTransactionHistory` for paginated results.
+The `SearchIntents` endpoint may return a large number of results for active addresses. Consider implementing client-side pagination or using `GetIntentHistory` for paginated results.
 </Warning>
 
 ## Best Practices
@@ -292,12 +292,12 @@ console.log('Active intents in last 24h:', activeIntents.length);
 ```
 
 <Info>
-For paginated transaction history with optimized summary data, use the `GetIntentTransactionHistory` endpoint instead.
+For paginated transaction history with full receipt data, use the `GetIntentHistory` endpoint instead.
 </Info>
 
 ## Next Steps
 
 - Use `GetIntent` to get full details for specific intents
 - Use `GetIntentReceipt` to get transaction hashes and status
-- Use `GetIntentTransactionHistory` for paginated history views
+- Use `GetIntentHistory` for paginated history views with receipts
 
