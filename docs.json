@@ -113,7 +113,7 @@
               "api-reference/endpoints/wait-intent-receipt",
               "api-reference/endpoints/get-intent",
               "api-reference/endpoints/search-intents",
-              "api-reference/endpoints/get-intent-transaction-history",
+              "api-reference/endpoints/get-intent-history",
               "api-reference/endpoints/get-token-prices",
               "api-reference/endpoints/get-token-list"
             ]
