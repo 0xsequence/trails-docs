@@ -162,7 +162,8 @@ import {
 
 Balance hooks and utilities:
 
-- `useTokenBalances(address)`: Returns sorted token balances enriched with USD price
+- `useTokenBalances(address, options?)`: Returns sorted token balances enriched with USD price
+- `useTokenBalancesForMultipleAccounts(addresses, options?)`: Returns token balances for multiple accounts
 - `useAccountTotalBalanceUsd(address)`: Returns total USD balance across tokens
 - `useHasSufficientBalanceUsd(address, targetUsd)`: Check if account has sufficient USD balance
 - `useHasSufficientBalanceToken(address, tokenAddress, tokenAmount, chainId)`: Check token balance
@@ -174,7 +175,13 @@ import { useTokenBalances, useAccountTotalBalanceUsd } from '0xtrails'
 import type { Token } from '0xtrails'
 
 const WalletBalance = ({ address }: { address: string }) => {
-  const { sortedTokens, isLoadingBalances } = useTokenBalances(address)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  const { sortedTokens, isLoadingBalances, page } = useTokenBalances(address, {
+    page: currentPage,
+    pageSize: pageSize,
+  })
   const { totalBalanceUsd, totalBalanceUsdFormatted } = useAccountTotalBalanceUsd(address)
 
   if (isLoadingBalances) return <div>Loading balances...</div>
@@ -187,13 +194,42 @@ const WalletBalance = ({ address }: { address: string }) => {
           {token.symbol}: {token.balanceDisplay} ({token.balanceUsdDisplay})
         </div>
       ))}
+      
+      {/* Pagination controls */}
+      <div>
+        <button 
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage}</span>
+        <button 
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          disabled={!page?.more}
+        >
+          Next
+        </button>
+      </div>
     </div>
   )
 }
 ```
 
-### useTokenBalances Return Type
+### useTokenBalances
 
+**Signature**:
+```ts
+function useTokenBalances(
+  address: Address | null,
+  options?: {
+    page?: number
+    pageSize?: number
+  }
+): UseTokenBalancesReturn
+```
+
+**Return Type**:
 ```ts
 type UseTokenBalancesReturn = {
   sortedTokens: Token[] // Tokens sorted by USD balance (highest first)
@@ -201,10 +237,41 @@ type UseTokenBalancesReturn = {
   isLoadingPrices: boolean
   isLoadingSortedTokens: boolean
   balanceError: Error | null
+  page: Page | undefined // Pagination info
+}
+
+type Page = {
+  column: string
+  pageSize: number
+  more: boolean // Whether there are more results
 }
 ```
 
 Token balances are returned as `Token[]` with balance fields populated. See the [Token Type](#token-type) above for all available fields including `balance`, `balanceFormatted`, `balanceDisplay`, `balanceUsd`, etc.
+
+### useTokenBalancesForMultipleAccounts
+
+Fetches token balances for multiple wallet addresses with pagination support.
+
+**Signature**:
+```ts
+function useTokenBalancesForMultipleAccounts(
+  addresses: (Address | null)[],
+  options?: {
+    page?: number
+    pageSize?: number
+  }
+): UseTokenBalancesForMultipleAccountsReturn
+```
+
+**Return Type**:
+```ts
+type UseTokenBalancesForMultipleAccountsReturn = {
+  balances: Record<string, Token[]> // Balances keyed by address
+  isLoading: boolean
+  error: Error | null
+}
+```
 
 ## Quotes and Swapping
 
