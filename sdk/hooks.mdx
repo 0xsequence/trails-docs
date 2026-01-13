@@ -162,7 +162,8 @@ import {
 
 Balance hooks and utilities:
 
-- `useTokenBalances(address)`: Returns sorted token balances enriched with USD price
+- `useTokenBalances(address, options?)`: Returns sorted token balances enriched with USD price
+- `useTokenBalancesForMultipleAccounts(addresses, options?)`: Returns token balances for multiple accounts
 - `useAccountTotalBalanceUsd(address)`: Returns total USD balance across tokens
 - `useHasSufficientBalanceUsd(address, targetUsd)`: Check if account has sufficient USD balance
 - `useHasSufficientBalanceToken(address, tokenAddress, tokenAmount, chainId)`: Check token balance
