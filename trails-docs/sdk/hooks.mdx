@@ -1,0 +1,58 @@
+## useQuote
+
+The `useQuote` hook provides a simple interface to get quotes for intent transactions and execute them. It handles both cross-chain and same-chain transactions, automatically fetching token balances, calculating fees, and providing transaction state updates.
+
+### Parameters
+
+All parameters are optional, but the hook will not fetch a quote until all required parameters are provided.
+
+#### Required (for quote fetching)
+
+- `walletClient` - The wallet client from wagmi (e.g., from `useWalletClient()`)
+- `fromTokenAddress` - The contract address of the origin token
+- `fromChainId` - The chain ID of the origin chain
+- `toTokenAddress` - The contract address of the destination token
+- `toChainId` - The chain ID of the destination chain
+- `swapAmount` - The amount to swap, as a string or bigint in the token's smallest unit (e.g., 1 USDC with 6 decimals = '1000000')
+- `toAddress` - The recipient address for the destination token
+
+#### Optional
+
+- `tradeType` - The trade type: `TradeType.EXACT_INPUT` or `TradeType.EXACT_OUTPUT` (default)
+- `slippageTolerance` - Slippage tolerance as a decimal string or number (e.g., '0.005' for 0.5%)
+- `toCalldata` - Custom calldata for the destination chain for executing arbitrary contract calls
+- `onStatusUpdate` - Callback function that receives transaction state updates during execution
+- `swapProvider` - Swap provider ID to use (auto, lifi, relay, cctp, direct)
+- `bridgeProvider` - Bridge provider ID to use (auto, lifi, relay, cctp, direct)
+- `checkoutOnHandlers` - Event handlers for tracking checkout/transaction lifecycle events
+- `paymasterUrl` - Paymaster URL for gasless ERC-4337 transactions
+- `selectedFeeOption` - Fee option selection (e.g., pay gas in USDC instead of ETH)
+- `abortSignal` - AbortSignal to cancel the quote request
+- `apiKey` - API key override for Trails API access
+- `nodeGatewayEnv` - Environment override ('prod' | 'dev' | 'local' | 'cors-anywhere')
+- `isSmartWallet` - Flag to indicate if the wallet is a smart wallet
+- `fundMethod` - Fund method identifier (e.g., 'wallet', 'direct-transfer', 'onramp-exchange')
+- `onramp` - Onramp tracking data for analytics
+- `fromUserIDAmountMore` - **Important**: User identifier that is necessary for production updates. This should be provided in production environments for tracking and system updates.
+
+<Warning>
+The `fromUserIDAmountMore` parameter is important for production deployments. While optional, providing this identifier helps with tracking and ensures proper system updates.
+</Warning>
+
+### Return Value
+
+The hook returns an object with the following properties:
+
+- `quote` - The quote object with transaction details, or `null` if not available
+- `send` - Function to execute the transaction, returns a Promise resolving to transaction result
+- `isLoadingQuote` - Boolean indicating if a quote is currently being fetched
+- `quoteError` - Any error that occurred while fetching the quote
+- `quoteErrorPrettified` - User-friendly error message string
+- `refetchQuote` - Function to manually refetch the quote
+- `abort` - Function to abort any in-flight quote requests
+- `feeOptions` - Available fee options for this quote
+- `isRecipientContract` - Whether the recipient address is a contract (null if not yet checked)
+- `isSenderContractOnOrigin` - Whether the sender is a contract on origin chain (null if not yet checked)
+- `isSenderContractOnDestination` - Whether the sender is a contract on destination chain (null if not yet checked)
+
+### Example
