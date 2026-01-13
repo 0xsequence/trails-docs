@@ -1825,6 +1825,7 @@ components:
         - originTxnId
         - originTxnHash
         - destinationTxnId
+        - destinationTxnHash
         - status
         - createdAt
         - updatedAt
@@ -1843,6 +1844,8 @@ components:
           type: string
         destinationTxnId:
           type: number
+        destinationTxnHash:
+          type: string
         status:
           type: number
         statusReason:
