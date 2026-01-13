@@ -175,7 +175,13 @@ import { useTokenBalances, useAccountTotalBalanceUsd } from '0xtrails'
 import type { Token } from '0xtrails'
 
 const WalletBalance = ({ address }: { address: string }) => {
-  const { sortedTokens, isLoadingBalances } = useTokenBalances(address)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  const { sortedTokens, isLoadingBalances, page } = useTokenBalances(address, {
+    page: currentPage,
+    pageSize: pageSize,
+  })
   const { totalBalanceUsd, totalBalanceUsdFormatted } = useAccountTotalBalanceUsd(address)
 
   if (isLoadingBalances) return <div>Loading balances...</div>
@@ -188,6 +194,23 @@ const WalletBalance = ({ address }: { address: string }) => {
           {token.symbol}: {token.balanceDisplay} ({token.balanceUsdDisplay})
         </div>
       ))}
+      
+      {/* Pagination controls */}
+      <div>
+        <button 
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage}</span>
+        <button 
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          disabled={!page?.more}
+        >
+          Next
+        </button>
+      </div>
     </div>
   )
 }
