@@ -183,9 +183,8 @@ export const yearnVaultABI = [
 
 ### Deposit with Fiat Onramp
 
-Trails supports fiat onramps, allowing users to purchase crypto directly with fiat currency and deposit it to any token on any supported chain. This is perfect for onboarding new users who don't yet hold crypto.
+Trails supports fiat onramps by default in fund mode, allowing users to purchase crypto directly with fiat currency and deposit it to any token on any supported chain. This is perfect for onboarding new users who don't yet hold crypto.
 
-Simply set the `fundOnRamp` prop to `true` to enable fiat onramps.
 <CodeGroup>
 
 ```tsx FiatOnrampDeposit.tsx
@@ -199,7 +198,6 @@ export const FiatOnrampExample = () => {
       toAddress="0x..." // Recipient Address
       toChainId={137} // Polygon
       toToken="USDC"
-      fundOnRamp={true}
       onCheckoutComplete={({ sessionId }) => {
         console.log('Fiat deposit completed:', sessionId)
       }}
