@@ -217,8 +217,27 @@ const WalletBalance = ({ address }: { address: string }) => {
 }
 ```
 
-### useTokenBalances Return Type
+### useTokenBalances
 
+Fetches token balances for a single account with optional pagination.
+
+**Signature**:
+```ts
+function useTokenBalances(
+  address: Address | null,
+  options?: {
+    page?: number
+    pageSize?: number
+  }
+): UseTokenBalancesReturn
+```
+
+**Parameters**:
+- `address`: The wallet address to fetch balances for
+- `options.page`: Page number for pagination (default: 1)
+- `options.pageSize`: Number of balances per page (default: 10)
+
+**Return Type**:
 ```ts
 type UseTokenBalancesReturn = {
   sortedTokens: Token[] // Tokens sorted by USD balance (highest first)
@@ -226,10 +245,44 @@ type UseTokenBalancesReturn = {
   isLoadingPrices: boolean
   isLoadingSortedTokens: boolean
   balanceError: Error | null
+  page: Page | undefined // Pagination metadata
+}
+
+type Page = {
+  more: boolean // Whether more results are available
 }
 ```
 
 Token balances are returned as `Token[]` with balance fields populated. See the [Token Type](#token-type) above for all available fields including `balance`, `balanceFormatted`, `balanceDisplay`, `balanceUsd`, etc.
+
+### useTokenBalancesForMultipleAccounts
+
+Fetches token balances for multiple accounts with optional pagination.
+
+**Signature**:
+```ts
+function useTokenBalancesForMultipleAccounts(
+  addresses: (Address | null)[],
+  options?: {
+    page?: number
+    pageSize?: number
+  }
+): UseTokenBalancesForMultipleAccountsReturn
+```
+
+**Parameters**:
+- `addresses`: Array of wallet addresses to fetch balances for
+- `options.page`: Page number for pagination (default: 1)
+- `options.pageSize`: Number of balances per page (default: 10)
+
+**Return Type**:
+```ts
+type UseTokenBalancesForMultipleAccountsReturn = {
+  balancesByAccount: Record<string, Token[]> // Balances grouped by account address
+  isLoading: boolean
+  error: Error | null
+}
+```
 
 ## Quotes and Swapping
 
