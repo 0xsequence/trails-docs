@@ -1974,6 +1974,42 @@ components:
           type: string
         currencyType:
           type: string
+    RelayTransfer:
+      type: object
+      required:
+        - id
+        - intentId
+        - originChainId
+        - destinationChainId
+        - originTxnId
+        - originTxnHash
+        - destinationTxnId
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: number
+        intentId:
+          type: string
+        originChainId:
+          type: number
+        destinationChainId:
+          type: number
+        originTxnId:
+          type: number
+        originTxnHash:
+          type: string
+        destinationTxnId:
+          type: number
+        status:
+          type: number
+        statusReason:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
     GasFeeOptions:
       type: object
       required:
