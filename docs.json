@@ -133,6 +133,10 @@
         "href": "https://dashboard.trails.build"
       },
       {
+        "label": "Explorer",
+        "href": "https://app.trails.build/explorer"
+      },
+      {
         "label": "Support",
         "href": "https://t.me/build_with_trails"
       }
