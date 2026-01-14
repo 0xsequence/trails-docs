@@ -273,6 +273,46 @@ type UseTokenBalancesForMultipleAccountsReturn = {
 }
 ```
 
+## Prices
+
+```ts
+import { clearLocalStoragePriceCache, cleanupExpiredPriceCache } from '0xtrails'
+```
+
+The Trails SDK automatically caches token prices in localStorage for 60 seconds to improve performance and reduce API calls. These utility functions allow you to manually manage the price cache for advanced use cases.
+
+### clearLocalStoragePriceCache
+
+Clears all cached token prices from localStorage. This is useful when you need to force a fresh fetch of all prices or when implementing cache invalidation logic.
+
+**Signature**: `() => void`
+
+**Usage**:
+```ts
+import { clearLocalStoragePriceCache } from '0xtrails'
+
+// Clear all cached prices
+clearLocalStoragePriceCache()
+```
+
+### cleanupExpiredPriceCache
+
+Removes only expired price entries from the localStorage cache while keeping valid entries. The SDK automatically runs cleanup periodically (every 5 minutes), but you can manually trigger it if needed.
+
+**Signature**: `() => void`
+
+**Usage**:
+```ts
+import { cleanupExpiredPriceCache } from '0xtrails'
+
+// Remove expired entries from cache
+cleanupExpiredPriceCache()
+```
+
+<Note>
+The price cache is automatically managed by the SDK. These functions are provided for advanced use cases where manual cache control is needed, such as implementing custom cache invalidation strategies or debugging price-related issues.
+</Note>
+
 ## Quotes and Swapping
 
 ```ts
