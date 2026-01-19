@@ -168,5 +168,13 @@
       "source": "/overview/chain-abstraction",
       "destination": "/architecture/how-it-works"
     }
-  ]
+  ],
+  "footer": {
+    "socials": {
+      "website": "https://trails.build",
+      "x": "https://x.com/TrailsHQ",
+      "telegram": "https://t.me/build_with_trails",
+      "linkedin": "https://www.linkedin.com/showcase/trailshq/"
+    }
+  }
 }
