@@ -115,3 +115,17 @@
   - Removed <Steps> component in favor of simple H2 sections for faster scanning
   - Keep code examples minimal but complete - just enough to copy-paste and run
 ---
+
+## 2026-01-21 - US-009
+- What was implemented: Added API authentication and error handling documentation to introduction.mdx
+- Files changed:
+  - Updated `api-reference/introduction.mdx` - added authentication, error codes, and rate limiting sections
+- **Learnings for future iterations:**
+  - API uses webrpc format - errors come as `webrpcError` object with code, name, message, cause, httpStatus
+  - Error codes are defined in gaps.md (from trails-api.ridl): 2000-2004 (general), 7000-7001 (intents), 8000-8009 (resources), 9000 (service)
+  - Quote validity is 5 minutes, then 10 minutes after CommitIntent to call ExecuteIntent
+  - `X-Access-Key` header is the authentication mechanism (not Bearer token)
+  - Mintlify supports `<Tip>` component for helpful hints alongside `<Note>` and `<Warning>`
+  - Tables work well for error code documentation - scannable format with code, name, description, HTTP status
+  - The pre-existing local changes in commit-intent.mdx, execute-intent.mdx, quote-intent.mdx were not part of US-009
+---
