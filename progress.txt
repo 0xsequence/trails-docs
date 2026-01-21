@@ -88,3 +88,17 @@
   - CardGroup with cols={2} provides clean navigation cards at bottom of use-case pages
   - Stablecoin availability varies by chain - link to supported-chains page rather than hardcoding full list
 ---
+
+## 2026-01-21 - US-007
+- What was implemented: Updated SDK hooks documentation to match actual SDK exports
+- Files changed:
+  - Updated `sdk/hooks.mdx` - corrected hook names and types
+- **Learnings for future iterations:**
+  - The SDK exports `useIntentRecover` not `useTrailsRefund` - hook was renamed at some point
+  - `useTokenBalancesForMultipleAccounts` returns `balancesByAccount` (object keyed by lowercase address), not `balances`
+  - Each account in `balancesByAccount` has structure: `{ tokenBalancesData: { tokens: Token[] }, isLoading, error }`
+  - Always verify hook return types against actual SDK source in `packages/0xtrails/src/index.ts`
+  - The recovery hook automatically selects the intent address (origin or destination) with highest balance
+  - `useIntentRecover` provides both manual flow (signPayload + getRecoverTx) and automatic flow (recover())
+  - Pre-existing broken link in transaction-history.mdx references deprecated endpoint - don't worry about this
+---

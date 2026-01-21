@@ -109,8 +109,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Renamed useTrailsRefund to useIntentRecover to match actual SDK export. Updated useTokenBalancesForMultipleAccounts with correct return type (balancesByAccount instead of balances) and added practical example. All hook documentation now matches SDK source code."
     },
     {
       "id": "US-008",
