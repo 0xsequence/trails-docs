@@ -144,3 +144,18 @@
   - AccordionGroup component is effective for "Best Practices" sections - keeps page scannable
   - Backend verification pattern should always be included for merchant integrations - never trust client-side alone
 ---
+
+## 2026-01-21 - US-011
+- What was implemented: Updated supported-chains.mdx with complete chain data from SDK source
+- Files changed:
+  - Rewrote `resources/supported-chains.mdx` - comprehensive chain support documentation
+- **Learnings for future iterations:**
+  - Chain data source of truth is `packages/0xtrails/src/chains.ts` - has `supportedSequenceChains` and `getAllChains()`
+  - Etherlink chain ID is 42793 (mainnet), 128123 (testnet) - was missing from old docs
+  - SDK supports 18 mainnet chains and 15 testnet chains
+  - Token availability per chain can be found in `packages/0xtrails/src/tokens.ts` - look for USDC/USDT definitions
+  - CCTP support: Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche
+  - Prefer markdown tables over JSX components for chain lists - more maintainable and LLM-friendly
+  - Include stablecoin contract addresses for API integrations (helps developers using direct API calls)
+  - Organize chains by use case (low fee, high liquidity, gaming/NFT) for better discoverability
+---

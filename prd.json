@@ -171,8 +171,8 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Rewrote supported-chains.mdx with complete chain data from SDK source: 18 mainnet chains with chain IDs, native tokens, and stablecoin availability (USDC, USDT, DAI, CCTP support). Added USDC/USDT contract addresses table, 15 testnet chains, supported bridges section (Relay, LiFi, CCTP V2), chain-specific notes by use case (low fee, high liquidity, gaming/NFT). Replaced JSX snippet with clean markdown tables."
     },
     {
       "id": "US-012",
