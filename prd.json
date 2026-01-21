@@ -125,8 +125,8 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Streamlined get-started.mdx: leads with npm install, minimal pay mode example (USDC on Base), card-based navigation for starter templates and next steps, footer links to SDK Configuration, API Reference, and Hooks."
     },
     {
       "id": "US-009",

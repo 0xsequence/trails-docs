@@ -102,3 +102,16 @@
   - `useIntentRecover` provides both manual flow (signPayload + getRecoverTx) and automatic flow (recover())
   - Pre-existing broken link in transaction-history.mdx references deprecated endpoint - don't worry about this
 ---
+
+## 2026-01-21 - US-008
+- What was implemented: Streamlined get-started.mdx to be a fast, no-fluff quickstart
+- Files changed:
+  - Rewrote `get-started.mdx` - bare essentials quickstart with npm install first
+- **Learnings for future iterations:**
+  - Quickstart pages should prioritize action over explanation - "Install" before "About"
+  - Changed example from mode="fund" to mode="pay" since pay is the core payment use case
+  - Use CardGroup with cols={3} for starter templates (compact 3-column layout)
+  - Footer with inline links (using · separator) is effective for "full reference" section
+  - Removed <Steps> component in favor of simple H2 sections for faster scanning
+  - Keep code examples minimal but complete - just enough to copy-paste and run
+---
