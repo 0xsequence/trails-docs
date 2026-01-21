@@ -159,3 +159,19 @@
   - Include stablecoin contract addresses for API integrations (helps developers using direct API calls)
   - Organize chains by use case (low fee, high liquidity, gaming/NFT) for better discoverability
 ---
+
+## 2026-01-21 - US-012
+- What was implemented: Comprehensive rewrite of SDK configuration documentation with all TrailsWidget props
+- Files changed:
+  - Rewrote `sdk/configuration.mdx` - complete configuration reference with TypeScript types
+- **Learnings for future iterations:**
+  - TrailsWidgetProps interface is defined in `packages/0xtrails/src/widget/widget.tsx` starting at line 162
+  - SDK exports TrailsWidgetRef interface with openModal(), closeModal(), isModalOpen for programmatic control
+  - Default values: mode="pay", theme="light", slippageTolerance=0.05 (5%), debug=false
+  - All callbacks receive a `sessionId` parameter to correlate events across the transaction lifecycle
+  - TransactionState type is in `packages/0xtrails/src/transactions.ts` - includes status, hash, chainId, explorerUrl
+  - TrailsProvider wraps SequenceHooksProvider and TrailsModalProvider - use it for apps with multiple widgets
+  - TrailsConfig defaults are in `packages/0xtrails/src/constants.ts` (PROD_* and DEFAULT_* exports)
+  - The `onramp` prop requires the separate `@0xtrails/onramp` package for fiat-to-crypto functionality
+  - Debug mode can be enabled via prop or URL parameter `?debug=true`
+---

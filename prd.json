@@ -186,8 +186,8 @@
         "Typecheck passes"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Comprehensive rewrite of sdk/configuration.mdx with: API key setup section with Sequence Builder link, all 40+ TrailsWidget props organized by category (Core, UI, Wallet, Transaction, App Metadata, Onramp), complete callback TypeScript types (TransactionState, all callback signatures), callback reference table, environment config examples (production, custom endpoints, debug mode), TrailsProvider usage with TrailsConfig interface, TrailsWidgetRef methods for programmatic control."
     },
     {
       "id": "US-013",
