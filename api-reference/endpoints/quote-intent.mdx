@@ -87,9 +87,15 @@ const quote = await response.json();
 console.log('Quote:', quote);
 ```
 
+## Quote Expiration
+
+<Warning>
+Quotes expire **5 minutes** after being issued. You must commit the intent using `CommitIntent` before the quote expires, or you'll need to request a new quote.
+</Warning>
+
 ## Next Steps
 
 After receiving a quote:
 1. Review the quote details, fees, and estimated amounts
-2. Use `CommitIntent` to commit the intent if the quote is acceptable
+2. Use `CommitIntent` to commit the intent before the quote expires (5-minute window)
 

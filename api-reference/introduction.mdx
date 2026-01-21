@@ -16,7 +16,7 @@ const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIn
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({ /* request body */ })
 });
@@ -72,7 +72,7 @@ const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGa
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     accountAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
@@ -96,7 +96,7 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     ownerAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1', // sender address
@@ -146,7 +146,7 @@ const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/C
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({ intent })
 });
@@ -218,7 +218,7 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     intentId,
@@ -378,7 +378,7 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     intentId,
@@ -445,7 +445,7 @@ async function waitForCompletion(intentId: string) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Access-Key': 'YOUR_API_KEY'
+          'X-Access-Key': 'YOUR_ACCESS_KEY'
         },
         body: JSON.stringify({ intentId })
       }
