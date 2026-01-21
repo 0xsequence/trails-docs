@@ -2,9 +2,11 @@
 - SDK exports are defined in `packages/0xtrails/src/index.ts` - check this file to see all public API
 - Documentation uses Mintlify framework with `.mdx` files
 - Run `npm test` to check for broken links (no typecheck in docs repo)
-- Pre-existing broken link exists: `/api-reference/endpoints/get-intent-transaction-history` referenced in `examples/transaction-history.mdx`
 - API definitions are in `trails-api/proto/trails-api.ridl` (main API) and `trails-api/proto/trails-onramp.ridl` (onramp)
 - API uses webrpc format - `.ridl` files define service endpoints and types
+- API HTTP examples use `'X-Access-Key': 'YOUR_ACCESS_KEY'` for the header value (standardized in US-015)
+- SDK widget examples use `apiKey="YOUR_API_KEY"` for the prop value
+- The refund/recovery hook is named `useIntentRecover` (not `useTrailsRefund`)
 
 ---
 
@@ -203,4 +205,27 @@
   - The API reference tab description had a typo "Referencing" which was fixed to "Reference"
   - All page paths were validated using shell script - 47 total pages now in navigation
   - The pre-existing broken link in transaction-history.mdx (/api-reference/endpoints/get-intent-transaction-history) is for a deprecated endpoint and will be fixed in US-015
+---
+
+## 2026-01-21 - US-015
+- What was implemented: Final documentation review and cleanup - fixed broken links, standardized terminology, cleaned up formatting
+- Files changed:
+  - Updated `examples/transaction-history.mdx` - fixed broken link to get-intent-history endpoint
+  - Updated `examples/refunds.mdx` - changed useTrailsRefund to useIntentRecover (correct hook name)
+  - Updated `api-reference/introduction.mdx` - standardized API key placeholder
+  - Updated `api-reference/endpoints/get-chains.mdx` - standardized API key placeholder
+  - Updated `api-reference/endpoints/get-exact-input-routes.mdx` - standardized API key placeholder
+  - Updated `api-reference/endpoints/get-exact-output-routes.mdx` - standardized API key placeholder
+  - Updated `api-reference/endpoints/get-token-list.mdx` - standardized API key placeholder
+  - Updated `api-reference/endpoints/quote-intent.mdx` - added quote expiration timing note
+  - Updated `api-reference/endpoints/commit-intent.mdx` - added commit expiration timing note
+  - Updated `api-reference/endpoints/execute-intent.mdx` - added execution timing note
+  - Deleted `gaps.md` - audit file no longer needed after documentation optimization complete
+- **Learnings for future iterations:**
+  - API HTTP header examples should use `YOUR_ACCESS_KEY` to match the `X-Access-Key` header name
+  - SDK widget prop examples use `YOUR_API_KEY` to match the `apiKey` prop name
+  - The SDK recovery hook is `useIntentRecover` not `useTrailsRefund` - this was renamed at some point
+  - Mintlify anchor links are generated from H2 headings: `## useIntentRecover` creates anchor `#useintentrecover` (lowercase)
+  - Quote expiration is 5 minutes, then 10 minutes after CommitIntent to call ExecuteIntent
+  - The gaps.md audit file was useful for tracking undocumented features but should be deleted after the documentation project is complete to avoid confusion
 ---

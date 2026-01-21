@@ -233,8 +233,8 @@
         "Typecheck passes"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Fixed broken link in transaction-history.mdx (get-intent-transaction-history → get-intent-history), updated refunds.mdx to use correct hook name (useTrailsRefund → useIntentRecover), standardized API access key placeholder to YOUR_ACCESS_KEY across all endpoint docs, added quote expiration timing information. Deleted gaps.md audit file. All tests pass (npm test shows no broken links)."
     }
   ]
 }
