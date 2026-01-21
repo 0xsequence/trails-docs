@@ -1,10 +1,25 @@
-# SDK Documentation Gaps Analysis
+# Documentation Gaps Analysis
 
-This document identifies features exported from the `0xtrails` SDK (`packages/0xtrails/src/index.ts`) that are not currently documented in the SDK documentation (`sdk/*.mdx`).
+This document identifies undocumented features in both the Trails SDK and Trails API.
 
 ## Summary
 
-**Total undocumented exports identified: 45+**
+| Category | Documented | Undocumented |
+|----------|------------|--------------|
+| SDK Exports | ~20 | 45+ |
+| API Endpoints (Trails) | 13 | 9 |
+| API Endpoints (Onramp) | 0 | 11 |
+| Admin Endpoints | N/A | 2 (internal) |
+
+---
+
+# SDK Documentation Gaps Analysis
+
+This section identifies features exported from the `0xtrails` SDK (`packages/0xtrails/src/index.ts`) that are not currently documented in the SDK documentation (`sdk/*.mdx`).
+
+## SDK Summary
+
+**Total undocumented SDK exports identified: 45+**
 
 The SDK exports many utilities and functions that developers may find useful but cannot discover through the documentation.
 
@@ -307,5 +322,432 @@ The SDK exports many utilities and functions that developers may find useful but
 
 ---
 
+---
+
+# API Documentation Gaps Analysis
+
+This section identifies API endpoints from `trails-api` (`proto/trails-api.ridl`, `proto/trails-onramp.ridl`) that are not currently documented in `api-reference/endpoints/*.mdx`.
+
+## Summary
+
+**Documented endpoints: 13**
+**Undocumented Trails endpoints: 9**
+**Undocumented Onramp endpoints: 11**
+**Admin endpoints (internal, not developer-facing): 2**
+
+---
+
+## Documented Endpoints (Complete)
+
+The following 13 endpoints are fully documented:
+
+| Endpoint | Documentation |
+|----------|---------------|
+| `QuoteIntent` | `api-reference/endpoints/quote-intent.mdx` |
+| `CommitIntent` | `api-reference/endpoints/commit-intent.mdx` |
+| `ExecuteIntent` | `api-reference/endpoints/execute-intent.mdx` |
+| `WaitIntentReceipt` | `api-reference/endpoints/wait-intent-receipt.mdx` |
+| `GetIntentReceipt` | `api-reference/endpoints/get-intent-receipt.mdx` |
+| `GetIntent` | `api-reference/endpoints/get-intent.mdx` |
+| `SearchIntents` | `api-reference/endpoints/search-intents.mdx` |
+| `GetIntentHistory` | `api-reference/endpoints/get-intent-history.mdx` |
+| `GetChains` | `api-reference/endpoints/get-chains.mdx` |
+| `GetExactInputRoutes` | `api-reference/endpoints/get-exact-input-routes.mdx` |
+| `GetExactOutputRoutes` | `api-reference/endpoints/get-exact-output-routes.mdx` |
+| `GetTokenList` | `api-reference/endpoints/get-token-list.mdx` |
+| `GetTokenPrices` | `api-reference/endpoints/get-token-prices.mdx` |
+
+---
+
+## Undocumented Trails Service Endpoints
+
+### 1. Health & Status Endpoints
+
+| Endpoint | Description | Request | Response |
+|----------|-------------|---------|----------|
+| `Ping` | Health check endpoint | None | `version: string` |
+| `RuntimeStatus` | Server runtime status with uptime, services health | None | `RuntimeStatus` object |
+| `Clock` | Get server timestamp | None | `serverTime: timestamp` |
+
+**Use case:** Health monitoring, debugging, service status dashboards.
+
+---
+
+### 2. AbortIntent
+
+**Endpoint:** `POST /rpc/Trails/AbortIntent`
+
+Allows users to abort an intent that has not yet been fully executed.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `intentId` | `string` | ID of the intent to abort |
+| `chainId` | `uint64` | Chain where the abort transaction was submitted |
+| `abortTransactionHash` | `string` | Transaction hash of the user's abort transaction |
+
+**Response:**
+- `intentId: string`
+- `status: IntentStatus`
+
+**Use case:** Cancel pending intents, handle user-initiated refunds.
+
+---
+
+### 3. GetExchangeRate
+
+**Endpoint:** `POST /rpc/Trails/GetExchangeRate`
+
+Returns exchange rate from USD to a specified fiat currency.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `toCurrency` | `string` | Target currency code (e.g., "EUR", "GBP") |
+
+**Response:**
+- `exchangeRate: ExchangeRate` object
+
+**Use case:** Display prices in user's local currency, fiat conversion calculations.
+
+---
+
+### 4. GetCountryList
+
+**Endpoint:** `POST /rpc/Trails/GetCountryList`
+
+Returns list of supported countries for onramp providers.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| (none) | - | No parameters required |
+
+**Response:**
+- `countries: []Country`
+
+**Use case:** Filter onramp options by user's country, show supported regions.
+
+---
+
+### 5. GetTrailsContracts
+
+**Endpoint:** `POST /rpc/Trails/GetTrailsContracts`
+
+Returns Trails contract addresses used by the Intent stack.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| (none) | - | No parameters required |
+
+**Response:**
+- `TrailsContracts: TrailsContracts` (contains contract addresses per chain)
+
+**Use case:** Programmatically get contract addresses for direct contract interactions.
+
+---
+
+### 6. GetEarnPools
+
+**Endpoint:** `POST /rpc/Trails/GetEarnPools`
+
+Returns aggregated DeFi pool information from protocols like Aave and Morpho.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `chainIds` | `[]uint64` | (Optional) Filter by chain IDs |
+| `protocols` | `[]string` | (Optional) Filter by protocols ("aave", "morpho") |
+| `minTvl` | `float64` | (Optional) Minimum TVL in USD |
+| `maxApy` | `float64` | (Optional) Maximum APY percentage |
+
+**Response:**
+- `pools: []EarnPool` - Pool details with APY, TVL, etc.
+- `timestamp: timestamp` - When data was fetched
+- `cached: bool` - Whether response is from cache
+
+**Use case:** Display yield opportunities, build earn/deposit features.
+
+---
+
+### 7. GetFiatCurrencyList
+
+**Endpoint:** `POST /rpc/Trails/GetFiatCurrencyList`
+
+Returns list of supported fiat currencies for display preferences.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| (none) | - | No parameters required |
+
+**Response:**
+- `currencies: []FiatCurrency`
+
+**Use case:** Currency selector for price displays, user preference settings.
+
+---
+
+### 8. GetIntentTransactionHistory (DEPRECATED)
+
+**Endpoint:** `POST /rpc/Trails/GetIntentTransactionHistory`
+
+⚠️ **DEPRECATED** - Use `GetIntentHistory` instead.
+
+---
+
+## Undocumented TrailsOnramp Service Endpoints
+
+The TrailsOnramp service provides fiat-to-crypto onramp functionality via Meld integration.
+
+### 1. GetMeldServiceProviders
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldServiceProviders`
+
+Returns available payment service providers for onramp.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `countryCode` | `string` | (Optional) Filter by country |
+| `serviceProviders` | `string` | (Optional) Specific providers |
+| `paymentMethodType` | `string` | (Optional) Payment method filter |
+| `sourceCurrencyCode` | `string` | (Optional) Fiat currency |
+| `destinationCurrencyCode` | `string` | (Optional) Crypto currency |
+
+**Response:**
+- `serviceProviders: []MeldServiceProvider` with name, status, logos, URLs
+
+---
+
+### 2. GetMeldCountryDefaults
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldCountryDefaults`
+
+Returns default currency and payment methods for a country.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `countryCode` | `string` | Country code (e.g., "US", "GB") |
+
+**Response:**
+- `defaults: []MeldCountryDefault` with default currency and payment methods
+
+---
+
+### 3. GetMeldFiatCurrencies
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldFiatCurrencies`
+
+Returns available fiat currencies for a country.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `countryCode` | `string` | Country code |
+
+**Response:**
+- `fiatCurrencies: []MeldFiatCurrency` with code, name, symbol image
+
+---
+
+### 4. GetMeldPaymentMethods
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldPaymentMethods`
+
+Returns payment methods available for a fiat currency.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `fiatCurrency` | `string` | Fiat currency code |
+
+**Response:**
+- `paymentMethods: []MeldPaymentMethod` with method type, name, logos
+
+---
+
+### 5. GetMeldCryptoCurrencies
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldCryptoCurrencies`
+
+Returns available cryptocurrencies for onramp in a country.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `countryCode` | `string` | Country code |
+
+**Response:**
+- `cryptoCurrencies: []MeldCryptoCurrency` with chain info, contract addresses
+
+---
+
+### 6. GetMeldPurchaseLimits
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldPurchaseLimits`
+
+Returns purchase limits for all fiat currencies.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| (none) | - | No parameters required |
+
+**Response:**
+- `limits: map<string, MeldCurrencyLimits>` with min/max/default amounts
+
+---
+
+### 7. GetMeldQuote
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldQuote`
+
+Returns real-time quotes from multiple onramp providers.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sourceAmount` | `string` | Fiat amount to spend |
+| `sourceCurrencyCode` | `string` | Fiat currency |
+| `destinationCurrencyCode` | `string` | Crypto currency |
+| `countryCode` | `string` | User's country |
+| `walletAddress` | `string` | Destination wallet |
+| `paymentMethodType` | `string` | (Optional) Payment method |
+
+**Response:**
+- Quote with fees, exchange rate, provider details
+
+---
+
+### 8. CreateMeldWidgetSession
+
+**Endpoint:** `POST /rpc/TrailsOnramp/CreateMeldWidgetSession`
+
+Creates a widget session and returns the provider URL for embedded onramp.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sessionData` | `MeldSessionData` | Wallet, amounts, provider selection |
+| `sessionType` | `string` | Session type |
+| `externalCustomerId` | `string` | Your customer ID |
+| `externalSessionId` | `string` | Your session ID |
+
+**Response:**
+- `widgetSession` with provider URL for iframe/redirect
+
+---
+
+### 9. GetMeldTransaction
+
+**Endpoint:** `POST /rpc/TrailsOnramp/GetMeldTransaction`
+
+Returns transaction details by transaction ID.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `transactionId` | `string` | Meld transaction ID |
+
+**Response:**
+- `transaction: MeldTransaction`
+
+---
+
+### 10. SearchMeldTransactions
+
+**Endpoint:** `POST /rpc/TrailsOnramp/SearchMeldTransactions`
+
+Search onramp transactions by various filters.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `statuses` | `string` | (Optional) Status filter |
+| `externalSessionIds` | `string` | (Optional) Your session IDs |
+| `externalCustomerIds` | `string` | (Optional) Your customer IDs |
+| `from` | `string` | (Optional) Start date |
+| `to` | `string` | (Optional) End date |
+| `limit` | `uint32` | (Optional) Max results |
+
+**Response:**
+- `transactions: MeldTransactions`
+
+---
+
+### 11. CreateMeldBankLinkingConnection
+
+**Endpoint:** `POST /rpc/TrailsOnramp/CreateMeldBankLinkingConnection`
+
+Creates a bank linking connection for ACH transfers.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `externalCustomerId` | `string` | Your customer ID |
+| `institutionId` | `string` | (Optional) Bank ID |
+| `institutionSearchString` | `string` | (Optional) Bank search |
+| `redirectUrl` | `string` | (Optional) Return URL |
+| `regions` | `[]string` | (Optional) Region filter |
+
+**Response:**
+- Connection URL for bank linking flow
+
+---
+
+## Admin Endpoints (Internal)
+
+The following endpoints are for internal administration and should NOT be documented for public developers:
+
+- `AdminRequeueIntentTransaction` - Requeue failed transactions
+- `AdminRebuildIntentReceiptSummary` - Rebuild receipt summaries
+
+---
+
+## API Error Codes
+
+The following error codes are defined but not documented:
+
+| Code | Name | Description | HTTP Status |
+|------|------|-------------|-------------|
+| 2000 | `InvalidArgument` | Invalid argument | 400 |
+| 2001 | `Unexpected` | Unexpected server error | 500 |
+| 2002 | `Unavailable` | Unavailable resource | 400 |
+| 2003 | `QueryFailed` | Query failed | 400 |
+| 2004 | `IntentStatus` | Invalid intent status | 422 |
+| 8000 | `NotFound` | Resource not found | 400 |
+| 8008 | `UnsupportedNetwork` | Unsupported network | 422 |
+| 8009 | `ClientOutdated` | Client is outdated | 422 |
+| 7000 | `IntentsSkipped` | Intent not needed for this transaction | 400 |
+| 7001 | `QuoteExpired` | Intent quote has expired | 400 |
+| 9000 | `IntentsDisabled` | Intents service unavailable | 400 |
+
+---
+
+## Recommendations
+
+### High Priority (Developer-facing)
+1. **AbortIntent** - Critical for error handling and user control
+2. **GetTrailsContracts** - Essential for direct contract integrations
+3. **GetEarnPools** - Important for DeFi/yield features
+4. **Error codes** - Add to `api-reference/introduction.mdx`
+
+### Medium Priority
+5. **GetExchangeRate** - Useful for multi-currency displays
+6. **GetFiatCurrencyList** - Supports currency preferences
+7. **GetCountryList** - Needed for onramp country selection
+
+### Consider Documenting (Onramp)
+8. **TrailsOnramp service** - If onramp is a public feature, create `api-reference/onramp/*.mdx` documentation for all 11 Meld endpoints
+
+### Lower Priority
+9. **Ping/RuntimeStatus/Clock** - Primarily for debugging/monitoring
+10. **GetIntentTransactionHistory** - Deprecated, point to GetIntentHistory
+
+---
+
+## Next Steps
+
+1. Add `AbortIntent` documentation to `api-reference/endpoints/`
+2. Add `GetTrailsContracts` documentation
+3. Add `GetEarnPools` documentation for DeFi features
+4. Update `api-reference/introduction.mdx` with:
+   - Error codes table
+   - Rate limiting information (if applicable)
+5. If onramp is public, create onramp documentation section
+
+---
+
 *Generated on: 2026-01-21*
+*Analyzed API version: trails-api/proto/trails-api.ridl, trails-onramp.ridl*
+
+---
+
+*SDK Analysis generated on: 2026-01-21*
 *Analyzed SDK version: packages/0xtrails/src/index.ts*
