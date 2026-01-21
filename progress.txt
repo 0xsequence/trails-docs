@@ -59,3 +59,17 @@
   - llms.txt lives at root of docs site and is fetched by AI tools for context
   - US-005 will need to reference this file in llm-integration.mdx
 ---
+
+## 2026-01-21 - US-005
+- What was implemented: Enhanced llm-integration.mdx with practical examples for AI agent developers
+- Files changed:
+  - Updated `resources/llm-integration.mdx` - comprehensive LLM integration guide with function calling
+- **Learnings for future iterations:**
+  - Mintlify supports `<AccordionGroup>` and `<Accordion>` components for collapsible best practices
+  - Tool definitions for LLM function calling should follow OpenAI/Anthropic JSON schema format
+  - Include both JSON tool definitions AND TypeScript implementation examples for completeness
+  - Error handling section should map error codes to user-friendly messages for LLM to relay
+  - System prompts should emphasize "always confirm before executing" for payment safety
+  - User intent examples table format works well for showing natural language → function call mapping
+  - Reference llms.txt at the top of the page since it's the primary AI context file
+---
