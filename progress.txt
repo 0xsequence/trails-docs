@@ -45,3 +45,17 @@
   - Code snippets should show the simplest use case first (mode="pay" with USDC settlement)
   - Keep intro focused on the core value prop - detailed explanations belong in use-case pages
 ---
+
+## 2026-01-21 - US-004
+- What was implemented: Created llms.txt for AI-friendly documentation following the llms.txt standard
+- Files changed:
+  - Created `llms.txt` - structured overview of Trails for LLM consumption
+- **Learnings for future iterations:**
+  - llms.txt standard requires: H1 title, blockquote summary, H2 sections with file lists
+  - Use `## Optional` section for secondary content that can be skipped for shorter context
+  - Keep token count low (~600 tokens here) - include code snippets sparingly but show key patterns
+  - Link format: `[Name](URL): Description` - concise one-line descriptions
+  - Include API flow (QuoteIntent → CommitIntent → ExecuteIntent → WaitIntentReceipt) for API integrations
+  - llms.txt lives at root of docs site and is fetched by AI tools for context
+  - US-005 will need to reference this file in llm-integration.mdx
+---

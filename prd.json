@@ -62,8 +62,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Created llms.txt following the standard with H1 title, blockquote summary, core concepts (intents, routes, SDK modes), API flow, integration patterns, SDK/API documentation links. ~600 tokens, well under 4000 limit."
     },
     {
       "id": "US-005",
