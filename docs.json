@@ -49,6 +49,7 @@
           {
             "group": "Examples",
             "pages": [
+              "examples/stablecoin-payments",
               "examples/wallet-compatibility",
               "examples/transaction-history",
               "examples/tokens-chains-prices",
