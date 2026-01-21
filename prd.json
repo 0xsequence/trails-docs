@@ -1,0 +1,240 @@
+{
+  "project": "trails-docs",
+  "branchName": "ralph/docs-optimization",
+  "description": "Optimize Trails documentation to be concise, LLM-friendly, captivating for developers, with focus on payments and stablecoins narrative",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Audit trails SDK for undocumented features",
+      "description": "As a developer, I need to identify SDK features that exist in code but are missing from documentation.",
+      "acceptanceCriteria": [
+        "Analyze trails SDK source code in /trails folder",
+        "Compare exported functions/hooks against sdk/*.mdx documentation",
+        "Create a gaps.md file listing undocumented features with file locations",
+        "Include component props, hooks, and utility functions in the audit",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Completed. Created gaps.md documenting 45+ undocumented SDK exports."
+    },
+    {
+      "id": "US-002",
+      "title": "Audit trails-api for undocumented endpoints",
+      "description": "As a developer, I need to identify API endpoints that exist but are missing from documentation.",
+      "acceptanceCriteria": [
+        "Analyze trails-api source code in /trails-api folder",
+        "Compare API routes against api-reference/endpoints/*.mdx documentation",
+        "Update gaps.md file with undocumented API endpoints",
+        "Include request/response schemas in the audit",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Completed. Identified 9 undocumented Trails endpoints, 11 undocumented TrailsOnramp endpoints, and documented all API error codes."
+    },
+    {
+      "id": "US-003",
+      "title": "Revamp intro.mdx with compelling payments narrative",
+      "description": "As a developer, I want a captivating introduction that clearly explains why Trails is the best choice for payments and stablecoins.",
+      "acceptanceCriteria": [
+        "Rewrite intro.mdx with strong focus on payments and stablecoins use case",
+        "Lead with developer value proposition (1-click payments, any token, any chain)",
+        "Include concise code snippet showing simple USDC payment",
+        "Remove redundant content - keep it focused and scannable",
+        "Add compelling stats or differentiators vs alternatives",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Completed. Rewrote intro.mdx with payment-focused narrative, USDC code example, 'Why Trails?' table comparing challenges vs solutions, and concise scannable sections."
+    },
+    {
+      "id": "US-004",
+      "title": "Create llms.txt for AI-friendly documentation",
+      "description": "As an LLM integration, I need a structured llms.txt file to efficiently understand Trails capabilities.",
+      "acceptanceCriteria": [
+        "Create llms.txt in root directory following llms.txt standard",
+        "Include core concepts: intents, routes, payments, SDK modes",
+        "Add key API endpoints with concise descriptions",
+        "Include common integration patterns",
+        "Keep under 4000 tokens for context efficiency",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Enhance llm-integration.mdx with practical examples",
+      "description": "As a developer building AI agents, I need clear examples of how to integrate Trails with LLMs.",
+      "acceptanceCriteria": [
+        "Update resources/llm-integration.mdx with concrete code examples",
+        "Add tool definition schema for LLM function calling",
+        "Include example prompts for payment intents",
+        "Add error handling patterns for LLM integrations",
+        "Reference llms.txt file",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Consolidate and improve pay use case documentation",
+      "description": "As a developer, I need clear, comprehensive payment documentation with stablecoin focus.",
+      "acceptanceCriteria": [
+        "Update use-cases/pay.mdx with strong stablecoin payment examples",
+        "Add USDC, USDT payment examples across chains",
+        "Include merchant/ecommerce integration pattern",
+        "Add fee estimation example",
+        "Remove duplicate content that exists in sdk/modes/pay.mdx",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Update SDK hooks documentation from source code",
+      "description": "As a developer, I need accurate hooks documentation that matches the actual SDK implementation.",
+      "acceptanceCriteria": [
+        "Update sdk/hooks.mdx to match actual exported hooks from trails SDK",
+        "Include all hook parameters and return types",
+        "Add practical examples for each hook",
+        "Document pagination options for useTokenBalances if supported",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Streamline get-started.mdx quickstart guide",
+      "description": "As a developer, I need a fast, no-fluff quickstart that gets me to a working payment in under 5 minutes.",
+      "acceptanceCriteria": [
+        "Simplify get-started.mdx to bare essentials",
+        "Lead with npm install and minimal code example",
+        "Remove explanatory text that slows down time-to-first-payment",
+        "Add copy-paste ready code blocks",
+        "Include link to full configuration docs",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Add API authentication and error handling docs",
+      "description": "As a developer, I need clear documentation on API authentication and error handling patterns.",
+      "acceptanceCriteria": [
+        "Update api-reference/introduction.mdx with authentication section",
+        "Document API key usage and best practices",
+        "Add error codes and handling examples",
+        "Include rate limiting information if applicable",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Create stablecoin payments guide",
+      "description": "As a developer accepting stablecoin payments, I need a dedicated guide for stablecoin use cases.",
+      "acceptanceCriteria": [
+        "Create examples/stablecoin-payments.mdx",
+        "Include USDC/USDT cross-chain payment examples",
+        "Add merchant settlement patterns",
+        "Document supported stablecoins per chain",
+        "Update docs.json navigation to include new page",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Update supported-chains.mdx with complete chain data",
+      "description": "As a developer, I need accurate and complete chain support information.",
+      "acceptanceCriteria": [
+        "Update resources/supported-chains.mdx from actual API/SDK chain data",
+        "Include chain IDs, names, and supported tokens",
+        "Add stablecoin availability per chain",
+        "Format as scannable table",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Improve SDK configuration documentation",
+      "description": "As a developer, I need clear documentation on all SDK configuration options.",
+      "acceptanceCriteria": [
+        "Update sdk/configuration.mdx with all TrailsWidget props",
+        "Document callback functions with TypeScript types",
+        "Add environment-specific configuration examples",
+        "Include API key setup instructions",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Add gasless transactions guide",
+      "description": "As a developer, I need documentation on implementing gasless transactions with Trails.",
+      "acceptanceCriteria": [
+        "Update examples/gasless.mdx with comprehensive gasless flow",
+        "Include USDC/USDT as gas fee token examples",
+        "Document permit-compatible token requirements",
+        "Add code example showing gasless payment setup",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Update docs.json navigation structure",
+      "description": "As a documentation consumer, I need a logical navigation that surfaces key content.",
+      "acceptanceCriteria": [
+        "Reorganize docs.json to prioritize payment use cases",
+        "Add new pages to appropriate groups",
+        "Ensure stablecoin-focused content is prominent",
+        "Remove any orphan pages from navigation",
+        "Verify all page paths are valid",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Final documentation review and cleanup",
+      "description": "As a documentation maintainer, I need to ensure consistency and remove non-developer-facing content.",
+      "acceptanceCriteria": [
+        "Review all .mdx files for consistent terminology",
+        "Remove internal/non-developer-facing content",
+        "Fix broken internal links",
+        "Ensure all code examples use consistent formatting",
+        "Delete gaps.md audit file",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

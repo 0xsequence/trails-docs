@@ -1,0 +1,47 @@
+## Codebase Patterns
+- SDK exports are defined in `packages/0xtrails/src/index.ts` - check this file to see all public API
+- Documentation uses Mintlify framework with `.mdx` files
+- Run `npm test` to check for broken links (no typecheck in docs repo)
+- Pre-existing broken link exists: `/api-reference/endpoints/get-intent-transaction-history` referenced in `examples/transaction-history.mdx`
+- API definitions are in `trails-api/proto/trails-api.ridl` (main API) and `trails-api/proto/trails-onramp.ridl` (onramp)
+- API uses webrpc format - `.ridl` files define service endpoints and types
+
+---
+
+## 2026-01-21 - US-001
+- What was implemented: Audited trails SDK source code and created comprehensive gaps.md documenting undocumented features
+- Files changed:
+  - Created `gaps.md` - comprehensive audit of 45+ undocumented SDK exports
+- **Learnings for future iterations:**
+  - The SDK main entry point is `packages/0xtrails/src/index.ts` which re-exports from various modules
+  - Widget-specific exports come from `widget/index.tsx`
+  - Many useful utilities exist that developers don't know about (formatting, intent monitoring, chain utilities)
+  - The docs repo uses Mintlify - no typecheck, but has `npm test` for broken link checking
+  - There are pre-existing modified files in the repo that were not touched by this iteration
+---
+
+## 2026-01-21 - US-002
+- What was implemented: Audited trails-api source code and updated gaps.md with undocumented API endpoints
+- Files changed:
+  - Updated `gaps.md` - added API documentation gaps section with 20+ undocumented endpoints
+- **Learnings for future iterations:**
+  - trails-api is a Go API using webrpc framework
+  - API definitions live in `.ridl` files in `proto/` folder
+  - Main service is `Trails` in `trails-api.ridl` with 22 endpoints (13 documented)
+  - Onramp service is `TrailsOnramp` in `trails-onramp.ridl` with 11 endpoints (0 documented)
+  - Admin service `TrailsAdmin` has 2 internal endpoints (should not be documented publicly)
+  - Error codes are defined at the bottom of `trails-api.ridl`
+  - The deprecated `GetIntentTransactionHistory` endpoint causes the pre-existing broken link
+---
+
+## 2026-01-21 - US-003
+- What was implemented: Rewrote intro.mdx with compelling payments/stablecoin narrative
+- Files changed:
+  - Rewrote `intro.mdx` - payment-focused introduction with USDC code example
+- **Learnings for future iterations:**
+  - Mintlify supports `<CardGroup>` and `<Card>` components for grid layouts
+  - Use `icon` prop on Cards (e.g., "credit-card", "wallet") for visual hierarchy
+  - Tables work well for comparing challenges vs solutions - scannable format
+  - Code snippets should show the simplest use case first (mode="pay" with USDC settlement)
+  - Keep intro focused on the core value prop - detailed explanations belong in use-case pages
+---
