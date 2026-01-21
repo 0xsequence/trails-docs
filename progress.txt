@@ -191,3 +191,16 @@
   - When user selects null (native gas), non-gasless flow is triggered; ERC-20 selection triggers gasless
   - Paymaster uses ERC-4337 entry point at `0x0000000071727de22e5e9d8baf0edac6f37da032`
 ---
+
+## 2026-01-21 - US-014
+- What was implemented: Reorganized docs.json navigation to prioritize payment use cases and add orphaned pages
+- Files changed:
+  - Updated `docs.json` - comprehensive navigation restructure
+- **Learnings for future iterations:**
+  - Mintlify docs.json navigation uses nested "groups" within "tabs"
+  - Pages can be nested in sub-groups using `{ "group": "Name", "pages": [...] }` object syntax
+  - Orphaned .mdx files to look for: snippets/ folder is for reusable content (not navigation), overview/ folder had redirects but also had cross-chain-execution which needed adding
+  - The API reference tab description had a typo "Referencing" which was fixed to "Reference"
+  - All page paths were validated using shell script - 47 total pages now in navigation
+  - The pre-existing broken link in transaction-history.mdx (/api-reference/endpoints/get-intent-transaction-history) is for a deprecated endpoint and will be fixed in US-015
+---

@@ -217,8 +217,8 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Reorganized navigation with: new 'Payments' group containing pay, stablecoin-payments, and gasless pages (stablecoin content now prominent); added orphaned pages to navigation (cross-chain-execution in Use Cases, unified-liquidity in Architecture, customization in SDK, get-chains/get-exact-input-routes/get-exact-output-routes in new 'Routes & Tokens' API group); split API endpoints into logical 'Intents' and 'Routes & Tokens' groups; verified all 47 page paths exist."
     },
     {
       "id": "US-015",
