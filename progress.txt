@@ -129,3 +129,18 @@
   - Tables work well for error code documentation - scannable format with code, name, description, HTTP status
   - The pre-existing local changes in commit-intent.mdx, execute-intent.mdx, quote-intent.mdx were not part of US-009
 ---
+
+## 2026-01-21 - US-010
+- What was implemented: Created comprehensive stablecoin payments guide
+- Files changed:
+  - Created `examples/stablecoin-payments.mdx` - dedicated stablecoin payments documentation
+  - Updated `docs.json` - added stablecoin-payments to Examples group (first position)
+- **Learnings for future iterations:**
+  - Examples pages should be placed at the top of their group in docs.json for visibility
+  - use-cases/pay.mdx and examples/stablecoin-payments.mdx have some overlap but serve different purposes: use-cases is the "how" overview, examples is deep-dive with more code
+  - CCTP (Circle Cross-Chain Transfer Protocol) is supported on Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche
+  - Stablecoin contract addresses are chain-specific - include them for API integrations
+  - Chain IDs reference: Ethereum=1, Base=8453, Arbitrum=42161, Optimism=10, Polygon=137, BNB=56, Avalanche=43114
+  - AccordionGroup component is effective for "Best Practices" sections - keeps page scannable
+  - Backend verification pattern should always be included for merchant integrations - never trust client-side alone
+---

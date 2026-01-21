@@ -156,8 +156,8 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Created comprehensive stablecoin-payments.mdx guide with: USDC examples for Base/Arbitrum/Ethereum with CCTP, USDT examples for Ethereum/BNB, complete merchant settlement pattern with backend verification, multi-currency settlement example, stablecoins-by-chain table with CCTP support info, contract addresses for API integrations, best practices accordion. Added to Examples group in docs.json navigation (first position)."
     },
     {
       "id": "US-011",
