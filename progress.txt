@@ -73,3 +73,18 @@
   - User intent examples table format works well for showing natural language → function call mapping
   - Reference llms.txt at the top of the page since it's the primary AI context file
 ---
+
+## 2026-01-21 - US-006
+- What was implemented: Consolidated and improved pay use case documentation with stablecoin focus
+- Files changed:
+  - Rewrote `use-cases/pay.mdx` - comprehensive stablecoin payment guide
+- **Learnings for future iterations:**
+  - use-cases/*.mdx should focus on practical examples, sdk/modes/*.mdx should be technical reference
+  - Removed duplicate content: basic payment and NFT examples were redundant with sdk/modes/pay.mdx
+  - Tables are effective for showing "You Settle In / User Pays With / Trails Handles" comparisons
+  - Merchant integration patterns should include both frontend (TrailsWidget) and backend (verifyPayment) code
+  - Fee estimation section should show both useQuote hook (SDK) and QuoteIntent API (server-side) approaches
+  - CCTP (Circle Cross-Chain Transfer Protocol) is the preferred bridge for native USDC transfers
+  - CardGroup with cols={2} provides clean navigation cards at bottom of use-case pages
+  - Stablecoin availability varies by chain - link to supported-chains page rather than hardcoding full list
+---

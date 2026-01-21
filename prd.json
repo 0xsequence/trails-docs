@@ -94,8 +94,8 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed. Rewrote pay.mdx with stablecoin focus: USDC/USDT examples for Base, Ethereum, Arbitrum with CCTP bridging, complete merchant checkout pattern with backend verification, fee estimation using useQuote hook and QuoteIntent API, supported stablecoins table. Removed duplicate content (basic payment, NFT examples) now in sdk/modes/pay.mdx."
     },
     {
       "id": "US-007",
