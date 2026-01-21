@@ -175,3 +175,19 @@
   - The `onramp` prop requires the separate `@0xtrails/onramp` package for fiat-to-crypto functionality
   - Debug mode can be enabled via prop or URL parameter `?debug=true`
 ---
+
+## 2026-01-21 - US-013
+- What was implemented: Comprehensive rewrite of gasless transactions guide with USDC/USDT fee examples
+- Files changed:
+  - Rewrote `examples/gasless.mdx` - complete gasless transactions documentation
+- **Learnings for future iterations:**
+  - Gasless implementation is in `packages/0xtrails/src/gasless.ts` (permit signatures) and `packages/0xtrails/src/transactionIntent/deposits/gaslessDeposit.ts` (deposit flow)
+  - Paymaster integration is in `packages/0xtrails/src/paymasterSend.ts` - supports Alchemy, Pimlico, ZeroDev, Thirdweb
+  - `getDoGasless()` in gaslessDeposit.ts determines when to use gasless flow based on token type and wallet
+  - EIP-2612 permit signatures are used for token approvals without on-chain transactions
+  - Smart contract wallets cannot use gasless (signature length validation in `validateGaslessSignature()`)
+  - Sequence-waas wallet is explicitly excluded from gasless flow (`walletId === "sequence-waas"`)
+  - Fee options are fetched via `gasFeeOptions` in quote response and displayed in FeeOptions component
+  - When user selects null (native gas), non-gasless flow is triggered; ERC-20 selection triggers gasless
+  - Paymaster uses ERC-4337 entry point at `0x0000000071727de22e5e9d8baf0edac6f37da032`
+---
