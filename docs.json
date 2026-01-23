@@ -37,16 +37,9 @@
             "pages": ["intro", "get-started"]
           },
           {
-            "group": "Payments",
-            "pages": [
-              "use-cases/pay",
-              "examples/stablecoin-payments",
-              "examples/gasless"
-            ]
-          },
-          {
             "group": "Use Cases",
             "pages": [
+              "use-cases/pay",
               "use-cases/swap",
               "use-cases/fund",
               "use-cases/earn",
@@ -56,6 +49,8 @@
           {
             "group": "Examples",
             "pages": [
+              "examples/stablecoin-payments",
+              "examples/gasless",
               "examples/wallet-compatibility",
               "examples/transaction-history",
               "examples/tokens-chains-prices",

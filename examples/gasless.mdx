@@ -37,7 +37,7 @@ export function GaslessPayment() {
       mode="pay"
       toAddress="0xMERCHANT_ADDRESS"
       toAmount="50"
-      toChainId={8453} // Base
+      toChainId={137} // Polygon
       toToken="USDC"
       onCheckoutComplete={({ sessionId }) => {
         console.log('Payment complete:', sessionId)
@@ -56,7 +56,7 @@ When the user has USDC (a permit-compatible token), the SDK:
 
 ## USDC/USDT as Gas Fee Examples
 
-### Pay with USDC on Base
+### Pay with USDC on Polygon
 
 ```tsx
 <TrailsWidget
@@ -64,7 +64,7 @@ When the user has USDC (a permit-compatible token), the SDK:
   mode="pay"
   toAddress="0xMERCHANT_ADDRESS"
   toAmount="100"
-  toChainId={8453} // Base
+  toChainId={137} // Polygon
   toToken="USDC"
   onCheckoutComplete={({ sessionId }) => {
     verifyPayment(sessionId)
@@ -76,7 +76,7 @@ When the user has USDC (a permit-compatible token), the SDK:
 
 The user only needs USDC—no ETH required for gas.
 
-### Pay with USDT on Arbitrum
+### Pay with USDT on Polygon
 
 ```tsx
 <TrailsWidget
@@ -84,7 +84,7 @@ The user only needs USDC—no ETH required for gas.
   mode="pay"
   toAddress="0xMERCHANT_ADDRESS"
   toAmount="75"
-  toChainId={42161} // Arbitrum
+  toChainId={137} // Polygon
   toToken="USDT"
   onCheckoutComplete={({ sessionId }) => {
     verifyPayment(sessionId)
@@ -104,7 +104,7 @@ Even cross-chain payments can be gasless if the origin token supports permits:
   mode="pay"
   toAddress="0xMERCHANT_ADDRESS"
   toAmount="200"
-  toChainId={8453} // Settle on Base
+  toChainId={137} // Settle on Polygon
   toToken="USDC"
   onCheckoutComplete={({ sessionId }) => {
     verifyPayment(sessionId)
@@ -114,7 +114,7 @@ Even cross-chain payments can be gasless if the origin token supports permits:
 </TrailsWidget>
 ```
 
-User pays with USDC on Polygon → Trails bridges gaslessly → Merchant receives USDC on Base.
+User pays with USDC on Base → Trails bridges gaslessly → Merchant receives USDC on Polygon.
 
 ## Permit-Compatible Tokens
 
@@ -156,7 +156,7 @@ You can listen to fee option events:
   mode="pay"
   toAddress="0xMERCHANT_ADDRESS"
   toAmount="50"
-  toChainId={8453}
+  toChainId={137}
   toToken="USDC"
   onCheckoutStart={({ sessionId }) => {
     console.log('Checkout started:', sessionId)
@@ -184,12 +184,12 @@ For apps with existing paymaster infrastructure (Alchemy, Pimlico, ZeroDev, Thir
   apiKey="YOUR_API_KEY"
   mode="pay"
   paymasterUrls={[
+    { chainId: 137, url: 'https://your-paymaster.example.com/polygon' },
     { chainId: 8453, url: 'https://your-paymaster.example.com/base' },
-    { chainId: 42161, url: 'https://your-paymaster.example.com/arbitrum' },
   ]}
   toAddress="0xMERCHANT_ADDRESS"
   toAmount="100"
-  toChainId={8453}
+  toChainId={137}
   toToken="USDC"
 >
   <button>Pay (Sponsored Gas)</button>

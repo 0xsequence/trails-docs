@@ -6,7 +6,7 @@ icon: 'money-bill'
 
 ## Fund with Trails
 
-Trails seamlessly enables users to deposit funds into your chain, app, or protocol with optimized UX flows and native integrations with multiple liquidity sources to optimize routes for low-slippage. Users can fund from any token they hold across any supported chain, eliminating the need for manual bridging and swapping - embedded seamlessly in the experience.
+Trails seamlessly enables users to deposit funds into your chain, app, or protocol with optimized UX flows and native integrations with multiple liquidity sources to optimize routes for low-slippage. Onramps, transfers from other dapps, wallet balances, and cross-chain liquidity are all built in by default, so you do not need to implement or expose any separate funding path. Users can fund from any token they hold across any supported chain, eliminating the need for manual bridging and swapping - embedded seamlessly in the experience.
 
 Traditional funding flows require users to:
 - Find an external bridge or fiat onramp provider supported by the chain / app 
@@ -34,9 +34,9 @@ This is ideal for a variety of use cases and apps such as the following:
 
 ## Examples
 
-### Depositing USDC into Base
+### Depositing USDC into Polygon
 
-This example shows how to use the Trails widget to enable a user to deposit into a chain with any token, in this case USDC on Base with a fixed amount:
+This example shows how to use the Trails widget to enable a user to deposit into a chain with any token, in this case USDC on Polygon with a fixed amount:
 
 <CodeGroup>
 
@@ -49,7 +49,7 @@ export const BaseDeposit = () => {
       apiKey="YOUR_API_KEY"
       mode="fund"
       toAddress="0x..." // Recipient Address
-      toChainId={8453} // Base
+      toChainId={137} // Polygon
       toToken="USDC"
       toAmount="100" // 100 USDC
       onCheckoutComplete={({ sessionId }) => {
@@ -180,39 +180,6 @@ export const yearnVaultABI = [
 ] as const
 ```
 </CodeGroup>
-
-### Deposit with Fiat Onramp
-
-Trails supports fiat onramps by default in fund mode, allowing users to purchase crypto directly with fiat currency and deposit it to any token on any supported chain. This is perfect for onboarding new users who don't yet hold crypto.
-
-<CodeGroup>
-
-```tsx FiatOnrampDeposit.tsx
-import { TrailsWidget } from '0xtrails/widget'
-
-export const FiatOnrampExample = () => {
-  return (
-    <TrailsWidget
-      apiKey="YOUR_API_KEY"
-      mode="fund"
-      toAddress="0x..." // Recipient Address
-      toChainId={137} // Polygon
-      toToken="USDC"
-      onCheckoutComplete={({ sessionId }) => {
-        console.log('Fiat deposit completed:', sessionId)
-      }}
-    />
-  )
-}
-```
-
-</CodeGroup>
-
-Users can fund any wallet or a smart contract with calldata execution, directly with credit/debit cards, bank transfers, Google Pay, Apple Pay, and more.
-
-This makes it easy to onboard new users who want to deposit funds into your protocol, exchange, or application without requiring them to first acquire crypto through external services.
-
-We support a variety of fiat onramp providers, currencies and payment methods.
 
 ## Next Steps
 

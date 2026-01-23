@@ -8,36 +8,30 @@ icon: 'network-wired'
 
 Trails supports 18 mainnet chains with full cross-chain routing capabilities:
 
-| Chain | Chain ID | Native Token | USDC | USDT | DAI | CCTP |
-|-------|----------|--------------|------|------|-----|------|
-| Ethereum | 1 | ETH | ✓ | ✓ | ✓ | ✓ |
-| Base | 8453 | ETH | ✓ | ✓ | ✓ | ✓ |
-| Arbitrum | 42161 | ETH | ✓ | ✓ | ✓ | ✓ |
-| Optimism | 10 | ETH | ✓ | ✓ | ✓ | ✓ |
-| Polygon | 137 | POL | ✓ | ✓ | ✓ | ✓ |
-| Avalanche | 43114 | AVAX | ✓ | ✓ | - | ✓ |
-| BNB Chain | 56 | BNB | ✓ | ✓ | ✓ | - |
-| Gnosis | 100 | xDAI | - | - | ✓ | - |
-| Blast | 81457 | ETH | - | - | - | - |
-| Arbitrum Nova | 42170 | ETH | - | - | - | - |
-| Ape Chain | 33139 | APE | - | - | - | - |
-| B3 | 8333 | ETH | ✓ | - | - | - |
-| Soneium | 1868 | ETH | - | - | - | - |
-| Xai | 660279 | XAI | - | - | - | - |
-| Katana | 747474 | ETH | - | - | - | - |
-| Etherlink | 42793 | XTZ | ✓ | ✓ | - | - |
-| Somnia | 5031 | SOMI | - | - | - | - |
-| Monad | 143 | MON | ✓ | - | - | - |
-
-<Tip>
-**Recommended for stablecoin payments:** Base, Arbitrum, and Optimism offer the lowest fees with native USDC support via CCTP.
-</Tip>
+| Chain | Chain ID | Native Token |
+|-------|----------|--------------|
+| Ethereum | 1 | ETH |
+| Base | 8453 | ETH |
+| Arbitrum | 42161 | ETH |
+| Optimism | 10 | ETH |
+| Polygon | 137 | POL |
+| Avalanche | 43114 | AVAX |
+| BNB Chain | 56 | BNB |
+| Gnosis | 100 | xDAI |
+| Blast | 81457 | ETH |
+| Arbitrum Nova | 42170 | ETH |
+| Ape Chain | 33139 | APE |
+| B3 | 8333 | ETH |
+| Soneium | 1868 | ETH |
+| Xai | 660279 | XAI |
+| Katana | 747474 | ETH |
+| Etherlink | 42793 | XTZ |
+| Somnia | 5031 | SOMI |
+| Monad | 143 | MON |
 
 ## Token Support Legend
 
 - **✓** = Native token available on chain
-- **-** = Not available on chain
-- **CCTP** = Circle Cross-Chain Transfer Protocol support for native USDC bridging
 
 ## Stablecoin Details
 
@@ -66,28 +60,6 @@ USDC is available on most major chains. Chains with CCTP support enable native U
 | Avalanche | `0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7` |
 | BNB Chain | `0x55d398326f99059fF775485246999027B3197955` |
 
-## Testnet Chains
-
-For development and testing, Trails supports these testnet chains:
-
-| Chain | Chain ID | Mainnet Equivalent |
-|-------|----------|-------------------|
-| Sepolia | 11155111 | Ethereum |
-| Base Sepolia | 84532 | Base |
-| Arbitrum Sepolia | 421614 | Arbitrum |
-| Optimism Sepolia | 11155420 | Optimism |
-| Polygon Amoy | 80002 | Polygon |
-| Avalanche Fuji | 43113 | Avalanche |
-| BNB Testnet | 97 | BNB Chain |
-| Blast Sepolia | 168587773 | Blast |
-| Gnosis Chiado | 10200 | Gnosis |
-| B3 Sepolia | 1993 | B3 |
-| Soneium Minato | 1946 | Soneium |
-| Xai Testnet | 37714555429 | Xai |
-| Etherlink Testnet | 128123 | Etherlink |
-| Somnia Testnet | 50312 | Somnia |
-| Monad Testnet | 10143 | Monad |
-
 ## Supported Bridges & Liquidity
 
 Trails routes transactions through the optimal liquidity sources:
@@ -97,28 +69,11 @@ Trails routes transactions through the optimal liquidity sources:
 | **Relay** | Bridge/Filler | Fast cross-chain execution with instant finality |
 | **LiFi** | Aggregator | Multi-bridge aggregation for optimal routes |
 | **CCTP V2** | Bridge | Native USDC cross-chain transfers via Circle |
+| **SushiSwap** | DEX | Cross-chain routing with deep onchain liquidity |
 
 <Note>
 Additional bridges and liquidity sources can be integrated on request. Contact us if you need a specific provider.
 </Note>
-
-## Chain-Specific Notes
-
-### Low Fee Chains
-- **Base** - Lowest fees, recommended for small payments
-- **Arbitrum** - Low fees, high liquidity
-- **Optimism** - Low fees, Superchain ecosystem
-
-### High Liquidity Chains
-- **Ethereum** - Highest liquidity, higher fees
-- **Polygon** - Good liquidity, very low fees
-- **BNB Chain** - High volume, low fees
-
-### Gaming & NFT Chains
-- **Xai** - Gaming-focused L3
-- **Ape Chain** - ApeCoin ecosystem
-- **B3** - Gaming-focused L2
-- **Katana** - Gaming L2 by Ronin
 
 ## Request a New Chain
 

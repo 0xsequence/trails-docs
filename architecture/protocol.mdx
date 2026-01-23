@@ -23,7 +23,7 @@ Under the hood, Trails intents are counterfactual instantiations of [Sequence v3
 
 In short, Trails introduces a novel 'intent address' primitive powered by account abstraction tech that enables fully onchain control and verifiable onchain execution transaction capabilities. Ultimately, this enables account abstraction primitives to EOA wallets (even EOA wallets without ERC7702) trustlessly. This is the magic of the Trails design in how it can construct a single transaction with a single end-user confirmation that spans multiple chains and transactions. The architectural goal of Trails is to always be able to construct a direct cross-chain/cross-token route for even the most common denominator of wallets, such as an EOA without ERC7702.
 
-Trails is architected as a trustless system that works on top of existing bridging / filler / solver infrastructure. For bridging / filling, Trails currently has integrated CCTP, Relay and LiFi.
+Trails is architected as a trustless system based on intents that works on top of existing bridging and liquidity infrastructure by orchestrating these components together.
 
 
 ## Key Components

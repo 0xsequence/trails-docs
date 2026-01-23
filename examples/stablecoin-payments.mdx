@@ -17,9 +17,9 @@ Stablecoins are the preferred settlement currency for crypto payments. Trails ha
 
 ## USDC Cross-Chain Examples
 
-### Accept USDC on Base (Lowest Fees)
+### Accept USDC on Polygon (Lowest Fees)
 
-Base offers the lowest transaction fees for USDC settlement:
+Polygon offers low transaction fees for USDC settlement:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
@@ -29,7 +29,7 @@ import { TrailsWidget } from '0xtrails/widget'
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="50"
-  toChainId={8453} // Base
+  toChainId={137} // Polygon
   toToken="USDC"
   onCheckoutComplete={({ sessionId }) => {
     verifyPayment(sessionId)
@@ -39,9 +39,9 @@ import { TrailsWidget } from '0xtrails/widget'
 </TrailsWidget>
 ```
 
-User pays with ETH on Arbitrum → Trails bridges and swaps → You receive USDC on Base.
+User pays with ETH on Arbitrum → Trails bridges and swaps → You receive USDC on Polygon.
 
-### Accept USDC on Arbitrum
+### Accept USDC on Polygon for Recurring Charges
 
 ```tsx
 <TrailsWidget
@@ -49,7 +49,7 @@ User pays with ETH on Arbitrum → Trails bridges and swaps → You receive USDC
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="100"
-  toChainId={42161} // Arbitrum
+  toChainId={137} // Polygon
   toToken="USDC"
   onCheckoutComplete={({ sessionId }) => {
     confirmOrder(sessionId)
@@ -59,7 +59,7 @@ User pays with ETH on Arbitrum → Trails bridges and swaps → You receive USDC
 </TrailsWidget>
 ```
 
-### Native USDC Bridging with CCTP
+### Native USDC Bridging with CCTP (Polygon Settlement)
 
 Circle's Cross-Chain Transfer Protocol (CCTP) enables native USDC transfers without wrapped tokens:
 
@@ -69,7 +69,7 @@ Circle's Cross-Chain Transfer Protocol (CCTP) enables native USDC transfers with
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="1000"
-  toChainId={1} // Ethereum mainnet
+  toChainId={137} // Polygon
   toToken="USDC"
   bridgeProvider="CCTP" // Native USDC bridging
   onCheckoutComplete={({ sessionId }) => {
@@ -86,7 +86,7 @@ CCTP is recommended for large payments as it transfers native USDC rather than w
 
 ## USDT Examples
 
-### Accept USDT on Ethereum
+### Accept USDT on Polygon
 
 ```tsx
 <TrailsWidget
@@ -94,7 +94,7 @@ CCTP is recommended for large payments as it transfers native USDC rather than w
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="250"
-  toChainId={1} // Ethereum
+  toChainId={137} // Polygon
   toToken="USDT"
   onCheckoutComplete={({ sessionId }) => {
     confirmPayment(sessionId)
@@ -104,7 +104,7 @@ CCTP is recommended for large payments as it transfers native USDC rather than w
 </TrailsWidget>
 ```
 
-### Accept USDT on BNB Chain
+### Accept USDT on Polygon for Global Users
 
 ```tsx
 <TrailsWidget
@@ -112,7 +112,7 @@ CCTP is recommended for large payments as it transfers native USDC rather than w
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="75"
-  toChainId={56} // BNB Chain
+  toChainId={137} // Polygon
   toToken="USDT"
   onCheckoutComplete={({ sessionId }) => {
     confirmPayment(sessionId)
@@ -209,9 +209,9 @@ Accept multiple stablecoins and let users choose:
 
 ```tsx
 const SETTLEMENT_OPTIONS = [
+  { chain: 137, token: 'USDC', label: 'USDC on Polygon' },
+  { chain: 137, token: 'USDT', label: 'USDT on Polygon' },
   { chain: 8453, token: 'USDC', label: 'USDC on Base' },
-  { chain: 42161, token: 'USDC', label: 'USDC on Arbitrum' },
-  { chain: 1, token: 'USDT', label: 'USDT on Ethereum' },
 ]
 
 function MultiCurrencyCheckout({ order }) {

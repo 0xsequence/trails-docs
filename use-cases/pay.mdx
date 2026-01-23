@@ -10,15 +10,15 @@ Accept USDC, USDT, or any token as payment. Your user pays with whatever they ha
 
 | You Settle In | User Pays With | Trails Handles |
 |--------------|----------------|----------------|
-| USDC on Base | ETH on Arbitrum | Bridge + Swap |
-| USDT on Ethereum | USDC on Polygon | Bridge + Swap |
-| ETH on Arbitrum | DAI on Optimism | Bridge + Swap |
+| USDC on Polygon | ETH on Arbitrum | Bridge + Swap |
+| USDT on Polygon | USDC on Base | Bridge + Swap |
+| USDC on Polygon | DAI on Optimism | Bridge + Swap |
 
 ## USDC Payment Examples
 
-### Accept USDC on Base
+### Accept USDC on Polygon
 
-Settle in USDC on Base—users pay from any chain:
+Settle in USDC on Polygon—users pay from any chain:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
@@ -28,7 +28,7 @@ import { TrailsWidget } from '0xtrails/widget'
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="25"
-  toChainId={8453} // Base
+  toChainId={137} // Polygon
   toToken="USDC"
   onCheckoutComplete={({ sessionId }) => {
     // Mark order as paid
@@ -39,9 +39,9 @@ import { TrailsWidget } from '0xtrails/widget'
 </TrailsWidget>
 ```
 
-### Accept USDT on Ethereum
+### Accept USDT on Polygon
 
-For merchants preferring USDT settlement:
+For merchants preferring USDT settlement on Polygon:
 
 ```tsx
 <TrailsWidget
@@ -49,7 +49,7 @@ For merchants preferring USDT settlement:
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="100"
-  toChainId={1} // Ethereum mainnet
+  toChainId={137} // Polygon
   toToken="USDT"
   onCheckoutComplete={({ sessionId }) => {
     confirmPayment(sessionId)
@@ -59,7 +59,7 @@ For merchants preferring USDT settlement:
 </TrailsWidget>
 ```
 
-### Cross-Chain USDC with CCTP
+### Cross-Chain USDC with CCTP (Polygon Settlement)
 
 Use Circle's Cross-Chain Transfer Protocol for native USDC bridging:
 
@@ -69,7 +69,7 @@ Use Circle's Cross-Chain Transfer Protocol for native USDC bridging:
   mode="pay"
   toAddress="0xYOUR_MERCHANT_ADDRESS"
   toAmount="500"
-  toChainId={42161} // Arbitrum
+  toChainId={137} // Polygon
   toToken="USDC"
   bridgeProvider="CCTP" // Native USDC bridging
   onCheckoutComplete={({ sessionId }) => {
@@ -97,7 +97,7 @@ export function CheckoutButton({ order }) {
       mode="pay"
       toAddress={process.env.MERCHANT_WALLET}
       toAmount={order.total.toString()}
-      toChainId={8453} // Base
+      toChainId={137} // Polygon
       toToken="USDC"
       onCheckoutStart={({ sessionId }) => {
         // Create pending payment record
@@ -172,7 +172,7 @@ function PaymentPreview({ amount, recipientAddress }) {
     mode: 'pay',
     toAddress: recipientAddress,
     toAmount: amount,
-    toChainId: 8453,
+    toChainId: 137,
     toToken: 'USDC',
   })
 
