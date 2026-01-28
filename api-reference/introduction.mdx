@@ -23,33 +23,8 @@ const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIn
 ```
 
 <Note>
-**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) to request your API access key.
+**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) or [email](jlawton@polygon.technology) to request your API access key.
 </Note>
-
-### API Key Best Practices
-
-| Practice | Description |
-|----------|-------------|
-| **Environment variables** | Store keys in `TRAILS_API_KEY` env var, never hardcode |
-| **Server-side only** | Make API calls from your backend to keep keys secret |
-| **Rotate regularly** | Request new keys periodically, especially if compromised |
-| **Separate keys** | Use different keys for development and production |
-
-```typescript
-// ✅ Good: Load from environment
-const apiKey = process.env.TRAILS_API_KEY;
-
-// ❌ Bad: Hardcoded in source
-const apiKey = 'abc123...';
-```
-
-## Base URL
-
-All endpoints use the base URL:
-
-```
-https://trails-api.sequence.app/rpc/Trails/
-```
 
 ## Core Workflow
 

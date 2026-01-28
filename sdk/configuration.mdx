@@ -3,87 +3,59 @@ title: Configuration
 description: "Complete configuration options for the Trails SDK"
 ---
 
-## API Key Setup
+## Configuration Options
 
-To use the Trails SDK, you need an API key from Trails.
+Trails is easy to get started, however we have deep configuration options to address most use cases.
 
-1. Go to [Sequence Builder](https://sequence.build) and create or select a project
-2. Navigate to the **API Keys** section
-3. Copy your **Project Access Key**
+### Core Props
 
-<Warning>
-Keep your API key secure. Never commit it to version control or expose it in client-side code without proper environment variable handling.
-</Warning>
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `apiKey` | `string` | Yes | Your project access key provided by Trails |
+| `mode` | `"pay" \| "fund" \| "earn" \| "swap"` | Yes | Widget operation mode |
+| `toAddress` | `string` | No | Destination address for payments |
+| `toAmount` | `string` | No | Exact amount for payments (used in pay mode) |
+| `toChainId` | `number \| string` | No | Destination chain ID |
+| `toToken` | `string` | No | Destination token symbol or contract address |
+| `toCalldata` | `string` | No | Custom calldata for contract interactions |
 
-```bash
-# .env.local
-NEXT_PUBLIC_TRAILS_API_KEY=your_api_key_here
-```
+### UI & Rendering Options
 
-```tsx
-<TrailsWidget
-  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
-  mode="pay"
-  // ...
-/>
-```
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `renderInline` | `boolean` | No | Render widget inline instead of as a modal (default: `false`) |
+| `children` | `React.ReactNode` | No | Custom button content (when not renderInline) |
+| `buttonText` | `string` | No | Custom text for the trigger button (auto-generated if not provided) |
+| `theme` | `"light" \| "dark" \| "auto"` | No | Color theme; `auto` follows system preference (default: `"auto"`) |
+| `customCss` | `string \| Record<string, string>` | No | Custom CSS styles to apply to the component |
+| `disableCss` | `boolean` | No | Disable default CSS injection (for custom styling) |
+| `toast` | `boolean` | No | Show toast notifications for transaction updates |
+| `hideDisconnect` | `boolean` | No | Hide the disconnect button in the widget |
+| `payMessage` | `string` | No | Custom message to display during payment flow |
 
-## Core Props
+### Wallet & Connection Options
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `apiKey` | `string` | Yes | - | Your project access key from Sequence Builder |
-| `mode` | `"pay" \| "fund" \| "earn" \| "swap"` | No | `"pay"` | Widget operation mode |
-| `toAddress` | `string \| null` | No | - | Destination address for payments |
-| `toAmount` | `string \| null` | No | - | Exact amount for payments |
-| `toChainId` | `number \| string \| null` | No | - | Destination chain ID |
-| `toToken` | `string \| null` | No | - | Destination token symbol or contract address |
-| `toCalldata` | `string \| null` | No | - | Custom calldata for contract interactions |
-| `fromChainId` | `number \| string \| null` | No | - | Source chain ID (pre-select origin chain) |
-| `fromToken` | `string \| null` | No | - | Source token symbol or address (pre-select token) |
-| `fromAccount` | `string \| null` | No | - | Source account address |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `walletConnectProjectId` | `string` | No | WalletConnect project ID for WalletConnect integration |
+| `walletOptions` | `string[]` | No | Array of wallet connector IDs to show (e.g., `["metamask", "walletconnect"]`) |
+| `isSmartWallet` | `boolean` | No | Indicate if the connected wallet is a smart wallet (for ERC-4337 support) |
+| `decoupleWagmi` | `boolean` | No | Decouple from wagmi provider (use external wagmi config) |
+| `wagmiConnectors` | `Connector[]` | No | Custom wagmi connectors to use |
 
-## UI & Rendering Options
+### Transaction Options
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `renderInline` | `boolean` | No | `false` | Render widget inline instead of as a modal |
-| `children` | `React.ReactNode` | No | - | Custom button content (when not renderInline) |
-| `buttonText` | `string` | No | Auto-generated | Custom text for the trigger button |
-| `theme` | `"light" \| "dark" \| "auto"` | No | `"light"` | Color theme; `auto` follows system preference |
-| `customCss` | `string \| Record<string, string>` | No | - | Custom CSS styles to apply |
-| `disableCss` | `boolean` | No | `false` | Disable default CSS injection |
-| `toast` | `boolean` | No | `false` | Show toast notifications for transaction updates |
-| `hideDisconnect` | `boolean` | No | `false` | Hide the disconnect button in the widget |
-| `hideAddWallet` | `boolean` | No | `false` | Hide the add wallet button in the widget |
-| `payMessage` | `string` | No | - | Custom message to display during payment flow |
-| `debug` | `boolean` | No | `false` | Enable debug logging |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
+| `swapProvider` | `RouteProvider` | No | Preferred swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, or `"CCTP"`. Default: `"AUTO"` automatically selects best provider |
+| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"`. Default: `"AUTO"` automatically selects best provider for cross-chain transfers |
+| `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |
+| `priceImpactWarningThresholdBps` | `number` | No | Price impact threshold in basis points before showing a warning (e.g., `500` for 5%) |
+| `priceImpactWarningMessage` | `string` | No | Custom message to display when price impact exceeds threshold |
+| `priceImpactFallbackBridgeUrl` | `string` | No | URL to redirect users when price impact is too high |
 
-## Wallet & Connection Options
-
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `walletConnectProjectId` | `string` | No | Trails default | WalletConnect project ID |
-| `walletOptions` | `string[]` | No | All wallets | Array of wallet connector IDs to show |
-| `isSmartWallet` | `boolean` | No | `false` | Indicate if connected wallet is ERC-4337 smart wallet |
-| `decoupleWagmi` | `boolean` | No | `false` | Use external wagmi provider instead of built-in |
-| `wagmiConnectors` | `Connector[]` | No | - | Custom wagmi connectors |
-
-## Transaction Options
-
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | - | Per-chain paymaster endpoints for gasless transactions |
-| `swapProvider` | `RouteProvider` | No | `"AUTO"` | Preferred swap provider |
-| `bridgeProvider` | `RouteProvider` | No | `"AUTO"` | Preferred bridge provider for cross-chain |
-| `slippageTolerance` | `number \| string` | No | `0.05` (5%) | Slippage tolerance for swaps |
-| `priceImpactWarningThresholdBps` | `number` | No | - | Price impact threshold in basis points |
-| `priceImpactWarningMessage` | `string` | No | - | Custom high price impact warning message |
-| `priceImpactFallbackBridgeUrl` | `string` | No | - | Redirect URL when price impact is too high |
-
-**RouteProvider values:** `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"`
-
-## App Metadata (for WalletConnect)
+### App Metadata (for WalletConnect)
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
@@ -91,183 +63,6 @@ NEXT_PUBLIC_TRAILS_API_KEY=your_api_key_here
 | `appUrl` | `string` | No | Your app's URL |
 | `appImageUrl` | `string` | No | Your app's logo URL |
 | `appDescription` | `string` | No | Short description of your app |
-
-## Onramp Integration
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `onramp` | `OnrampFactory` | No | Enable fiat-to-crypto onramp (requires `@0xtrails/onramp`) |
-
-```tsx
-import { trailsOnramp } from "@0xtrails/onramp"
-
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="fund"
-  onramp={trailsOnramp({ config: { exchanges: ['coinbase'] } })}
-/>
-```
-
-## Callback Functions
-
-All callbacks receive a `sessionId` to correlate events across the transaction lifecycle.
-
-### TypeScript Types
-
-```typescript
-type TransactionStateStatus = "pending" | "failed" | "confirmed" | "aborted"
-
-type TransactionState = {
-  transactionHash: string
-  explorerUrl: string
-  blockNumber?: number
-  chainId: number
-  state: TransactionStateStatus
-  label: string
-  refunded?: boolean
-  refundTransactionHash?: string
-  refundTransactionChainId?: number
-  txnMinedAt?: string
-}
-
-// Callback type signatures
-type OnOriginConfirmation = (data: {
-  txHash: string
-  chainId: number
-  sessionId: string
-}) => void
-
-type OnDestinationConfirmation = (data: {
-  txHash: string
-  chainId: number
-  sessionId: string
-}) => void
-
-type OnCheckoutStart = (data: { sessionId: string }) => void
-type OnCheckoutQuote = (data: { sessionId: string; quote: any }) => void
-type OnCheckoutSignatureRequest = (data: { sessionId: string }) => void
-type OnCheckoutSignatureConfirmed = (data: { sessionId: string }) => void
-type OnCheckoutSignatureRejected = (data: { sessionId: string; error: unknown }) => void
-type OnCheckoutComplete = (data: { sessionId: string }) => void
-type OnCheckoutError = (data: { sessionId: string; error: unknown }) => void
-type OnCheckoutStatusUpdate = (data: {
-  sessionId: string
-  transactionStates: TransactionState[]
-}) => void
-type OnCheckoutApprovalRequest = (data: { sessionId: string }) => void
-type OnCheckoutApprovalConfirmed = (data: {
-  sessionId: string
-  transactionHash: `0x${string}`
-}) => void
-type OnCheckoutApprovalRejected = (data: { sessionId: string; error: unknown }) => void
-type OnOpen = () => void
-type OnClose = () => void
-```
-
-### Callback Reference
-
-| Callback | Description |
-|----------|-------------|
-| `onCheckoutStart` | Transaction flow started |
-| `onCheckoutQuote` | Quote received for the transaction |
-| `onCheckoutSignatureRequest` | User prompted to sign |
-| `onCheckoutSignatureConfirmed` | User signed the transaction |
-| `onCheckoutSignatureRejected` | User rejected signing |
-| `onCheckoutApprovalRequest` | Token approval required |
-| `onCheckoutApprovalConfirmed` | Token approval confirmed |
-| `onCheckoutApprovalRejected` | Token approval rejected |
-| `onOriginConfirmation` | Origin chain transaction confirmed |
-| `onDestinationConfirmation` | Destination chain transaction confirmed |
-| `onCheckoutStatusUpdate` | Transaction state changed (pending/confirmed/failed) |
-| `onCheckoutComplete` | Transaction completed successfully |
-| `onCheckoutError` | Transaction failed |
-| `onOpen` | Widget modal opened |
-| `onClose` | Widget modal closed |
-
-### Complete Callback Example
-
-```tsx
-import { getIsUserRejectionError, TrailsWidget } from '0xtrails'
-
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x..."
-  toAmount="10"
-  toChainId={8453}
-  toToken="USDC"
-  onCheckoutStart={({ sessionId }) => {
-    console.log('Started:', sessionId)
-  }}
-  onCheckoutQuote={({ sessionId, quote }) => {
-    console.log('Quote received:', quote.estimatedGas)
-  }}
-  onOriginConfirmation={({ txHash, chainId, sessionId }) => {
-    console.log('Origin confirmed:', txHash)
-  }}
-  onDestinationConfirmation={({ txHash, chainId, sessionId }) => {
-    console.log('Destination confirmed:', txHash)
-  }}
-  onCheckoutStatusUpdate={({ sessionId, transactionStates }) => {
-    transactionStates.forEach((state, i) => {
-      console.log(`Step ${i + 1}: ${state.label} - ${state.state}`)
-    })
-  }}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Payment complete!')
-    // Redirect to success page or update UI
-  }}
-  onCheckoutError={({ sessionId, error }) => {
-    if (getIsUserRejectionError(error)) {
-      console.log('User cancelled')
-    } else {
-      console.error('Payment failed:', error)
-    }
-  }}
-/>
-```
-
-## Environment Configuration
-
-### Production (Default)
-
-```tsx
-<TrailsWidget
-  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
-  mode="pay"
-  toAddress="0x..."
-/>
-```
-
-### Custom API Endpoints
-
-For enterprise deployments or testing against custom infrastructure:
-
-```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  trailsApiUrl="https://custom-trails-api.example.com"
-  trailsAppUrl="https://custom-trails-app.example.com"
-  sequenceIndexerUrl="https://custom-indexer.example.com"
-  sequenceNodeGatewayUrl="https://custom-nodes.example.com"
-  sequenceApiUrl="https://custom-api.example.com"
-/>
-```
-
-### Debug Mode
-
-Enable verbose logging for development:
-
-```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  debug={true}
-/>
-```
-
-You can also enable debug mode via URL parameter: `?debug=true`
 
 ## Smart Contract Interactions
 
@@ -290,117 +85,77 @@ const calldata = encodeFunctionData({
   toChainId={1}
   toToken="ETH"
   toCalldata={calldata}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('NFT minted!')
+  onCheckoutComplete={(result) => {
+    console.log('NFT minted:', result)
   }}
 />
 ```
 
-## Gasless Transactions
+## Event Handling Examples
 
-Configure paymaster URLs for gasless (sponsored) transactions:
-
+### Complete Event Handling
 ```tsx
+import { getIsUserRejectionError } from '0xtrails'
+
 <TrailsWidget
   apiKey="YOUR_API_KEY"
   mode="pay"
   toAddress="0x..."
-  paymasterUrls={[
-    { chainId: 8453, url: "https://your-paymaster.com/base" },
-    { chainId: 42161, url: "https://your-paymaster.com/arbitrum" },
-  ]}
+  toAmount="1"
+  toChainId={8453}
+  toToken="USDC"
+  onOriginConfirmation={({ txHash, chainId, sessionId }) => {
+    console.log('Origin tx confirmed:', { txHash, chainId, sessionId })
+  }}
+  onDestinationConfirmation={({ txHash, chainId, sessionId }) => {
+    console.log('Destination tx confirmed:', { txHash, chainId, sessionId })
+  }}
+  onCheckoutStatusUpdate={({ sessionId, transactionStates }) => {
+    transactionStates.forEach((state, index) => {
+      console.log(`Step ${index + 1}: ${state.label} - ${state.state}`)
+      if (state.state === 'confirmed') {
+        console.log('Transaction confirmed:', state.transactionHash)
+      }
+    })
+  }}
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Transaction completed successfully:', sessionId)
+  }}
+  onCheckoutError={({ sessionId, error }) => {
+    console.error('Transaction failed:', sessionId, error)
+    
+    // Check if user rejected the transaction
+    if (getIsUserRejectionError(error)) {
+      console.log('User rejected the transaction')
+      // Handle user rejection (e.g., show "Transaction cancelled" message)
+    } else {
+      // Handle other errors (show error notification, retry logic, etc.)
+    }
+  }}
 />
 ```
 
-## Using TrailsProvider
+### Handling User Rejection
 
-For apps with multiple widget instances or hooks usage, wrap your app with `TrailsProvider`:
-
-```tsx
-import { TrailsProvider, useTrails } from '0xtrails'
-
-function App() {
-  return (
-    <TrailsProvider
-      config={{
-        trailsApiKey: process.env.NEXT_PUBLIC_TRAILS_API_KEY,
-        walletConnectProjectId: "your_wc_project_id",
-        slippageTolerance: 0.03, // 3%
-        debug: process.env.NODE_ENV === 'development',
-      }}
-    >
-      <YourApp />
-    </TrailsProvider>
-  )
-}
-
-function PaymentButton() {
-  const config = useTrails() // Access config anywhere
-
-  return (
-    <TrailsWidget
-      apiKey={config.trailsApiKey}
-      mode="pay"
-      toAddress="0x..."
-    />
-  )
-}
-```
-
-### TrailsConfig Interface
-
-```typescript
-interface TrailsConfig {
-  trailsApiKey: string
-  trailsApiUrl?: string           // Default: https://trails-api.sequence.app
-  trailsAppUrl?: string           // Default: https://app.trails.build
-  sequenceIndexerUrl?: string     // Default: https://indexer.sequence.app
-  sequenceNodeGatewayUrl?: string // Default: https://nodes.sequence.app
-  sequenceMetadataUrl?: string    // Default: https://metadata.sequence.app
-  sequenceApiUrl?: string         // Default: https://api.sequence.app
-  walletConnectProjectId?: string
-  slippageTolerance?: string | number // Default: 0.05 (5%)
-  debug?: boolean                 // Default: false
-}
-```
-
-## Widget Ref Methods
-
-Access widget methods via ref:
+User rejection occurs when a user declines to sign a transaction in their wallet. This is handled through the `onCheckoutError` callback:
 
 ```tsx
-import { useRef } from 'react'
-import { TrailsWidget, TrailsWidgetRef } from '0xtrails'
+import { getIsUserRejectionError, TrailsWidget } from '0xtrails'
 
-function PaymentPage() {
-  const widgetRef = useRef<TrailsWidgetRef>(null)
-
-  return (
-    <>
-      <button onClick={() => widgetRef.current?.openModal()}>
-        Open Payment
-      </button>
-      <button onClick={() => widgetRef.current?.closeModal()}>
-        Close
-      </button>
-
-      <TrailsWidget
-        ref={widgetRef}
-        apiKey="YOUR_API_KEY"
-        mode="pay"
-        toAddress="0x..."
-      />
-    </>
-  )
-}
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="pay"
+  toAddress="0x..."
+  onCheckoutError={({ sessionId, error }) => {
+    if (getIsUserRejectionError(error)) {
+      // User cancelled the transaction
+      showNotification('Transaction cancelled by user')
+    } else {
+      // Other error occurred
+      showNotification('Transaction failed: ' + error)
+    }
+  }}
+/>
 ```
 
-### TrailsWidgetRef Interface
 
-```typescript
-interface TrailsWidgetRef {
-  openModal: () => void
-  closeModal: () => void
-  isModalOpen: boolean
-}
-```
