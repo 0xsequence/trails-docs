@@ -49,7 +49,6 @@
           {
             "group": "Examples",
             "pages": [
-              "examples/stablecoin-payments",
               "examples/gasless",
               "examples/wallet-compatibility",
               "examples/transaction-history",

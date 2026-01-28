@@ -6,7 +6,6 @@ icon: 'money-bill'
 
 ## Fund with Trails
 
-Trails seamlessly enables users to deposit funds into your chain, app, or protocol with optimized UX flows and native integrations with multiple liquidity sources to optimize routes for low-slippage. Onramps, transfers from other dapps, wallet balances, and cross-chain liquidity are all built in by default, so you do not need to implement or expose any separate funding path. Users can fund from any token they hold across any supported chain, eliminating the need for manual bridging and swapping - embedded seamlessly in the experience.
 
 Traditional funding flows require users to:
 - Find an external bridge or fiat onramp provider supported by the chain / app 
@@ -15,11 +14,11 @@ Traditional funding flows require users to:
 - Wait for bridge confirmations
 - Navigate complex interfaces
 
-Trails simplifies this by allowing users to deposit funds using any token from any supported chain in a single transaction, automatically handling all bridging, swapping, routing, and execution logic where the user deposit with a variable or fixed amount. Importantly, Trails intent addresses can be utilized to also automatically orchestrate transactions to chains or apps that an onramp provider doesn't explicitly support or provide liquidity.
+Trails seamlessly enables users to deposit funds into your chain, app, or protocol with optimized UX flows and native integrations with multiple liquidity sources to optimize routes for low-slippage. Onramps, transfers from other dapps, wallet balances, and chain abstraction are all built in by default, so you do not need to implement or expose any separate funding path. Users can fund from any token they hold across any supported chain, eliminating the need for manual bridging and swapping - embedded seamlessly in the experience as a single transaction.
 
 ## Use Cases
 
-Funding flows in Trails are modeled as exact input by default. For example, "I have exactly 10 USDC tokens I want to send out from the origin chain, and I'll receive 9.99 USDC on the destination." Funding can done through a variety of methods such as the user's connected wallet, QR code deposit, or onramping from various fiat options.
+Funding flows in Trails are modeled as exact input by default. For example, "I have exactly 10 USDC tokens I want to send out from the origin chain, and I'll receive 9.99 USDC on the destination." Funding can done through a variety of methods such as the user's connected wallet, an existing app they already have funds, or onramping from various fiat options.
 
 This is ideal for a variety of use cases and apps such as the following:
 
@@ -40,7 +39,7 @@ This example shows how to use the Trails widget to enable a user to deposit into
 
 <CodeGroup>
 
-```tsx SimpleStaticDeposit.tsx
+```tsx SimpleDeposit.tsx
 import { TrailsWidget } from '0xtrails/widget'
 
 export const BaseDeposit = () => {
@@ -60,6 +59,8 @@ export const BaseDeposit = () => {
 }
 ```
 </CodeGroup>
+
+
 
 ### Depositing Fixed Amount into a DeFi Yield Vault
 
@@ -180,6 +181,68 @@ export const yearnVaultABI = [
 ] as const
 ```
 </CodeGroup>
+
+### Creating a trustless deposit address via API (quote → commit → execute)
+
+Deposit addresses are common flows where users can simply deposit funds into based on their requested quote and Trails will automatically orchestrate. The funding mode of the widget handles this for you, but in some cases you may wish to use the API to create your own deposit flows.
+
+To create a Trails deposit address, use the backend endpoints to create a quote, commit it, and then execute after the user deposits to the intent address returned in the quote. This gives you a trustless, deterministic deposit address and an intent lifecycle you can track server-side.
+
+<CodeGroup>
+```ts DepositAddressFlow.ts
+const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    ownerAddress: userWallet,
+    originChainId: 137, // User funds on Polygon
+    originTokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
+    destinationChainId: 8453, // Settle on Base
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    destinationToAddress: appCreditAddress, // Address your app credits on destination
+    destinationTokenAmount: '50000000', // 50 USDC (6 decimals)
+    tradeType: 'EXACT_OUTPUT',
+  })
+})
+
+const { intent } = await quoteResponse.json()
+const intentAddress = intent.depositTransaction.toAddress
+
+const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/CommitIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ intent })
+})
+
+const { intentId } = await commitResponse.json()
+
+// 1) Ask the user to deposit to the intent address returned in the quote
+// 2) When the deposit is confirmed, execute with the deposit transaction hash
+const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId,
+    depositTransactionHash: userDepositTxHash
+  })
+})
+
+const { intentStatus } = await executeResponse.json()
+```
+</CodeGroup>
+
+<Note>
+Quotes expire after **10 minutes**.
+</Note>
 
 ## Next Steps
 

@@ -4,17 +4,31 @@ description: 'Accept stablecoin payments from any chain with automatic bridging 
 icon: 'bolt'
 ---
 
-## Stablecoin Payments
+## Pay with Trails
+Trails revolutionizes crypto purchases by enabling users to buy NFTs, RWAs, or any other asset using any token a user holds from any supported chain. The payee simply specifies the settlement asset that they would like the payment to be reconciled in or to successfully complete the purchase, for example USDC, ETH, or any other token and the payer can select how they'd like to pay from their aggregated balance.
 
-Accept USDC, USDT, or any token as payment. Your user pays with whatever they have—Trails handles the conversion automatically.
+Accept USDC, USDT, or any token as payment. Your user pays with whatever they have—Trails handles the conversion automatically and any executions automatically.
 
 | You Settle In | User Pays With | Trails Handles |
 |--------------|----------------|----------------|
 | USDC on Polygon | ETH on Arbitrum | Bridge + Swap |
-| USDT on Polygon | USDC on Base | Bridge + Swap |
-| USDC on Polygon | DAI on Optimism | Bridge + Swap |
+| USDC on Polygon | POL on Polygon | Swap |
+| USDC on Base | USDC on Base | Normal Execution |
 
-## USDC Payment Examples
+## Use Cases
+
+**Pay** flows in Trails are modeled as exact output by default. This means the developer simply defines the total amount the payee should receive for the payment and Trails will automatically include any additional fees to successfully fulfill the payment. For example, "I want to receive exactly 1 USDC tokens on the destination chain, so the user will send 1.01 USDC on the origin chain."
+
+Ideal for use cases such as the following:
+
+- Purchase and/or mint an NFT directly from a marketplace on any chain
+- Use crypto to make a purchase at an ecommerce platform
+- Transfer a specific amount of funds to a user
+- Make an [x402 payment](/examples/x402) in any token from any chain
+- Execute smart contract calls with an attached payment
+
+
+## Stablecoin Payment Examples
 
 ### Accept USDC on Polygon
 
@@ -39,26 +53,6 @@ import { TrailsWidget } from '0xtrails/widget'
 </TrailsWidget>
 ```
 
-### Accept USDT on Polygon
-
-For merchants preferring USDT settlement on Polygon:
-
-```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xYOUR_MERCHANT_ADDRESS"
-  toAmount="100"
-  toChainId={137} // Polygon
-  toToken="USDT"
-  onCheckoutComplete={({ sessionId }) => {
-    confirmPayment(sessionId)
-  }}
->
-  <button>Pay $100 in USDT</button>
-</TrailsWidget>
-```
-
 ### Cross-Chain USDC with CCTP (Polygon Settlement)
 
 Use Circle's Cross-Chain Transfer Protocol for native USDC bridging:
@@ -79,6 +73,71 @@ Use Circle's Cross-Chain Transfer Protocol for native USDC bridging:
   <button>Pay $500</button>
 </TrailsWidget>
 ```
+## Purchasing an NFT on Arbitrum
+
+This example shows how to use the Trails widget to purchase an NFT on Arbitrum, where the user can pay with any token from any chain that automatically gets converted to ETH to fulfill the purchase:
+
+<CodeGroup>
+
+```tsx NFTPurchase.tsx
+import { TrailsWidget } from '0xtrails/widget'
+import { encodeFunctionData } from 'viem'
+import { nftABI } from './abi.ts'
+
+export const CrossChainNFTPurchase = () => {
+  // NFT contract address on Arbitrum
+  const NFT_CONTRACT = "0xAA3df3c86EdB6aA4D03b75092b4dd0b99515EC83"
+  
+  // NFT purchase calldata
+  const purchaseCalldata = encodeFunctionData({
+    abi: nftABI,
+    functionName: 'mint',
+    args: [
+      "0x97c4a952b46becad0663f76357d3776ba11566e1", // recipient address
+    ],
+  })
+
+  return (
+    <TrailsWidget
+      apiKey="YOUR_API_KEY"
+      mode="pay"
+      toAddress={NFT_CONTRACT}
+      toAmount="0.00002"
+      toChainId={42161} // Arbitrum
+      toToken="ETH"
+      toCalldata={purchaseCalldata}
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('NFT purchase completed:', sessionId)
+        // Handle successful purchase
+      }}
+      onCheckoutError={({ sessionId, error }) => {
+        console.error('Purchase failed:', sessionId, error)
+      }}
+      theme="auto"
+    >
+      <button className="nft-purchase-button">
+        Buy NFT (0.00002 ETH)
+      </button>
+    </TrailsWidget>
+  )
+}
+```
+
+```typescript abi.ts
+export const nftABI = [
+  {
+    type: "function",
+    name: "mint",
+    stateMutability: "payable",
+    inputs: [
+      { name: "to", type: "address" },
+    ],
+    outputs: [],
+  },
+] as const
+```
+
+</CodeGroup>
 
 ## Merchant Integration Pattern
 
@@ -158,38 +217,6 @@ export async function verifyPayment(sessionId: string, expectedAmount: string) {
 }
 ```
 
-## Fee Estimation
-
-Show users the total cost before they commit to a payment.
-
-### Using the useQuote Hook
-
-```tsx
-import { useQuote } from '0xtrails'
-
-function PaymentPreview({ amount, recipientAddress }) {
-  const { quote, isLoading, error } = useQuote({
-    mode: 'pay',
-    toAddress: recipientAddress,
-    toAmount: amount,
-    toChainId: 137,
-    toToken: 'USDC',
-  })
-
-  if (isLoading) return <div>Calculating fees...</div>
-  if (error) return <div>Unable to estimate fees</div>
-
-  const { originAmount, fees } = quote
-
-  return (
-    <div className="fee-breakdown">
-      <div>Payment amount: ${amount} USDC</div>
-      <div>Network fees: ${fees.gasFee} {fees.gasFeeToken}</div>
-      <div>Total from wallet: {originAmount} {quote.originToken}</div>
-    </div>
-  )
-}
-```
 
 ### API-Based Fee Estimation
 
@@ -228,18 +255,6 @@ const fees = {
 }
 ```
 
-## Supported Stablecoins
-
-| Stablecoin | Ethereum | Base | Arbitrum | Polygon | Optimism |
-|------------|----------|------|----------|---------|----------|
-| USDC | ✓ | ✓ | ✓ | ✓ | ✓ |
-| USDT | ✓ | ✓ | ✓ | ✓ | ✓ |
-| DAI | ✓ | ✓ | ✓ | ✓ | ✓ |
-
-<Note>
-For the complete list of supported tokens and chains, see [Supported Chains](/resources/supported-chains).
-</Note>
-
 ## Next Steps
 
 <CardGroup cols={2}>
@@ -250,9 +265,6 @@ For the complete list of supported tokens and chains, see [Supported Chains](/re
     Let users pay fees in stablecoins
   </Card>
   <Card title="x402 Payments" icon="globe" href="/examples/x402">
-    HTTP 402 payment flows
-  </Card>
-  <Card title="SDK Hooks" icon="hook" href="/sdk/hooks">
-    useQuote, usePay, and more
+    HTTP 402 payment flows with Trails
   </Card>
 </CardGroup>
