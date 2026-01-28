@@ -29,7 +29,6 @@
       ]
     },
     "tabs": [
-
       {
         "tab": "Documentation",
         "groups": [
@@ -43,12 +42,14 @@
               "use-cases/pay",
               "use-cases/swap",
               "use-cases/fund",
-              "use-cases/earn"
+              "use-cases/earn",
+              "overview/cross-chain-execution"
             ]
           },
           {
             "group": "Examples",
             "pages": [
+              "examples/gasless",
               "examples/wallet-compatibility",
               "examples/transaction-history",
               "examples/tokens-chains-prices",
@@ -63,6 +64,7 @@
               "architecture/protocol",
               "architecture/pricing-fees",
               "architecture/alt-fee-tokens",
+              "architecture/unified-liquidity",
               "architecture/smart-contracts"
             ]
           },
@@ -86,6 +88,7 @@
                 "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/earn"]
               },
               "sdk/theming",
+              "sdk/customization",
               "sdk/quote-providers",
               "sdk/tokens-and-chains"
             ]
@@ -94,7 +97,7 @@
       },
       {
         "tab": "API reference",
-        "description": "Trails API Referencing",
+        "description": "Trails API Reference",
         "groups": [
           {
             "group": "Overview",
@@ -104,7 +107,7 @@
             ]
           },
           {
-            "group": "Endpoints",
+            "group": "Intents",
             "pages": [
               "api-reference/endpoints/quote-intent",
               "api-reference/endpoints/commit-intent",
@@ -113,9 +116,17 @@
               "api-reference/endpoints/wait-intent-receipt",
               "api-reference/endpoints/get-intent",
               "api-reference/endpoints/search-intents",
-              "api-reference/endpoints/get-intent-history",
-              "api-reference/endpoints/get-token-prices",
-              "api-reference/endpoints/get-token-list"
+              "api-reference/endpoints/get-intent-history"
+            ]
+          },
+          {
+            "group": "Routes & Tokens",
+            "pages": [
+              "api-reference/endpoints/get-chains",
+              "api-reference/endpoints/get-exact-input-routes",
+              "api-reference/endpoints/get-exact-output-routes",
+              "api-reference/endpoints/get-token-list",
+              "api-reference/endpoints/get-token-prices"
             ]
           }
         ]

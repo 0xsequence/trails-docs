@@ -1,9 +1,21 @@
 ---
 title: "LLM Integrations"
-description: There are several ways to integrate Trails with LLMs to get intelligent assistance with Trails-related development tasks, from querying blockchain data to interacting with smart contracts.
+description: Integrate Trails with AI agents for automated payments, from MCP servers to custom function calling.
 sidebarTitle: LLM Integrations
 icon: 'robot'
 ---
+
+## llms.txt
+
+Trails provides an `llms.txt` file for AI-friendly documentation discovery. This file follows the [llms.txt standard](https://llmstxt.org/) and provides structured context about Trails capabilities.
+
+**URL:** [https://docs.trails.build/llms.txt](https://docs.trails.build/llms.txt)
+
+Use this file to give your LLM context about Trails before making integration requests. It includes:
+- Core concepts (intents, routes, SDK modes)
+- API flow overview
+- Common integration patterns
+- Links to relevant documentation
 
 ## MCP Server
 
@@ -58,3 +70,320 @@ When your query is being processed, you'll see an indication like:
 ```
 > Called SearchTrails
 ```
+
+## Function Calling Tools
+
+For custom LLM integrations (OpenAI, Anthropic, etc.), use these tool definitions to enable payment capabilities.
+
+### Payment Tool Definition
+
+```json
+{
+  "name": "create_payment",
+  "description": "Create a crypto payment request. Accepts any token from any chain, settles in stablecoins. Use for: sending payments, paying invoices, e-commerce checkout.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "recipient_address": {
+        "type": "string",
+        "description": "Ethereum address to receive payment (0x...)"
+      },
+      "amount": {
+        "type": "string",
+        "description": "Amount to receive in destination token (e.g., '100' for 100 USDC)"
+      },
+      "token": {
+        "type": "string",
+        "description": "Token symbol to receive (USDC, USDT, ETH, etc.)",
+        "default": "USDC"
+      },
+      "chain_id": {
+        "type": "number",
+        "description": "Destination chain ID (1=Ethereum, 8453=Base, 42161=Arbitrum)",
+        "default": 8453
+      },
+      "memo": {
+        "type": "string",
+        "description": "Optional payment reference or description"
+      }
+    },
+    "required": ["recipient_address", "amount"]
+  }
+}
+```
+
+### Quote Tool Definition
+
+```json
+{
+  "name": "get_payment_quote",
+  "description": "Get a quote for a cross-chain payment. Returns estimated fees, exchange rates, and routing info before execution.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "from_token": {
+        "type": "string",
+        "description": "Token symbol user wants to pay with"
+      },
+      "from_chain_id": {
+        "type": "number",
+        "description": "Chain ID where user's tokens are"
+      },
+      "to_token": {
+        "type": "string",
+        "description": "Token symbol recipient will receive"
+      },
+      "to_chain_id": {
+        "type": "number",
+        "description": "Chain ID for recipient"
+      },
+      "amount": {
+        "type": "string",
+        "description": "Amount (in destination token for EXACT_OUTPUT, source for EXACT_INPUT)"
+      },
+      "trade_type": {
+        "type": "string",
+        "enum": ["EXACT_INPUT", "EXACT_OUTPUT"],
+        "description": "EXACT_OUTPUT: specify what recipient gets. EXACT_INPUT: specify what user pays.",
+        "default": "EXACT_OUTPUT"
+      }
+    },
+    "required": ["from_token", "from_chain_id", "to_token", "to_chain_id", "amount"]
+  }
+}
+```
+
+### Swap Tool Definition
+
+```json
+{
+  "name": "swap_tokens",
+  "description": "Swap tokens across chains. User specifies input token and amount, receives output token on any chain.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "from_token": {
+        "type": "string",
+        "description": "Token symbol to swap from"
+      },
+      "from_chain_id": {
+        "type": "number",
+        "description": "Source chain ID"
+      },
+      "from_amount": {
+        "type": "string",
+        "description": "Amount of source token to swap"
+      },
+      "to_token": {
+        "type": "string",
+        "description": "Token symbol to receive"
+      },
+      "to_chain_id": {
+        "type": "number",
+        "description": "Destination chain ID"
+      },
+      "slippage_tolerance": {
+        "type": "number",
+        "description": "Max slippage as decimal (0.005 = 0.5%)",
+        "default": 0.005
+      }
+    },
+    "required": ["from_token", "from_chain_id", "from_amount", "to_token", "to_chain_id"]
+  }
+}
+```
+
+## Example Prompts
+
+These prompts help LLMs understand common payment scenarios.
+
+### System Prompt for Payment Agent
+
+```
+You are a payment assistant that helps users send crypto payments using Trails.
+
+Key capabilities:
+- Accept any token from any chain
+- Settle payments in stablecoins (USDC/USDT)
+- Cross-chain swaps and bridges handled automatically
+- Gasless transactions available for permit-compatible tokens
+
+When users want to make a payment:
+1. Confirm the recipient address and amount
+2. Ask what token/chain they want to pay WITH (or suggest based on their balances)
+3. Get a quote to show fees and rates
+4. Execute when user confirms
+
+Always show the fee breakdown before executing. Never execute without user confirmation.
+```
+
+### User Intent Examples
+
+| User says | Interpreted action |
+|-----------|-------------------|
+| "Pay 0xABC 50 USDC" | `create_payment(recipient="0xABC", amount="50", token="USDC")` |
+| "Send 100 dollars to merchant.eth" | Resolve ENS, then `create_payment(amount="100", token="USDC")` |
+| "Swap my ETH on mainnet to USDC on Base" | `swap_tokens(from="ETH", from_chain=1, to="USDC", to_chain=8453)` |
+| "How much will it cost to send 1000 USDC?" | `get_payment_quote(to_token="USDC", amount="1000")` |
+| "Pay invoice #123 for 250 USDT" | `create_payment(amount="250", token="USDT", memo="Invoice #123")` |
+
+## API Integration Example
+
+Complete example implementing the payment tool with Trails API:
+
+```typescript
+import { TrailsApi, TradeType } from '@0xtrails/api';
+
+const trails = new TrailsApi('YOUR_API_KEY');
+
+// Token addresses (abbreviated - use full list in production)
+const TOKENS = {
+  USDC: {
+    1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',     // Ethereum
+    8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base
+    42161: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' // Arbitrum
+  }
+};
+
+async function handlePaymentTool(params: {
+  recipient_address: string;
+  amount: string;
+  token?: string;
+  chain_id?: number;
+  user_address: string;
+  user_chain_id: number;
+  user_token_address: string;
+}) {
+  const {
+    recipient_address,
+    amount,
+    token = 'USDC',
+    chain_id = 8453,
+    user_address,
+    user_chain_id,
+    user_token_address
+  } = params;
+
+  // Step 1: Get quote
+  const { intent, gasFeeOptions } = await trails.quoteIntent({
+    ownerAddress: user_address,
+    originChainId: user_chain_id,
+    originTokenAddress: user_token_address,
+    destinationChainId: chain_id,
+    destinationTokenAddress: TOKENS[token]?.[chain_id],
+    destinationToAddress: recipient_address,
+    destinationTokenAmount: BigInt(parseFloat(amount) * 1e6).toString(), // Assuming 6 decimals
+    tradeType: TradeType.EXACT_OUTPUT
+  });
+
+  // Step 2: Return quote for user confirmation
+  return {
+    quote_id: intent.id,
+    recipient: recipient_address,
+    receive_amount: amount,
+    receive_token: token,
+    estimated_pay: intent.quote?.originTokenAmount,
+    fees: {
+      gas: gasFeeOptions?.feeOptions?.[0]?.fee,
+      protocol: intent.quote?.fees
+    },
+    expires_at: intent.expiresAt
+  };
+}
+
+// After user confirms, commit and execute
+async function executePayment(intent: any, signature: string) {
+  const { intentId } = await trails.commitIntent({ intent });
+
+  const { intentStatus } = await trails.executeIntent({
+    intentId,
+    depositSignature: {
+      intentSignature: signature,
+      deadline: Math.floor(Date.now() / 1000) + 3600
+    }
+  });
+
+  // Stream status updates
+  const receipt = await trails.waitIntentReceipt({ intentId });
+  return receipt;
+}
+```
+
+## Error Handling
+
+Handle these common errors in your LLM integration:
+
+```typescript
+async function safePaymentCall(params: any) {
+  try {
+    return await handlePaymentTool(params);
+  } catch (error: any) {
+    const errorMap: Record<string, string> = {
+      // Quote errors
+      'INSUFFICIENT_BALANCE': 'User does not have enough tokens. Check their balance first.',
+      'NO_ROUTE_FOUND': 'No route available for this swap. Try a different token pair or chain.',
+      'AMOUNT_TOO_SMALL': 'Amount is below minimum. Minimum is typically $1 equivalent.',
+      'QUOTE_EXPIRED': 'Quote expired. Get a new quote before proceeding.',
+
+      // Execution errors
+      'INTENT_EXPIRED': 'Intent expired before execution. Start over with a new quote.',
+      'DEPOSIT_FAILED': 'Token deposit failed. Check user approved the transaction.',
+      'SLIPPAGE_EXCEEDED': 'Price moved too much. Retry with higher slippage tolerance.',
+
+      // Auth errors
+      'INVALID_API_KEY': 'API key invalid. Check configuration.',
+      'RATE_LIMITED': 'Too many requests. Wait before retrying.'
+    };
+
+    const message = errorMap[error.code] || `Payment failed: ${error.message}`;
+
+    return {
+      success: false,
+      error: error.code,
+      user_message: message,
+      retry_allowed: !['INVALID_API_KEY', 'AMOUNT_TOO_SMALL'].includes(error.code)
+    };
+  }
+}
+```
+
+### Error Response Format
+
+When returning errors to the LLM, use a structured format:
+
+```json
+{
+  "success": false,
+  "error": "NO_ROUTE_FOUND",
+  "user_message": "I couldn't find a route to swap PEPE to USDC on Base. This token may not be supported or have insufficient liquidity. Would you like to try a different token?",
+  "suggestions": [
+    "Try swapping to ETH first, then to USDC",
+    "Check if the token is available on a different chain"
+  ],
+  "retry_allowed": true
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always confirm before executing">
+    Show the user the full quote including fees before calling `executeIntent`. Never auto-execute payments.
+  </Accordion>
+
+  <Accordion title="Handle quote expiration">
+    Quotes expire in 5 minutes. If the user takes too long to confirm, get a fresh quote.
+  </Accordion>
+
+  <Accordion title="Validate addresses">
+    Always validate Ethereum addresses and resolve ENS names before making API calls.
+  </Accordion>
+
+  <Accordion title="Cache token lists">
+    Use `GetTokenList` to cache supported tokens rather than hardcoding. Token availability changes.
+  </Accordion>
+
+  <Accordion title="Provide context in errors">
+    When errors occur, give the LLM enough context to explain to the user and suggest alternatives.
+  </Accordion>
+</AccordionGroup>

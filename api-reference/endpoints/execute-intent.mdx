@@ -177,6 +177,12 @@ const receipt = await trailsApi.waitIntentReceipt({ intentId });
 console.log('Receipt:', receipt);
 ```
 
+## Timing Requirements
+
+<Warning>
+You must call `ExecuteIntent` within **10 minutes** of committing the intent. If this window expires, the committed intent becomes invalid and you'll need to request a new quote and commit again.
+</Warning>
+
 ## Error Handling
 
 <Warning>

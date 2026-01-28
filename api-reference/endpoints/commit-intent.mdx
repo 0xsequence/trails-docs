@@ -68,7 +68,7 @@ console.log('Intent committed:', intentId);
 ## Important Notes
 
 <Warning>
-Committed intents have an expiration time. Make sure to execute the intent before it expires, or you'll need to get a new quote.
+Committed intents must be executed within **10 minutes**. Make sure to call `ExecuteIntent` before this window expires, or you'll need to get a new quote and commit again.
 </Warning>
 
 <Info>

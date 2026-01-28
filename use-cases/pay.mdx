@@ -1,13 +1,19 @@
 ---
 title: 'Pay'
-description: 'Step-by-step examples for making payments for a variety of use cases leveraging Trails such as NFT purchases, buying with stablecoins, and more.'
+description: 'Accept stablecoin payments from any chain with automatic bridging and swapping.'
 icon: 'bolt'
 ---
 
 ## Pay with Trails
 Trails revolutionizes crypto purchases by enabling users to buy NFTs, RWAs, or any other asset using any token a user holds from any supported chain. The payee simply specifies the settlement asset that they would like the payment to be reconciled in or to successfully complete the purchase, for example USDC, ETH, or any other token and the payer can select how they'd like to pay from their aggregated balance.
 
-For example, if a user wants to purchase an NFT that is listed in USDC on Arbitrum, Trails will automatically detect the funds the user currently holds in their wallet across all chains, presents those as options to fulfill the payment, and automatically handles any bridging, swapping, or execution logic if necessary to complete the transaction.
+Accept USDC, USDT, or any token as payment. Your user pays with whatever they have—Trails handles the conversion automatically and any executions automatically.
+
+| You Settle In | User Pays With | Trails Handles |
+|--------------|----------------|----------------|
+| USDC on Polygon | ETH on Arbitrum | Bridge + Swap |
+| USDC on Polygon | POL on Polygon | Swap |
+| USDC on Base | USDC on Base | Normal Execution |
 
 ## Use Cases
 
@@ -21,37 +27,53 @@ Ideal for use cases such as the following:
 - Make an [x402 payment](/examples/x402) in any token from any chain
 - Execute smart contract calls with an attached payment
 
-## Examples
 
-### Simple Payment
+## Stablecoin Payment Examples
 
-Basic payment setup - pay exactly 1 USDC to a recipient:
+### Accept USDC on Polygon
+
+Settle in USDC on Polygon—users pay from any chain:
 
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
 
-export const SimplePayment = () => {
-  return (
-    <TrailsWidget
-      apiKey="YOUR_API_KEY"
-      mode="pay"
-      toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
-      toAmount="1"
-      toChainId={8453} // Base
-      toToken="USDC"
-      onCheckoutComplete={({ sessionId }) => {
-        console.log('Payment completed:', sessionId)
-      }}
-    >
-      <button className="pay-button">
-        Pay 1 USDC
-      </button>
-    </TrailsWidget>
-  )
-}
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="pay"
+  toAddress="0xYOUR_MERCHANT_ADDRESS"
+  toAmount="25"
+  toChainId={137} // Polygon
+  toToken="USDC"
+  onCheckoutComplete={({ sessionId }) => {
+    // Mark order as paid
+    updateOrderStatus(orderId, 'paid', sessionId)
+  }}
+>
+  <button>Pay $25</button>
+</TrailsWidget>
 ```
 
-### Purchasing an NFT on Arbitrum
+### Cross-Chain USDC with CCTP (Polygon Settlement)
+
+Use Circle's Cross-Chain Transfer Protocol for native USDC bridging:
+
+```tsx
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="pay"
+  toAddress="0xYOUR_MERCHANT_ADDRESS"
+  toAmount="500"
+  toChainId={137} // Polygon
+  toToken="USDC"
+  bridgeProvider="CCTP" // Native USDC bridging
+  onCheckoutComplete={({ sessionId }) => {
+    processLargePayment(sessionId)
+  }}
+>
+  <button>Pay $500</button>
+</TrailsWidget>
+```
+## Purchasing an NFT on Arbitrum
 
 This example shows how to use the Trails widget to purchase an NFT on Arbitrum, where the user can pay with any token from any chain that automatically gets converted to ETH to fulfill the purchase:
 
@@ -117,14 +139,132 @@ export const nftABI = [
 
 </CodeGroup>
 
+## Merchant Integration Pattern
+
+Complete ecommerce checkout flow with order verification:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+import { useState } from 'react'
+
+export function CheckoutButton({ order }) {
+  const [status, setStatus] = useState('pending')
+
+  return (
+    <TrailsWidget
+      apiKey={process.env.TRAILS_API_KEY}
+      mode="pay"
+      toAddress={process.env.MERCHANT_WALLET}
+      toAmount={order.total.toString()}
+      toChainId={137} // Polygon
+      toToken="USDC"
+      onCheckoutStart={({ sessionId }) => {
+        // Create pending payment record
+        createPaymentRecord({
+          orderId: order.id,
+          sessionId,
+          amount: order.total,
+          status: 'processing'
+        })
+        setStatus('processing')
+      }}
+      onCheckoutComplete={async ({ sessionId }) => {
+        // Verify payment on your backend
+        const verified = await verifyPayment(sessionId)
+        if (verified) {
+          await fulfillOrder(order.id)
+          setStatus('complete')
+        }
+      }}
+      onCheckoutError={({ sessionId, error }) => {
+        logPaymentError(sessionId, error)
+        setStatus('failed')
+      }}
+    >
+      <button disabled={status === 'processing'}>
+        {status === 'processing' ? 'Processing...' : `Pay $${order.total}`}
+      </button>
+    </TrailsWidget>
+  )
+}
+```
+
+### Backend Payment Verification
+
+Verify payments server-side before fulfilling orders:
+
+```typescript
+// api/verify-payment.ts
+import { Trails } from '@0xtrails/api'
+
+const trails = new Trails({ accessKey: process.env.TRAILS_ACCESS_KEY })
+
+export async function verifyPayment(sessionId: string, expectedAmount: string) {
+  const receipt = await trails.getIntentReceipt({ intentId: sessionId })
+
+  // Verify the payment completed successfully
+  if (receipt.status !== 'COMPLETED') {
+    return { verified: false, reason: 'Payment not completed' }
+  }
+
+  // Verify the amount matches
+  const receivedAmount = receipt.destinationTransaction?.amount
+  if (receivedAmount !== expectedAmount) {
+    return { verified: false, reason: 'Amount mismatch' }
+  }
+
+  return { verified: true, receipt }
+}
+```
+
+
+### API-Based Fee Estimation
+
+For server-side fee estimation or custom UIs:
+
+```typescript
+const quote = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    ownerAddress: userWallet,
+    originChainId: 137, // User's funds on Polygon
+    originTokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
+    destinationChainId: 8453, // Settle on Base
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    destinationToAddress: merchantAddress,
+    destinationTokenAmount: '100000000', // 100 USDC (6 decimals)
+    tradeType: 'EXACT_OUTPUT',
+    options: {
+      slippageTolerance: 0.005 // 0.5%
+    }
+  })
+})
+
+const { intent } = await quote.json()
+
+// Extract fee information
+const fees = {
+  gasFee: intent.gasFee,
+  bridgeFee: intent.bridgeFee,
+  totalInput: intent.originAmount,
+  estimatedOutput: intent.destinationAmount
+}
+```
+
 ## Next Steps
 
-Explore more about configuring and customizing payment flows:
-
-- [**Pay Mode Configuration**](/sdk/modes/pay) - Complete configuration options and parameters for pay mode
-- [**SDK Configuration**](/sdk/configuration) - Widget setup, callbacks, and event handling
-- [**Widget Theming**](/sdk/theming) - Customize the appearance to match your brand
-- [**Hooks Reference**](/sdk/hooks) - Available hooks for programmatic control (useQuote, usePay, etc.)
-- [**Tokens & Chains**](/sdk/tokens-and-chains) - Configure payment tokens and destination chains
-- [**x402 Payment Example**](/examples/x402) - Advanced example with HTTP 402 payment flows
-
+<CardGroup cols={2}>
+  <Card title="Pay Mode Reference" icon="code" href="/sdk/modes/pay">
+    Complete configuration options and props
+  </Card>
+  <Card title="Gasless Payments" icon="gas-pump" href="/examples/gasless">
+    Let users pay fees in stablecoins
+  </Card>
+  <Card title="x402 Payments" icon="globe" href="/examples/x402">
+    HTTP 402 payment flows with Trails
+  </Card>
+</CardGroup>

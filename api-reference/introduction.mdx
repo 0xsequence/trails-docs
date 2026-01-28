@@ -5,10 +5,25 @@ description: "Learn how to integrate the Trails API for cross-chain transactions
 
 ## Welcome to the Trails API
 
-The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions in a simplified interface with the Trails protocol. This guide walks you through the complete flow from requesting a quote to executing a transaction.
+The Trails API enables seamless cross-chain token swaps, deposits, payments, and smart contract executions in a simplified interface with the Trails protocol.
+
+## Authentication
+
+All API requests require an API key passed in the `X-Access-Key` header.
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ /* request body */ })
+});
+```
 
 <Note>
-**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) to request your API access key.
+**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) or [email](jlawton@polygon.technology) to request your API access key.
 </Note>
 
 ## Core Workflow
@@ -32,7 +47,7 @@ const balancesResponse = await fetch('https://indexer.sequence.app/rpc/IndexerGa
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     accountAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
@@ -56,7 +71,7 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     ownerAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1', // sender address
@@ -106,7 +121,7 @@ const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/C
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({ intent })
 });
@@ -119,7 +134,7 @@ console.log('Intent committed:', intentId);
 You cannot change the contents of the intent, or the server will reject the commit. The `intent` object contains everything needed to relay and execute the intent.
 
 <Warning>
-Committed intents expire after a set period (check `intent.expiresAt`). Execute before expiration or request a new quote.
+Quotes expire **5 minutes** after being issued. Once committed, you have **10 minutes** to call `ExecuteIntent`. If either window expires, you'll need to request a new quote.
 </Warning>
   </Step>
 
@@ -178,7 +193,7 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     intentId,
@@ -338,7 +353,7 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_API_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
   },
   body: JSON.stringify({
     intentId,
@@ -405,7 +420,7 @@ async function waitForCompletion(intentId: string) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Access-Key': 'YOUR_API_KEY'
+          'X-Access-Key': 'YOUR_ACCESS_KEY'
         },
         body: JSON.stringify({ intentId })
       }
@@ -440,10 +455,134 @@ const receipt = await waitForCompletion(intentId);
 Now you have an end to end API integration with Trails for seamless chain abstraction flows! You can continue this initial integration for specific use cases such as:
 
 - x402 Payments
-- AI Agents 
+- AI Agents
 - Server-side currency conversion & settlement
 - Fund, Swap, Earn, or Pay for any application
 - Pass in optional calldata to call any smart contract function
+
+## Error Handling
+
+The API returns errors in a consistent JSON format:
+
+```json
+{
+  "webrpcError": {
+    "code": 2000,
+    "name": "InvalidArgument",
+    "message": "Invalid token address",
+    "cause": "originTokenAddress must be a valid EVM address",
+    "httpStatus": 400
+  }
+}
+```
+
+### Error Codes
+
+| Code | Name | Description | HTTP Status |
+|------|------|-------------|-------------|
+| 2000 | `InvalidArgument` | Request parameter is invalid or malformed | 400 |
+| 2001 | `Unexpected` | Unexpected server error | 500 |
+| 2002 | `Unavailable` | Requested resource is unavailable | 400 |
+| 2003 | `QueryFailed` | Database or external query failed | 400 |
+| 2004 | `IntentStatus` | Intent is in an invalid state for this operation | 422 |
+| 7000 | `IntentsSkipped` | Transaction doesn't require an intent (same chain/token) | 400 |
+| 7001 | `QuoteExpired` | Quote has expired, request a new one | 400 |
+| 8000 | `NotFound` | Resource not found | 400 |
+| 8008 | `UnsupportedNetwork` | Chain ID is not supported | 422 |
+| 8009 | `ClientOutdated` | SDK/client version is outdated | 422 |
+| 9000 | `IntentsDisabled` | Intents service is temporarily unavailable | 400 |
+
+### Handling Errors
+
+```typescript
+async function executeWithRetry(intentId: string, depositTxHash: string) {
+  try {
+    const response = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': process.env.TRAILS_API_KEY
+      },
+      body: JSON.stringify({ intentId, depositTransactionHash: depositTxHash })
+    });
+
+    const data = await response.json();
+
+    if (data.webrpcError) {
+      const { code, message, cause } = data.webrpcError;
+
+      switch (code) {
+        case 7001: // QuoteExpired
+          // Request a new quote and retry
+          throw new Error('Quote expired - request a new quote');
+
+        case 2004: // IntentStatus
+          // Intent already executed or in wrong state
+          console.log('Intent already processed');
+          break;
+
+        case 9000: // IntentsDisabled
+          // Service unavailable - retry with backoff
+          await delay(5000);
+          return executeWithRetry(intentId, depositTxHash);
+
+        default:
+          throw new Error(`API Error ${code}: ${message}. ${cause || ''}`);
+      }
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+```
+
+### Quote Expiration
+
+Quotes have strict time limits:
+
+| Stage | Time Limit | What Happens |
+|-------|------------|--------------|
+| Quote validity | 5 minutes | Quote expires, request a new one |
+| After CommitIntent | 10 minutes | Must call ExecuteIntent within this window |
+| Intent execution | N/A | Trails handles execution timing |
+
+<Tip>
+Always check quote expiration before committing. The `intent.expiresAt` timestamp indicates when the quote becomes invalid.
+</Tip>
+
+## Rate Limiting
+
+The API uses rate limiting to ensure service reliability. If you exceed limits, you'll receive HTTP 429 responses.
+
+| Limit Type | Value | Notes |
+|------------|-------|-------|
+| Requests per second | 50 | Per API key |
+| Burst limit | 100 | Short burst allowance |
+| QuoteIntent calls | 20/min | Rate-limited separately |
+
+**Best practices:**
+- Cache `GetChains`, `GetTokenList` responses (they change infrequently)
+- Batch balance checks where possible
+- Implement exponential backoff on 429 responses
+
+```typescript
+async function fetchWithBackoff(url: string, options: RequestInit, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await fetch(url, options);
+
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get('Retry-After') || '1');
+      await delay(retryAfter * 1000 * Math.pow(2, i));
+      continue;
+    }
+
+    return response;
+  }
+  throw new Error('Max retries exceeded');
+}
+```
 
 ## Next Steps
 

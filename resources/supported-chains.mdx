@@ -1,17 +1,88 @@
 ---
 title: 'Supported Chains'
-description: 'List of integrated blockchain networks and cross-chain liquidity providers'
+description: 'Complete list of supported blockchain networks, chain IDs, and token availability.'
 icon: 'network-wired'
 ---
 
-import { ChainsWithFeesPart2 } from '/snippets/ChainsAndFees.mdx';
+## Mainnet Chains
 
-## Supported Chains
+Trails supports 18 mainnet chains with full cross-chain routing capabilities:
 
-<ChainsWithFeesPart2 env="all" id="complete-networks-table" />
+| Chain | Chain ID | Native Token |
+|-------|----------|--------------|
+| Ethereum | 1 | ETH |
+| Base | 8453 | ETH |
+| Arbitrum | 42161 | ETH |
+| Optimism | 10 | ETH |
+| Polygon | 137 | POL |
+| Avalanche | 43114 | AVAX |
+| BNB Chain | 56 | BNB |
+| Gnosis | 100 | xDAI |
+| Blast | 81457 | ETH |
+| Arbitrum Nova | 42170 | ETH |
+| Ape Chain | 33139 | APE |
+| B3 | 8333 | ETH |
+| Soneium | 1868 | ETH |
+| Xai | 660279 | XAI |
+| Katana | 747474 | ETH |
+| Etherlink | 42793 | XTZ |
+| Somnia | 5031 | SOMI |
+| Monad | 143 | MON |
 
-More chains are being added all the time. If you'd like to see a specific chain added, please get in touch!
+## Token Support Legend
 
-## Supported Bridges & Fillers
+- **✓** = Native token available on chain
 
-We are able to tap into virtually any solver, filler, or bridge system as well as underlying liquidity sources like DEX's, aggregators, and more. Currently we are integrated with Relay, LiFi, and CCTP V2 but please contact us if you would like your own liquidity source added.
+## Stablecoin Details
+
+### USDC Availability
+
+USDC is available on most major chains. Chains with CCTP support enable native USDC transfers without wrapped variants:
+
+| Chain | USDC Contract Address | CCTP |
+|-------|----------------------|------|
+| Ethereum | `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48` | ✓ |
+| Base | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | ✓ |
+| Arbitrum | `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` | ✓ |
+| Optimism | `0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85` | ✓ |
+| Polygon | `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359` | ✓ |
+| Avalanche | `0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E` | ✓ |
+| BNB Chain | `0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d` | - |
+
+### USDT Availability
+
+| Chain | USDT Contract Address |
+|-------|----------------------|
+| Ethereum | `0xdAC17F958D2ee523a2206206994597C13D831ec7` |
+| Arbitrum | `0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9` |
+| Optimism | `0x94b008aA00579c1307B0EF2c499aD98a8ce58e58` |
+| Polygon | `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` |
+| Avalanche | `0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7` |
+| BNB Chain | `0x55d398326f99059fF775485246999027B3197955` |
+
+## Supported Bridges & Liquidity
+
+Trails routes transactions through the optimal liquidity sources:
+
+| Provider | Type | Description |
+|----------|------|-------------|
+| **Relay** | Bridge/Filler | Fast cross-chain execution with instant finality |
+| **LiFi** | Aggregator | Multi-bridge aggregation for optimal routes |
+| **CCTP V2** | Bridge | Native USDC cross-chain transfers via Circle |
+| **SushiSwap** | DEX | Cross-chain routing with deep onchain liquidity |
+
+<Note>
+Additional bridges and liquidity sources can be integrated on request. Contact us if you need a specific provider.
+</Note>
+
+## Request a New Chain
+
+Need a chain that's not listed? [Contact us](mailto:support@sequence.xyz) to request integration.
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api-reference/endpoints/get-chains">
+    GetChains API endpoint
+  </Card>
+</CardGroup>

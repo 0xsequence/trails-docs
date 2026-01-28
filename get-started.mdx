@@ -1,78 +1,82 @@
 ---
-title: "Getting Started"
-description: "Installing and importing the SDK"
-sidebarTitle: "Getting Started"
+title: "Quickstart"
+description: "Integrate Trails in under 5 minutes"
+sidebarTitle: "Quickstart"
 ---
 
-<div className="not-prose grid gap-x-4 gap-y-2 sm:grid-cols-2 md:grid-cols-3">
-  <Card title="Live Demo" icon="bolt" href="https://demo.trails.build/widget">
-    Try the Trails widget live. Configure, preview, and copy code.
-  </Card>
+## Install
 
-  <Card title="React Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-starter">
-    Minimal React template for Trails with Earn, Swap, Pay, and Fund modes integrated.
-  </Card>
+<CodeGroup>
+```shell npm
+npm install 0xtrails
+```
+```shell pnpm
+pnpm add 0xtrails
+```
+```shell yarn
+yarn add 0xtrails
+```
+```shell bun
+bun add 0xtrails
+```
+</CodeGroup>
 
-  <Card title="NextJS Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-nextjs-starter">
-    Minimal NextJS template for Trails with Earn, Swap, Pay, and Fund modes integrated.
-  </Card>
-</div>
+## Add the Widget
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+
+export function Checkout() {
+  return (
+    <TrailsWidget
+      apiKey="YOUR_API_KEY"
+      mode="pay"
+      toAddress="0xYourMerchantAddress"
+      toAmount="10"
+      toChainId={8453}
+      toToken="USDC"
+    />
+  )
+}
+```
+
+User pays with any token from any chain → You receive exactly 10 USDC on Base.
 
 <Note>
-**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) to request your API access key for Trails.
+**Get an API key**: Join the [Trails Telegram](https://t.me/build_with_trails) to request access.
 </Note>
 
-To install on your own application:
-<Steps>
-  <Step title="Install the SDK and dependencies">
-    <CodeGroup>
-    ```shell pnpm
-    pnpm i 0xtrails 
-    ```
-    ```shell npm
-    npm install --save 0xtrails 
-    ```
-    ```shell yarn
-    yarn add 0xtrails 
-    ```
-    ```shell bun
-    bun add 0xtrails
-    ```
-    </CodeGroup>
-  </Step>
-  
-  <Step title="Import and Use the Widget">
-    Add the widget to your React application, for example send 1 USDC cross-chain to a recipient on Base.
+## Starter Templates
 
-    ```typescript
-    import { TrailsWidget } from '0xtrails/widget'
+<CardGroup cols={3}>
+  <Card title="Live Demo" icon="play" href="https://demo.trails.build/widget">
+    Try it now
+  </Card>
+  <Card title="React" icon="react" href="https://github.com/0xsequence-demos/trails-starter">
+    Starter kit
+  </Card>
+  <Card title="Next.js" icon="code" href="https://github.com/0xsequence-demos/trails-nextjs-starter">
+    Starter kit
+  </Card>
+</CardGroup>
 
-    export const App = () => {
-      return (
-        <TrailsWidget
-          apiKey="YOUR_API_KEY"
-          mode="fund"
-          toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1" // contract or wallet address of recipient
-          toAmount="1" 
-          toChainId={8453}
-          toToken="USDC"
-        />
-      )
-    }
-    ```
-  </Step>
-</Steps>
+## Next Steps
 
+<CardGroup cols={2}>
+  <Card title="Pay" icon="credit-card" href="/use-cases/pay">
+    Stablecoin payments, merchant integration
+  </Card>
+  <Card title="Swap" icon="arrows-rotate" href="/use-cases/swap">
+    Cross-chain token swaps
+  </Card>
+  <Card title="Fund" icon="wallet" href="/use-cases/fund">
+    Protocol deposits, trustless deposit addresses, chain onboarding, built-in onramps, and more
+  </Card>
+  <Card title="Earn" icon="chart-line" href="/use-cases/earn">
+    Integrated DeFi Yield Deposits
+  </Card>
+</CardGroup>
 
-## Next steps
-Trails is optimized for a variety of common use cases or flows for your application:
+---
 
-- **[Pay](/use-cases/pay)**: Enable cross-chain, 1-click payments with any token for ecommerce platforms, NFT marketplaces, real-world asset purchases, and minimal-slippage stablecoin transactions.
-- **[Swap](/use-cases/swap)**: Embed low-latency, highly liquid cross-chain token swaps for your applications.
-- **[Fund](/use-cases/fund)**: Maximize TVL and transaction velocity through fully brandable funding widgets for protocol deposits such as perpetual exchanges, chain deposits, and liquidity provisioning. 
-- **[Earn](/use-cases/earn)**: Streamline DeFi yield opportunities by enabling deposits from your app into already integrated tokenized vaults, lending pools, and yield strategies from any token on any chain.
-- **[Configuration](/sdk/configuration)**: Full list of variables & hooks to customize Trails including different modes, theming, enabling gasless transactions, events, and quote providers.
-- **[API Integration](/api-reference/introduction)**: Want full control over your UI / UX or integrating server-side? Leverage our endpoints directly to build your own chain abstraction flows.
-
-
-For production use, pin to a specific version by replacing `@latest` with `@1.0.0` or your desired version. 
+**Full reference**: [SDK Configuration](/sdk/configuration) · [API Reference](/api-reference/introduction) · [Hooks](/sdk/hooks)

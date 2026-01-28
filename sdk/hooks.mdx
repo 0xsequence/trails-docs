@@ -251,7 +251,7 @@ Token balances are returned as `Token[]` with balance fields populated. See the 
 
 ### useTokenBalancesForMultipleAccounts
 
-Fetches token balances for multiple wallet addresses with pagination support.
+Fetches token balances for multiple wallet addresses in a single API call. More efficient than calling `useTokenBalances` multiple times.
 
 **Signature**:
 ```ts
@@ -267,9 +267,52 @@ function useTokenBalancesForMultipleAccounts(
 **Return Type**:
 ```ts
 type UseTokenBalancesForMultipleAccountsReturn = {
-  balances: Record<string, Token[]> // Balances keyed by address
+  /** Per-account token balances data, keyed by lowercase address */
+  balancesByAccount: {
+    [account: string]: {
+      tokenBalancesData: {
+        tokens: Token[]
+      } | undefined
+      isLoading: boolean
+      error: Error | null
+    }
+  }
+  /** Combined loading state - true if any account is loading */
   isLoading: boolean
+  /** Combined error - first error encountered */
   error: Error | null
+}
+```
+
+**Example**:
+```tsx
+import { useTokenBalancesForMultipleAccounts } from '0xtrails'
+
+const MultiWalletBalances = ({ addresses }: { addresses: string[] }) => {
+  const { balancesByAccount, isLoading, error } = useTokenBalancesForMultipleAccounts(addresses)
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  return (
+    <div>
+      {addresses.map(address => {
+        const accountData = balancesByAccount[address.toLowerCase()]
+        const tokens = accountData?.tokenBalancesData?.tokens || []
+
+        return (
+          <div key={address}>
+            <h4>{address.slice(0, 6)}...{address.slice(-4)}</h4>
+            {tokens.map(token => (
+              <div key={`${token.chainId}-${token.contractAddress}`}>
+                {token.symbol}: {token.balanceDisplay}
+              </div>
+            ))}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 ```
 
@@ -432,120 +475,6 @@ enum RouteProvider {
   RELAY = 'RELAY',
   SUSHI = 'SUSHI',
   ZEROX = 'ZEROX'
-}
-```
-
-## useTrailsSendTransaction
-
-A powerful hook for creating, signing, and sending transactions using Trails SDK. Provides a wagmi-compatible API for sending transactions with automatic cross-chain orchestration.
-
-<Note>
-**Required Components**: When using `useTrailsSendTransaction`, you must render `TrailsHookModal` inside your `WagmiProvider` for the modal UI to work properly.
-</Note>
-
-### Setup
-
-```tsx
-import { TrailsProvider, TrailsHookModal } from '0xtrails'
-import { WagmiProvider } from 'wagmi'
-
-function App() {
-  return (
-    <WagmiProvider config={wagmiConfig}>
-      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
-        <TrailsHookModal />
-        <YourApp />
-      </TrailsProvider>
-    </WagmiProvider>
-  )
-}
-```
-
-### Usage Examples
-
-```tsx
-import { useTrailsSendTransaction } from '0xtrails'
-import { parseEther } from 'viem'
-
-export const SendTransaction = () => {
-  const { sendTransaction, isPending, isSuccess } = useTrailsSendTransaction({
-    onSuccess: (data) => console.log('Transaction successful:', data),
-    onError: (error) => console.error('Transaction failed:', error),
-  })
-
-  // Simple native token send (wagmi-compatible)
-  const handleSendNative = () => {
-    sendTransaction({
-      to: '0xd2135CfB216b74109775236E36d4b433F1DF507B',
-      value: parseEther('0.01'),
-    })
-  }
-
-  // Cross-chain transaction with specific destination token
-  // Modal opens for user to select origin token/chain
-  const handleCrossChain = () => {
-    sendTransaction({
-      to: '0xaavePoolAddress',
-      tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      tokenAmount: '3000000', // 3 USDC (6 decimals)
-      data: '0x...', // Optional contract calldata
-    })
-  }
-
-  return (
-    <div>
-      <button onClick={handleSendNative} disabled={isPending}>
-        Send 0.01 ETH
-      </button>
-      <button onClick={handleCrossChain} disabled={isPending}>
-        Deposit 3 USDC to AAVE
-      </button>
-      {isSuccess && <p>Transaction completed!</p>}
-    </div>
-  )
-}
-```
-
-### Types
-
-```ts
-type TrailsSendTransactionVariables = {
-  to?: Address
-  value?: bigint // Native token amount (wagmi-compatible)
-  data?: Hex // Contract calldata
-  
-  // Destination token requirements
-  tokenAddress?: Address // Destination token address
-  tokenAmount?: string // Destination token amount (in smallest units)
-  
-  // Origin token parameters (optional - modal opens if not provided)
-  fromTokenAddress?: Address // Origin token address
-  fromChainId?: number // Origin chain ID
-  fromAmount?: string // Origin token amount
-}
-
-type UseTrailsSendTransactionParameters = {
-  onSuccess?: (data: SwapReturn, variables: TrailsSendTransactionVariables) => void
-  onError?: (error: Error, variables: TrailsSendTransactionVariables) => void
-  onSettled?: (data: SwapReturn | undefined, error: Error | null, variables: TrailsSendTransactionVariables) => void
-  receiptActionButtonText?: string // Custom text for receipt button (default: "Transact Again")
-  onReceiptAction?: () => void // Custom callback for receipt button
-  // ... plus all UseQuoteProps options (slippageTolerance, paymasterUrl, etc.)
-}
-
-type UseTrailsSendTransactionReturnType = {
-  sendTransaction: (variables: TrailsSendTransactionVariables, callbacks?: {...}) => void
-  sendTransactionAsync: (variables: TrailsSendTransactionVariables, callbacks?: {...}) => Promise<SwapReturn>
-  retry: () => void
-  data: SwapReturn | undefined
-  error: Error | null
-  isPending: boolean
-  isSuccess: boolean
-  isError: boolean
-  isIdle: boolean
-  status: 'idle' | 'pending' | 'error' | 'success'
-  reset: () => void
-  variables: TrailsSendTransactionVariables | undefined
 }
 ```
 
@@ -935,25 +864,25 @@ type UseGetIntentReturn = {
 }
 ```
 
-## useTrailsRefund
+## useIntentRecover
 
-Hook for handling refunds from stuck or failed intent transactions. Trails will automatically refund upon reverting, however this can be used in situations where funds are stuck without an explicit revert. This hook provides utilities to sign and execute refund transactions to recover funds from intent addresses.
+Hook for recovering funds from stuck or failed intent transactions. Trails automatically refunds upon reverting, but this hook handles situations where funds are stuck without an explicit revert. It automatically selects the intent address (origin or destination) with the highest balance for recovery.
 
 ```ts
 import {
-  useTrailsRefund,
-  type UseTrailsRefundParams,
-  type UseTrailsRefundReturn,
+  useIntentRecover,
+  type UseIntentRecoverParams,
+  type UseIntentRecoverReturn,
 } from '0xtrails'
 ```
 
 ### Usage
 
 ```tsx
-import { useTrailsRefund } from '0xtrails'
+import { useIntentRecover } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
 
-export const RefundComponent = ({ intentId }: { intentId: string }) => {
+export const RecoverComponent = ({ intentId }: { intentId: string }) => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
 
@@ -961,47 +890,74 @@ export const RefundComponent = ({ intentId }: { intentId: string }) => {
     intent,
     isLoadingIntent,
     hasIntentBalance,
+    recoverToken,
+    selectedRecoveryTarget,
     signPayload,
-    getRefundTx,
+    getRecoverTx,
+    recover,
+    getRecoverStatus,
     intentError,
-  } = useTrailsRefund({
+  } = useIntentRecover({
     intentId,
     walletClient,
     refundToAddress: address, // Optional: defaults to connected wallet
   })
 
-  const handleRefund = async () => {
+  // Option 1: Automatic flow (recommended)
+  const handleAutoRecover = async () => {
     try {
-      // Step 1: Sign the refund payload
+      const { txHash, receipt, chainId } = await recover()
+      console.log('Recovery successful:', txHash)
+
+      // Optionally check status
+      const status = await getRecoverStatus({ txHash, chainId })
+      console.log('Recovery status:', status)
+    } catch (error) {
+      console.error('Recovery failed:', error)
+    }
+  }
+
+  // Option 2: Manual flow for more control
+  const handleManualRecover = async () => {
+    try {
+      // Step 1: Sign the recovery payload
       const { signature, payload } = await signPayload()
-      
-      // Step 2: Get the refund transaction
-      const refundTx = await getRefundTx({
+
+      // Step 2: Get the recovery transaction
+      const recoverTx = await getRecoverTx({
         signedHash: signature,
         payload,
       })
-      
-      // Step 3: Execute the refund transaction
+
+      // Step 3: Execute the recovery transaction
       const txHash = await walletClient.sendTransaction({
-        to: refundTx.to,
-        data: refundTx.data,
-        chain: refundTx.chain,
+        to: recoverTx.to,
+        data: recoverTx.data,
+        chain: recoverTx.chain,
       })
-      
-      console.log('Refund transaction sent:', txHash)
+
+      console.log('Recovery transaction sent:', txHash)
     } catch (error) {
-      console.error('Refund failed:', error)
+      console.error('Recovery failed:', error)
     }
   }
 
   if (isLoadingIntent) return <div>Loading intent...</div>
   if (intentError) return <div>Error: {intentError.message}</div>
-  if (!hasIntentBalance) return <div>No balance to refund</div>
+  if (!hasIntentBalance) return <div>No balance to recover</div>
 
   return (
-    <button onClick={handleRefund}>
-      Refund Funds
-    </button>
+    <div>
+      {recoverToken && (
+        <p>
+          Recovering {recoverToken.balanceFormatted} {recoverToken.symbol}
+          ({recoverToken.balanceUsdDisplay}) from {selectedRecoveryTarget?.chainName}
+        </p>
+      )}
+      <button onClick={handleAutoRecover}>
+        Recover Funds
+      </button>
+    </div>
   )
 }
 ```
@@ -1009,26 +965,35 @@ export const RefundComponent = ({ intentId }: { intentId: string }) => {
 ### Types
 
 ```ts
-type UseTrailsRefundParams = {
+type UseIntentRecoverParams = {
   intentId: string | undefined
   walletClient?: WalletClient
-  refundToAddress?: string // Optional: address to receive refund (defaults to wallet address)
+  refundToAddress?: `0x${string}` // Optional: address to receive recovered funds (defaults to wallet address)
 }
 
-type UseTrailsRefundReturn = {
+type UseIntentRecoverReturn = {
   intent: Intent | null
   isLoadingIntent: boolean
   isLoadingBalances: boolean
   intentError: Error | null
   balancesError: Error | null
   hasIntentBalance: boolean
+  /** Token that will be recovered (the one with highest balance) */
+  recoverToken: Token | null
+  /** Information about which intent address will be recovered from */
+  selectedRecoveryTarget: {
+    address: string
+    chainId: number
+    chainName: string
+    isOrigin: boolean
+  } | null
   refetchIntent: () => void
   signPayload: () => Promise<{
     signature: string
     payload: Payload
     refundCall: PayloadCall
   }>
-  getRefundTx: (params: {
+  getRecoverTx: (params: {
     signedHash: string
     payload: Payload
   }) => Promise<{
@@ -1036,6 +1001,19 @@ type UseTrailsRefundReturn = {
     data: `0x${string}`
     chainId: number
     chain: Chain
+  }>
+  /** One-call recovery: signs, builds, and sends the recovery transaction */
+  recover: () => Promise<{
+    txHash: `0x${string}`
+    receipt: TransactionReceipt
+    chainId: number
+  }>
+  /** Check recovery transaction status */
+  getRecoverStatus: (params: {
+    txHash: `0x${string}`
+    chainId: number
+  }) => Promise<{
+    status: 'success' | 'fail' | 'pending'
   }>
 }
 ```
