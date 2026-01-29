@@ -1,7 +1,3 @@
-:root {
-  --primary: 108 0 246;
-}
-
 div.sm\:flex:has(a[href*="mintlify.com/preview-request"]) {
   display: none !important;
 }
