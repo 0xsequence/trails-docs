@@ -89,7 +89,8 @@
                   "sdk/modes/pay",
                   "sdk/modes/fund",
                   "sdk/modes/swap",
-                  "sdk/modes/earn"
+                  "sdk/modes/earn",
+                  "sdk/modes/withdraw"
                 ]
               },
               "sdk/theming",

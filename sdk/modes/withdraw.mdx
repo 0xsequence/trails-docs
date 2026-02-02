@@ -1,0 +1,78 @@
+---
+title: Withdraw Mode
+description: "Technical reference for guided withdrawals across chains"
+sidebarTitle: "Withdraw"
+---
+
+## Overview
+
+Withdraw mode provides a guided flow for moving assets out of a wallet while keeping fee options and routing handled by Trails. Users can choose the amount to withdraw and the destination token/chain, or you can pre-configure those selections.
+
+**Trade Types**: Supports both `EXACT_INPUT` and `EXACT_OUTPUT` trade types.
+
+## Configuration
+
+### Required Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `mode` | `"withdraw"` | Sets the widget to withdraw mode |
+
+### Optional Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `fromChainId` | `number` | Pre-select origin chain |
+| `fromToken` | `string` | Pre-select origin token |
+| `fromAccount` | `string` | Pre-select a connected wallet if multiple wallets are connected |
+| `toChainId` | `number` | Controlled destination chain (locks selection) |
+| `toToken` | `string` | Controlled destination token (locks selection) |
+| `defaultToChainId` | `number` | Default destination chain (user can change) |
+| `defaultToToken` | `string` | Default destination token (user can change) |
+| `toAddress` | `string` | Recipient address (defaults to connected account if omitted) |
+| `toAmount` | `string` | Exact output amount for withdrawals |
+
+## Widget Implementation
+
+### Basic Withdraw Widget
+
+Minimal configuration - users select everything:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="withdraw"
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Withdrawal completed:', sessionId)
+  }}
+>
+  <button>Withdraw</button>
+</TrailsWidget>
+```
+
+### Pre-configured Withdraw
+
+Pre-select origin and destination details:
+
+```tsx
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="withdraw"
+  fromChainId={1} // Ethereum
+  fromToken="USDC"
+  defaultToChainId={8453} // Base
+  defaultToToken="ETH"
+  toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Withdrawal completed:', sessionId)
+  }}
+>
+  <button>Withdraw USDC</button>
+</TrailsWidget>
+```
+
+<Note>
+Recipient inputs accept `.eth` ENS names in the widget UI and resolve them automatically.
+</Note>

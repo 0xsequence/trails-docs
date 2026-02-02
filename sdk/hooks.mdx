@@ -664,6 +664,51 @@ const timeDiff = getTxTimeDiff(transaction.timestamp)
 console.log(timeDiff) // "5 minutes ago"
 ```
 
+## ENS Resolution
+
+```ts
+import { useResolveEns, useResolveEnsAddress, useResolveEnsName } from '0xtrails'
+```
+
+- `useResolveEns({ address })`: Returns `{ ensName, ensAvatar, isLoading }`
+- `useResolveEnsAddress({ textInput })`: Resolves `.eth` names to addresses
+- `useResolveEnsName({ address })`: Resolves an address to its ENS name
+
+ENS lookups are cached for 24 hours to minimize repeated resolution calls.
+
+## Intent Storage & Monitoring
+
+```ts
+import {
+  storeIntentForMonitoring,
+  getStoredIntents,
+  removeStoredIntent,
+  clearAllStoredIntents,
+} from '0xtrails'
+```
+
+- `storeIntentForMonitoring(intentId, data)`: Persist intent metadata for background tracking
+- `getStoredIntents()`: Read stored intents for monitoring
+- `removeStoredIntent(intentId)`: Remove a stored intent
+- `clearAllStoredIntents()`: Clear all stored intents
+
+## SDK Utilities
+
+```ts
+import { SDK_VERSION, getVersion } from '0xtrails'
+```
+
+- `SDK_VERSION`: Current SDK version string
+- `getVersion()`: Returns the current SDK version at runtime
+
+### FundMethod Type
+
+```ts
+import type { FundMethod } from '0xtrails'
+```
+
+`FundMethod` is exported as a strict union: `"wallet" | "direct-transfer" | "onramp-mesh" | "onramp-meld"`.
+
 ## Encoders
 
 ```ts
