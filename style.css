@@ -11,12 +11,12 @@ div.sm\:flex:has(a[href*="utm_source=undefined"]) {
 }
 
 #topbar-cta-button .bg-primary-dark {
-  background-color: #3A5bff !important;
+  background-color: #3a5bff !important;
 }
 
 #topbar-cta-button:hover .bg-primary-dark {
   opacity: 0.9 !important;
-} 
+}
 
 .home-hero {
   min-height: 26rem;

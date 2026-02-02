@@ -7,12 +7,12 @@
   },
   "name": "Trails",
   "colors": {
-    "primary": "#3A5bff",
-    "light": "#D9ECFF",
-    "dark": "#15803D"
+    "primary": "#6C00F6",
+    "light": "#CDA7FF",
+    "dark": "#3A0084"
   },
   "favicon": "/favicon.ico",
-  
+
   "navigation": {
     "global": {
       "anchors": [
@@ -85,7 +85,12 @@
               "sdk/hooks",
               {
                 "group": "Modes",
-                "pages": ["sdk/modes/pay", "sdk/modes/fund", "sdk/modes/swap", "sdk/modes/earn"]
+                "pages": [
+                  "sdk/modes/pay",
+                  "sdk/modes/fund",
+                  "sdk/modes/swap",
+                  "sdk/modes/earn"
+                ]
               },
               "sdk/theming",
               "sdk/customization",
@@ -154,18 +159,13 @@
     ]
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude"
-    ]
+    "options": ["copy", "view", "chatgpt", "claude"]
   },
   "seo": {
     "metatags": {
-        "canonical": "https://docs.trails.build"
+      "canonical": "https://docs.trails.build"
     }
-},
+  },
   "redirects": [
     {
       "source": "/home",
