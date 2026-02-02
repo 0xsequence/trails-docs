@@ -12,12 +12,21 @@ Trails is easy to get started, however we have deep configuration options to add
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `apiKey` | `string` | Yes | Your project access key provided by Trails |
-| `mode` | `"pay" \| "fund" \| "earn" \| "swap"` | Yes | Widget operation mode |
+| `mode` | `"pay" \| "fund" \| "earn" \| "swap" \| "withdraw"` | Yes | Widget operation mode |
 | `toAddress` | `string` | No | Destination address for payments |
 | `toAmount` | `string` | No | Exact amount for payments (used in pay mode) |
-| `toChainId` | `number \| string` | No | Destination chain ID |
-| `toToken` | `string` | No | Destination token symbol or contract address |
+| `toChainId` | `number \| string` | No | Controlled destination chain ID (locks selection) |
+| `toToken` | `string` | No | Controlled destination token symbol or contract address (locks selection) |
+| `defaultToChainId` | `number \| string` | No | Default destination chain ID (user can change) |
+| `defaultToToken` | `string` | No | Default destination token symbol or contract address (user can change) |
 | `toCalldata` | `string` | No | Custom calldata for contract interactions |
+| `fromChainId` | `number \| string` | No | Default origin chain ID (preselects source chain) |
+| `fromToken` | `string` | No | Default origin token symbol or contract address (preselects source token) |
+| `fromAccount` | `string` | No | Preselect a connected wallet address if multiple wallets are connected |
+
+<Note>
+Recipient inputs in the widget support `.eth` ENS names and resolve them to addresses automatically.
+</Note>
 
 ### UI & Rendering Options
 
@@ -42,6 +51,7 @@ Trails is easy to get started, however we have deep configuration options to add
 | `isSmartWallet` | `boolean` | No | Indicate if the connected wallet is a smart wallet (for ERC-4337 support) |
 | `decoupleWagmi` | `boolean` | No | Decouple from wagmi provider (use external wagmi config) |
 | `wagmiConnectors` | `Connector[]` | No | Custom wagmi connectors to use |
+| `hideAddWallet` | `boolean` | No | Hide the "Add wallet" option in the widget |
 
 ### Transaction Options
 
