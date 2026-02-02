@@ -59,6 +59,10 @@ import { TrailsWidget } from '0xtrails/widget'
 
 Fiat onramp functionality is enabled by default in fund mode, allowing users to purchase crypto with credit/debit cards, bank transfers, and other payment methods.
 
+<Note>
+`fundOnramp` and `buyCryptoOnramp` props have been removed. Onramp funding is now enabled by default, so you can drop those props from your widget configuration.
+</Note>
+
 ```tsx
 <TrailsWidget
   apiKey="YOUR_API_KEY"
