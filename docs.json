@@ -128,7 +128,6 @@
           {
             "group": "Routes & Tokens",
             "pages": [
-              "api-reference/endpoints/get-chains",
               "api-reference/endpoints/get-exact-input-routes",
               "api-reference/endpoints/get-exact-output-routes",
               "api-reference/endpoints/get-token-list",

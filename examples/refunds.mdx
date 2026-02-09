@@ -31,7 +31,13 @@ Trails is **non-custodial by design**. Only the user always retains control over
 The user's wallet is the only party with control over the intent address. This cryptographic guarantee ensures the funds are always recoverable.
 </Note>
 
-Recovery is implemented in the [Trails Explorer](https://app.trails.build/explorer) as well as in the Transaction History within the Trails Widget which will automatically detect intents that are eligible for a recovery.
+### Initiating a Refund via the Explorer
+
+Refunds can be initiated directly from the [Trails Explorer](https://app.trails.build/explorer). Simply connect the wallet you used to initiate the transaction and navigate to the intent that is pending. From there, you can initiate a manual refund.
+
+### Initiating a Refund via the Widget
+
+Refunds are also available in the **History** section of the Trails Widget embedded in your application. The widget will automatically detect intents that are eligible for a refund.
 
 ## Manual Fund Recovery with useIntentRecover
 
