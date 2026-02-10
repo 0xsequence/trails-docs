@@ -23,7 +23,7 @@ const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIn
 ```
 
 <Note>
-**Get Your API Key**: Join the [Trails Telegram group](https://t.me/build_with_trails) or [email](jlawton@polygon.technology) to request your API access key.
+**Get an API key**: Sign up and create an API key on the [Trails Dashboard](https://dashboard.trails.build/landing)
 </Note>
 
 ## Core Workflow
@@ -174,7 +174,7 @@ const amount = intent.depositTransaction.amount;
 
 const depositTxHash = await walletClient.sendTransaction({
   to: tokenAddress,
-  data: encodeFunctionData( 
+  data: encodeFunctionData(
       {
           abi: erc20Abi,
           functionName: 'transfer',
@@ -442,7 +442,7 @@ async function waitForCompletion(intentId: string) {
         throw new Error('Transaction failed: ' + intentReceipt.originTransaction.statusReason);
       }
     }
-    
+
     // If not done, the endpoint will have waited internally before returning until completion
   }
 }
