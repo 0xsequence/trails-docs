@@ -1063,6 +1063,157 @@ type UseIntentRecoverReturn = {
 }
 ```
 
+## useIntentRecoverWithAddress
+
+Recovery hook designed for apps that handle signing externally (e.g., embedded wallets, or custodial solutions). Unlike `useIntentRecover` which requires a `walletClient`, this hook accepts a plain `walletAddress` and exposes `getDataToSign` so you can sign the EIP-712 typed data with any signing method.
+
+Like `useIntentRecover`, it automatically selects the intent address (origin or destination) with the highest balance for recovery.
+
+```ts
+import {
+  useIntentRecoverWithAddress,
+  type UseIntentRecoverWithSignatureParams,
+  type UseIntentRecoverWithSignatureReturn,
+} from '0xtrails'
+```
+
+### Usage
+
+```tsx
+import { useIntentRecoverWithAddress } from '0xtrails'
+
+export const RecoverComponent = ({ intentId }: { intentId: string }) => {
+  const walletAddress = '0x...' // Your externally managed wallet address
+
+  const {
+    intent,
+    isLoadingIntent,
+    hasIntentBalance,
+    recoverToken,
+    selectedRecoveryTarget,
+    getDataToSign,
+    getRecoverTx,
+    getRecoverStatus,
+    intentError,
+  } = useIntentRecoverWithAddress({
+    intentId,
+    walletAddress,
+    refundToAddress: '0x...', // Optional: defaults to walletAddress
+  })
+
+  const handleRecover = async () => {
+    try {
+      // Step 1: Get EIP-712 typed data to sign
+      const { payload, typedData, chainId } = await getDataToSign()
+
+      // Step 2: Sign with your external wallet/signer
+      const signature = await myCustomWallet.signTypedData({
+        account: walletAddress,
+        ...typedData,
+      })
+
+      // Step 3: Build the recovery transaction
+      const recoverTx = await getRecoverTx({ signature, payload })
+
+      // Step 4: Send the transaction with your external wallet
+      const hash = await myCustomWallet.sendTransaction({
+        to: recoverTx.to,
+        data: recoverTx.data,
+        chain: recoverTx.chain,
+      })
+
+      console.log('Recovery transaction sent:', hash)
+
+      // Optionally check status
+      const status = await getRecoverStatus({ txHash: hash, chainId })
+      console.log('Recovery status:', status)
+    } catch (error) {
+      console.error('Recovery failed:', error)
+    }
+  }
+
+  if (isLoadingIntent) return <div>Loading intent...</div>
+  if (intentError) return <div>Error: {intentError.message}</div>
+  if (!hasIntentBalance) return <div>No balance to recover</div>
+
+  return (
+    <div>
+      {recoverToken && (
+        <p>
+          Recovering {recoverToken.balanceFormatted} {recoverToken.symbol}
+          ({recoverToken.balanceUsdDisplay}) from {selectedRecoveryTarget?.chainName}
+        </p>
+      )}
+      <button onClick={handleRecover}>
+        Recover Funds
+      </button>
+    </div>
+  )
+}
+```
+
+### Types
+
+```ts
+type UseIntentRecoverWithSignatureParams = {
+  intentId: string | undefined
+  walletAddress?: `0x${string}` // The address that will sign the recovery payload
+  refundToAddress?: `0x${string}` // Optional: address to receive recovered funds (defaults to walletAddress)
+}
+
+type UseIntentRecoverWithSignatureReturn = {
+  intent: Intent | null
+  isLoadingIntent: boolean
+  isLoadingBalances: boolean
+  intentError: Error | null
+  balancesError: Error | null
+  hasIntentBalance: boolean
+  /** Token that will be recovered (the one with highest balance) */
+  recoverToken: Token | null
+  /** Information about which intent address will be recovered from */
+  selectedRecoveryTarget: {
+    address: string
+    chainId: number
+    chainName: string
+    isOrigin: boolean
+  } | null
+  refetchIntent: () => void
+  /** Returns EIP-712 typed data for external signing */
+  getDataToSign: () => Promise<{
+    payload: Payload
+    refundCall: PayloadCall
+    chainId: number
+    typedData: TypedData // EIP-712 typed data to pass to your signer
+  }>
+  getRecoverTx: (params: {
+    signature: string
+    payload: Payload
+  }) => Promise<{
+    to: `0x${string}`
+    data: `0x${string}`
+    chainId: number
+    chain: Chain
+  }>
+  /** Check recovery transaction status */
+  getRecoverStatus: (params: {
+    txHash: `0x${string}`
+    chainId: number
+  }) => Promise<{
+    status: 'success' | 'fail' | 'pending'
+  }>
+}
+```
+
+### Comparison with useIntentRecover
+
+| Feature | `useIntentRecover` | `useIntentRecoverWithAddress` |
+|---------|-------------------|-------------------------------|
+| Signing | Uses `walletClient` internally | You sign externally via `getDataToSign` |
+| One-call recovery | `recover()` handles everything | Manual: `getDataToSign` → sign → `getRecoverTx` → send |
+| Best for | Standard wallets | Embedded wallets, custodial signers |
+| `signPayload` | Yes | No (replaced by `getDataToSign`) |
+| `recover` | Yes | No (you control the full flow) |
+
 ## useCommitIntent / useExecuteIntent
 
 Mutation hooks for committing and executing intents. These are lower-level hooks for advanced users who need direct control over the intent lifecycle.
