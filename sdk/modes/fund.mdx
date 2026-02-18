@@ -28,9 +28,18 @@ Fund mode implements input-driven deposit flows where users select the amount th
 | `toChainId` | `number` | Destination chain ID |
 | `toToken` | `string` | Destination token symbol or address |
 | `toCalldata` | `string` | Calldata to execute on destination |
+| `defaultInputMode` | `"fiat" \| "token"` | Default input mode — `"fiat"` starts with fiat currency input (e.g. USD), `"token"` starts with token amount input |
+| `fundOptions` | `object` | Options for customizing fund mode behavior. See [Fund Options](#fund-options) |
 | `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
 | `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
 | `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"` |
+
+### Fund Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `hideSwap` | `boolean` | `false` | Hide the Swap button in the fund screen header. Useful when swapping is not needed or desired in your integration |
+| `hideWallets` | `string[]` | `[]` | Array of wallet addresses to hide from the funding wallet selection. Useful when you want to prevent specific connected wallets from appearing as funding sources |
 
 ## Implementation
 
@@ -77,6 +86,37 @@ Fiat onramp functionality is enabled by default in fund mode, allowing users to 
   <button>Deposit to Base</button>
 </TrailsWidget>
 ```
+
+### Customizing Fund Mode
+
+Control the default input mode and fund-specific UI options:
+
+```tsx
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="fund"
+  toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
+  toChainId={8453} // Base
+  toToken="USDC"
+  defaultInputMode="fiat" // Start with fiat currency input (e.g. USD)
+  fundOptions={{
+    hideSwap: true, // Hide the Swap button
+    hideWallets: ["0x..."] // Hide specific wallets from funding selection
+  }}
+  onCheckoutComplete={({ sessionId }) => {
+    console.log('Deposit completed:', sessionId)
+  }}
+>
+  <button>Deposit to Base</button>
+</TrailsWidget>
+```
+
+| Prop | Effect |
+|------|--------|
+| `defaultInputMode="fiat"` | The amount input starts in fiat currency mode (e.g. USD). Users can still toggle to token input |
+| `defaultInputMode="token"` | The amount input starts in token mode (default behavior) |
+| `fundOptions.hideSwap` | Removes the Swap button from the fund screen header, restricting the flow to deposits only |
+| `fundOptions.hideWallets` | Hides specified wallet addresses from the funding wallet selection |
 
 ### Fixed Amount Deposit
 
