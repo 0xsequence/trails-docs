@@ -31,7 +31,8 @@ import { TrailsProvider } from '0xtrails'
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `trailsApiKey` | `string` | Yes | Your Trails API key. Join the [Trails Telegram group](https://t.me/build_with_trails) to request access. |
+| `trailsApiKey` | `string` | Yes | Your Trails API key. Get your API key from the [Trails Dashboard](https://dashboard.trails.build/landing)
+ |
 | `trailsApiUrl` | `string` | No | Custom API endpoint URL if using a self-hosted instance. |
 | `sequenceIndexerUrl` | `string` | No | Custom Sequence indexer URL. |
 | `sequenceNodeGatewayUrl` | `string` | No | Custom Sequence node gateway URL. |
@@ -194,17 +195,17 @@ const WalletBalance = ({ address }: { address: string }) => {
           {token.symbol}: {token.balanceDisplay} ({token.balanceUsdDisplay})
         </div>
       ))}
-      
+
       {/* Pagination controls */}
       <div>
-        <button 
+        <button
           onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
           disabled={currentPage === 1}
         >
           Previous
         </button>
         <span>Page {currentPage}</span>
-        <button 
+        <button
           onClick={() => setCurrentPage(prev => prev + 1)}
           disabled={!page?.more}
         >
@@ -319,8 +320,8 @@ const MultiWalletBalances = ({ addresses }: { addresses: string[] }) => {
 ## Quotes and Swapping
 
 ```ts
-import { 
-  useQuote, 
+import {
+  useQuote,
   TradeType,
   type UseQuoteReturn,
   type UseQuoteProps,
@@ -395,7 +396,7 @@ export const SwapComponent = () => {
 
   const handleSwap = async () => {
     if (!swap) return
-    
+
     try {
       const result = await swap()
       console.log('Swap completed:', result)
@@ -431,7 +432,7 @@ export const SwapComponent = () => {
 
 ```ts
 type UseQuoteProps = {
-  walletClient?: any 
+  walletClient?: any
   fromTokenAddress?: string | null
   fromChainId?: number | null
   toTokenAddress?: string | null
@@ -520,7 +521,7 @@ export const Example = () => {
 }
 ```
 
-This pattern is essential for fund mode transactions where users choose their input amount, but the contract needs to receive the exact output amount after any swaps or bridging operations. 
+This pattern is essential for fund mode transactions where users choose their input amount, but the contract needs to receive the exact output amount after any swaps or bridging operations.
 
 ## Transaction History
 
@@ -835,22 +836,22 @@ async function handleSwap() {
       // User cancelled - don't show error notification
       return
     }
-    
+
     if (getIsBalanceTooLowError(error)) {
       showNotification('Not enough balance. Please add funds.')
       return
     }
-    
+
     if (getIsNoAvailableQuoteError(error)) {
       showNotification('No route available for this swap. Try a different token pair.')
       return
     }
-    
+
     if (getIsRateLimitedError(error)) {
       showNotification('Too many requests. Please wait a moment.')
       return
     }
-    
+
     // Fallback to prettified message
     showNotification(getPrettifiedErrorMessage(error))
   }
@@ -1350,7 +1351,7 @@ function calculateOriginAndDestinationIntentAddresses(
 
 **Usage**:
 ```ts
-const { originAddress, destinationAddress } = 
+const { originAddress, destinationAddress } =
   await calculateOriginAndDestinationIntentAddresses(params)
 ```
 
