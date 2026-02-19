@@ -472,7 +472,6 @@ enum TradeType {
 enum RouteProvider {
   AUTO = 'AUTO',
   CCTP = 'CCTP',
-  LIFI = 'LIFI',
   RELAY = 'RELAY',
   SUSHI = 'SUSHI',
   ZEROX = 'ZEROX'
@@ -1314,7 +1313,7 @@ type OriginCallParams = {
   chainId: number
 }
 
-type RouteProvider = 'AUTO' | 'CCTP' | 'LIFI' | 'RELAY' | 'SUSHI' | 'ZEROX'
+type RouteProvider = 'AUTO' | 'CCTP' | 'RELAY' | 'SUSHI' | 'ZEROX'
 
 type TrailsFee = {
   amount: bigint

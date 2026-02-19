@@ -27,8 +27,8 @@ Swap mode provides a flexible interface for cross-chain token exchanges. Users c
 | `toChainId` | `number` | Pre-select destination chain |
 | `toToken` | `string` | Pre-select destination token |
 | `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
-| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
-| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"` |
+| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
+| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"RELAY"`, `"CCTP"` |
 
 ## Widget Implementation
 
@@ -79,8 +79,8 @@ Specify routing preference:
 <TrailsWidget
   apiKey="YOUR_API_KEY"
   mode="swap"
-  bridgeProvider="CCTP" // Use Circle's CCTP for USDC cross-chain
-  swapProvider="LIFI"   // Use LiFi for on-chain swaps
+  bridgeProvider="CCTP"  // Use Circle's CCTP for USDC cross-chain
+  swapProvider="SUSHI"   // Use SushiSwap for on-chain swaps
   onCheckoutComplete={({ sessionId }) => {
     console.log('Swap completed:', sessionId)
   }}

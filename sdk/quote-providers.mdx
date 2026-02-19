@@ -10,7 +10,6 @@ Trails integrates with multiple liquidity sources and bridge providers to find t
 ## Available Providers
 
 - **`AUTO`** (recommended): Automatically selects the best provider based on the route
-- **`LIFI`**: Uses LiFi aggregator for cross-chain swaps and bridging
 - **`RELAY`**: Uses Relay for fast bridging operations
 - **`CCTP`**: Uses Circle's Cross-Chain Transfer Protocol for USDC transfers
 - **`SUSHI`**: Uses SushiSwap for on-chain swaps
@@ -28,7 +27,7 @@ import { TrailsWidget } from '0xtrails/widget'
 <TrailsWidget
   apiKey="YOUR_API_KEY"
   mode="swap"
-  swapProvider="LIFI"    // Provider for on-chain swaps
+  swapProvider="SUSHI"   // Provider for on-chain swaps
   bridgeProvider="RELAY" // Provider for cross-chain bridging
   toAddress="0x..."
   toChainId={8453}
@@ -71,22 +70,6 @@ The `AUTO` setting allows Trails to intelligently select the best provider for e
 <TrailsWidget
   swapProvider="AUTO"   // Default - recommended
   bridgeProvider="AUTO" // Default - recommended
-  // ... other props
-/>
-```
-
-### LiFi
-
-LiFi is a cross-chain liquidity aggregator that sources routes from multiple bridges and DEXs:
-
-- **Multi-source**: Aggregates from 20+ bridges and DEXs
-- **Optimized routing**: Finds the best multi-hop routes
-- **Wide token support**: Supports a large variety of tokens
-
-```tsx
-<TrailsWidget
-  swapProvider="LIFI"
-  bridgeProvider="LIFI"
   // ... other props
 />
 ```
@@ -156,6 +139,5 @@ SushiSwap provides on-chain swaps across multiple chains:
 2. **Specify for USDC**: Use `CCTP` bridge provider for USDC-specific transfers if you want guaranteed 1:1 transfers
 3. **Consider your use case**: 
    - Fast bridging? Use `RELAY` as bridge provider
-   - Need best rates? Use `LIFI` for aggregation
    - USDC transfers? Use `CCTP` for native transfers
 4. **Separate concerns**: Use `swapProvider` for same-chain swaps and `bridgeProvider` for cross-chain transfers

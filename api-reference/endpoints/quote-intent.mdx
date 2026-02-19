@@ -33,8 +33,8 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 - **destinationCallData** (string): Custom calldata for contract interactions on destination chain
 - **destinationCallValue** (string): Value to send with the destination call
 - **options** (QuoteIntentRequestOptions):
-  - **bridgeProvider** (RouteProvider): Preferred bridge provider (`NONE`, `RELAY`, `CCTP`, `LIFI`, `SUSHI`, `ZEROX`)
-  - **swapProvider** (RouteProvider): Preferred swap provider, only for for same chain swaps (`NONE`, `RELAY`, `CCTP`, `LIFI`, `SUSHI`, `ZEROX`)
+  - **bridgeProvider** (RouteProvider): Preferred bridge provider (`NONE`, `RELAY`, `CCTP`, `SUSHI`, `ZEROX`)
+  - **swapProvider** (RouteProvider): Preferred swap provider, only for for same chain swaps (`NONE`, `RELAY`, `CCTP`, `SUSHI`, `ZEROX`)
   - **slippageTolerance** (number): Maximum acceptable slippage percentage as a fraction of 1 (e.g. 0.005 for 0.5%)
   - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses
 

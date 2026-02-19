@@ -58,8 +58,8 @@ Recipient inputs in the widget support `.eth` ENS names, resolve them to address
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
-| `swapProvider` | `RouteProvider` | No | Preferred swap provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, or `"CCTP"`. Default: `"AUTO"` automatically selects best provider |
-| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"`, `"LIFI"`, `"RELAY"`, `"CCTP"`. Default: `"AUTO"` automatically selects best provider for cross-chain transfers |
+| `swapProvider` | `RouteProvider` | No | Preferred swap provider: `"AUTO"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, or `"CCTP"`. Default: `"AUTO"` automatically selects best provider |
+| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"`, `"RELAY"`, `"CCTP"`. Default: `"AUTO"` automatically selects best provider for cross-chain transfers |
 | `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |
 | `priceImpactWarningThresholdBps` | `number` | No | Price impact threshold in basis points before showing a warning (e.g., `500` for 5%) |
 | `priceImpactWarningMessage` | `string` | No | Custom message to display when price impact exceeds threshold |
