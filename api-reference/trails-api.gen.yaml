@@ -970,10 +970,20 @@ components:
         - AUTO
         - CCTP
         - LIFI
+        - LZ_OFT
+        - LZ_STARGATE
         - RELAY
         - SUSHI
         - WETH
         - ZEROX
+    RoutePreference:
+      type: string
+      description: Represented as string on the server side
+      enum:
+        - RECOMMENDED
+        - FASTEST
+        - CHEAPEST
+        - TRUSTLESS
     FundMethod:
       type: string
       description: Represented as string on the server side
@@ -1103,6 +1113,8 @@ components:
           $ref: '#/components/schemas/RouteProvider'
         bridgeProvider:
           $ref: '#/components/schemas/RouteProvider'
+        preference:
+          $ref: '#/components/schemas/RoutePreference'
         slippageTolerance:
           type: number
         trailsAddressOverrides:
@@ -1337,6 +1349,8 @@ components:
           type: string
         input:
           type: string
+        bridgeGas:
+          type: number
     IntentHistory:
       type: object
       required:
@@ -1557,6 +1571,8 @@ components:
           type: string
         tokenAmount:
           type: number
+        bridgeGas:
+          type: number
         calldata:
           type: string
         metaTxnId:
@@ -1638,6 +1654,8 @@ components:
           description: '[]float64'
           items:
             type: number
+        estimatedDuration:
+          type: number
         fromAmount:
           type: number
         fromAmountMin:
