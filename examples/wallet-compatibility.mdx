@@ -97,46 +97,46 @@ export function AppWithSequence() {
 Integrate Privy for seamless embedded wallet experiences:
 
 ```tsx
-import { createConfig, http, WagmiProvider } from 'wagmi'
-import { mainnet, base, arbitrum } from 'wagmi/chains'
-import { PrivyProvider } from '@privy-io/react-auth'
-import { createPrivyWalletConnector } from '@privy-io/wagmi-connector'
-
-// Create Privy connector
-const privyConnector = createPrivyWalletConnector({
-  appId: "your-privy-app-id",
-  name: "Privy Wallet",
-})
+import React from 'react';
+import { PrivyProvider } from '@privy-io/react-auth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { mainnet } from 'wagmi/chains';
+import { createConfig, WagmiProvider } from '@privy-io/wagmi';
+import { http } from 'wagmi';
 
 const config = createConfig({
-  chains: [mainnet, base, arbitrum],
-  connectors: [privyConnector],
+  chains: [mainnet],
   transports: {
     [mainnet.id]: http(),
-    [base.id]: http(),
-    [arbitrum.id]: http(),
   },
-})
+});
+
+const queryClient = new QueryClient();
 
 export function AppWithPrivy() {
   return (
     <PrivyProvider
       appId="your-privy-app-id"
       config={{
-        loginMethods: ["email", "google"],
-        embeddedWallets: { createOnLogin: "all-users" },
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
+        },
       }}
     >
-      <WagmiProvider config={config}>
-        <TrailsWidget
-          apiKey="YOUR_API_KEY"
-          mode="pay"
-          toAddress="0x..."
-          toAmount="1000"
-          toChainId={42161}
-          toToken="USDC"
-        />
-      </WagmiProvider>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
+          <TrailsWidget
+            apiKey="YOUR_API_KEY"
+            mode="pay"
+            toAddress="0x..."
+            toAmount="1000"
+            toChainId={42161}
+            toToken="USDC"
+          />
+        </WagmiProvider>
+      </QueryClientProvider>
     </PrivyProvider>
   )
 }
