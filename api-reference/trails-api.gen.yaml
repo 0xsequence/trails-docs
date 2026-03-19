@@ -4604,6 +4604,7 @@ paths:
                 - $ref: '#/components/schemas/ErrorClientOutdated'
                 - $ref: '#/components/schemas/ErrorIntentsSkipped'
                 - $ref: '#/components/schemas/ErrorQuoteExpired'
+                - $ref: '#/components/schemas/ErrorHighPriceImpact'
                 - $ref: '#/components/schemas/ErrorIntentsDisabled'
         '5XX':
           description: Server error
@@ -4675,6 +4676,7 @@ paths:
                 - $ref: '#/components/schemas/ErrorClientOutdated'
                 - $ref: '#/components/schemas/ErrorIntentsSkipped'
                 - $ref: '#/components/schemas/ErrorQuoteExpired'
+                - $ref: '#/components/schemas/ErrorHighPriceImpact'
                 - $ref: '#/components/schemas/ErrorIntentsDisabled'
         '5XX':
           description: Server error
