@@ -20,7 +20,7 @@ The `GetIntentHistory` endpoint provides a paginated view of intent history with
 All parameters are optional:
 
 - **page** (Page): Pagination configuration
-  - **column** (string): Column to paginate by (typically "id" or "createdAt")
+  - **column** (string): Column to paginate by (typically `"id"` or `"createdAt"`)
   - **before** (number): Cursor for previous page
   - **after** (number): Cursor for next page
   - **sort** (SortBy[]): Sorting configuration
@@ -30,6 +30,14 @@ All parameters are optional:
   - **more** (boolean): Indicates if more pages are available
 - **byProjectId** (number): Filter by project ID
 - **byOwnerAddress** (string): Filter by wallet address
+- **byStatus** (IntentStatus): Filter to a single status
+- **byStatuses** (IntentStatus[]): Filter to multiple statuses (takes precedence over `byStatus`)
+- **originChainId** (number): Filter by origin (source) chain ID
+- **destinationChainId** (number): Filter by destination chain ID
+- **fromTime** (number): Unix timestamp — return only intents created at or after this time
+- **toTime** (number): Unix timestamp — return only intents created at or before this time
+- **includeBalances** (boolean): When `true`, augment each history entry with on-chain balance data for the intent-relevant tokens
+- **onlyRecoverable** (boolean): When `true`, return only intents that have recoverable (stuck) balances
 
 ## Response
 
@@ -43,7 +51,7 @@ The response includes:
 Each `IntentHistory` object contains:
 
 - **intentId** (string): Unique intent identifier
-- **status** (IntentStatus): Current status (`QUOTED`, `COMMITTED`, `EXECUTING`, `FAILED`, `SUCCEEDED`, `ABORTED`, `REFUNDED`)
+- **status** (IntentStatus): Current status (`QUOTED`, `COMMITTED`, `EXECUTING`, `FAILED`, `SUCCEEDED`, `ABORTED`, `REFUNDED`, `INVALID`)
 - **expiresAt** (string): Intent expiration timestamp
 - **updatedAt** (string): Last update timestamp
 - **createdAt** (string): Creation timestamp
