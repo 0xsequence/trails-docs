@@ -487,10 +487,12 @@ The API returns errors in a consistent JSON format:
 | 2004 | `IntentStatus` | Intent is in an invalid state for this operation | 422 |
 | 7000 | `IntentsSkipped` | Transaction doesn't require an intent (same chain/token) | 400 |
 | 7001 | `QuoteExpired` | Quote has expired, request a new one | 400 |
+| 7002 | `HighPriceImpact` | Quote unavailable due to high price impact | 422 |
 | 8000 | `NotFound` | Resource not found | 400 |
 | 8008 | `UnsupportedNetwork` | Chain ID is not supported | 422 |
 | 8009 | `ClientOutdated` | SDK/client version is outdated | 422 |
 | 9000 | `IntentsDisabled` | Intents service is temporarily unavailable | 400 |
+| 9001 | `ChainNodeHealth` | Quote unavailable due to interrupted chain node access | 503 |
 
 ### Handling Errors
 
