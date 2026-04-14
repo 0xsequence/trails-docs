@@ -30,13 +30,21 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 - **tradeType** (TradeType): Either `EXACT_INPUT` or `EXACT_OUTPUT`
 - **destinationTokenAmount** (bigint): Amount of destination tokens (only for EXACT_OUTPUT)
 - **originTokenAmount** (bigint): Amount of origin tokens (only for EXACT_INPUT)
+- **destinationToAddress** (string): Recipient address on the destination chain (defaults to `ownerAddress`)
+- **destinationApproveAddress** (string): Contract address to pre-approve on the destination chain before executing `destinationCallData`
 - **destinationCallData** (string): Custom calldata for contract interactions on destination chain
-- **destinationCallValue** (string): Value to send with the destination call
+- **destinationCallValue** (number): Value (in wei) to send with the destination call
+- **fundMethod** (FundMethod): Hint for the funding method — `WALLET`, `DIRECT_TRANSFER`, `ONRAMP_MESH`, or `ONRAMP_MELD`
+- **onlyNativeGasFee** (boolean): When `true`, restricts gas fee options to the origin chain's native token only
 - **options** (QuoteIntentRequestOptions):
-  - **bridgeProvider** (RouteProvider): Preferred bridge provider (`NONE`, `RELAY`, `CCTP`, `SUSHI`, `ZEROX`)
-  - **swapProvider** (RouteProvider): Preferred swap provider, only for for same chain swaps (`NONE`, `RELAY`, `CCTP`, `SUSHI`, `ZEROX`)
-  - **slippageTolerance** (number): Maximum acceptable slippage percentage as a fraction of 1 (e.g. 0.005 for 0.5%)
-  - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses
+  - **bridgeProvider** (RouteProvider): Preferred bridge provider — `AUTO` (default), `RELAY`, `CCTP`, `LZ_OFT`, `SUSHI`, `ZEROX`, `LIFI`, `WETH`
+  - **bridgeProviderFallback** (boolean): If `true`, fall back to another provider if the preferred bridge provider is unavailable
+  - **swapProvider** (RouteProvider): Preferred same-chain swap provider — `AUTO` (default), `RELAY`, `SUSHI`, `ZEROX`
+  - **swapProviderFallback** (boolean): If `true`, fall back to another provider if the preferred swap provider is unavailable
+  - **preference** (RoutePreference): Route optimisation target — `RECOMMENDED` (default), `FASTEST`, `CHEAPEST`, `TRUSTLESS`
+  - **intentProtocol** (IntentProtocolVersion): Force a specific intent protocol version — `v1` or `v1_5`
+  - **slippageTolerance** (number): Maximum acceptable slippage as a fraction of 1 (e.g. `0.005` for 0.5%)
+  - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses for the intent
 
 ## Response
 
