@@ -23,6 +23,8 @@ Trails is easy to get started, however we have deep configuration options to add
 | `fromChainId` | `number \| string` | No | Default origin chain ID (preselects source chain) |
 | `fromToken` | `string` | No | Default origin token symbol or contract address (preselects source token) |
 | `fromAccount` | `string` | No | Preselect a connected wallet address if multiple wallets are connected |
+| `defaultInputMode` | `"fiat" \| "token"` | No | Default input mode for fund/withdraw modes: `"fiat"` starts with USD input, `"token"` starts with token input |
+| `fundMethod` | `"wallet" \| "crypto-transfer" \| "onramp" \| "onramp-exchange"` | No | Pre-select the active funding method. Applies across modes; in fund mode it also controls the initial destination flow |
 
 <Note>
 Recipient inputs in the widget support `.eth` ENS names, resolve them to addresses, and show ENS avatars when available.
@@ -58,8 +60,10 @@ Recipient inputs in the widget support `.eth` ENS names, resolve them to address
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
-| `swapProvider` | `RouteProvider` | No | Preferred swap provider: `"AUTO"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, or `"CCTP"`. Default: `"AUTO"` automatically selects best provider |
-| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"`, `"RELAY"`, `"CCTP"`. Default: `"AUTO"` automatically selects best provider for cross-chain transfers |
+| `swapProvider` | `RouteProvider` | No | Preferred same-chain swap provider: `"AUTO"` (default), `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
+| `swapProviderFallback` | `boolean` | No | When `true`, fall back to another provider if the preferred swap provider is unavailable |
+| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"` (default), `"RELAY"`, `"CCTP"`, `"LZ_OFT"`, `"LIFI"`, `"WETH"` |
+| `bridgeProviderFallback` | `boolean` | No | When `true`, fall back to another provider if the preferred bridge provider is unavailable |
 | `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |
 | `priceImpactWarningThresholdBps` | `number` | No | Price impact threshold in basis points before showing a warning (e.g., `500` for 5%) |
 | `priceImpactWarningMessage` | `string` | No | Custom message to display when price impact exceeds threshold |
@@ -73,6 +77,29 @@ Recipient inputs in the widget support `.eth` ENS names, resolve them to address
 | `appUrl` | `string` | No | Your app's URL |
 | `appImageUrl` | `string` | No | Your app's logo URL |
 | `appDescription` | `string` | No | Short description of your app |
+
+### Fund Mode Options
+
+The `fundOptions` prop provides fine-grained control over fund mode behavior:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `fundOptions.hideSwap` | `boolean` | Hide the Swap button in the fund screen header (default: `false`) |
+| `fundOptions.hideWallets` | `string[]` | Array of wallet addresses to hide from the funding wallet selection |
+| `fundOptions.fundMethodsList` | `FundMethodListOption[]` | Ordered list of funding methods to display. Accepted values: `"connected-wallet"`, `"crypto-transfer"`, `"cc-onramp"`, `"exchange"` |
+| `fundOptions.hideUnlistedMethods` | `boolean` | If `true`, methods not in `fundMethodsList` are hidden; if `false` (default) they are shown but disabled |
+
+```tsx
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  mode="fund"
+  fundOptions={{
+    hideSwap: true,
+    fundMethodsList: ["connected-wallet", "crypto-transfer"],
+    hideUnlistedMethods: true,
+  }}
+/>
+```
 
 ## Smart Contract Interactions
 
