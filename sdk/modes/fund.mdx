@@ -31,8 +31,10 @@ Fund mode implements input-driven deposit flows where users select the amount th
 | `defaultInputMode` | `"fiat" \| "token"` | Default input mode — `"fiat"` starts with fiat currency input (e.g. USD), `"token"` starts with token amount input |
 | `fundOptions` | `object` | Options for customizing fund mode behavior. See [Fund Options](#fund-options) |
 | `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
-| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
-| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"RELAY"`, `"CCTP"` |
+| `swapProvider` | `RouteProvider` | Preferred same-chain swap provider: `"AUTO"` (default), `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"`, `"LZ_OFT"`, `"LIFI"`, `"WETH"` |
+| `swapProviderFallback` | `boolean` | When `true`, fall back to another provider if the preferred swap provider is unavailable |
+| `bridgeProvider` | `RouteProvider` | Preferred bridge provider: `"AUTO"` (default), `"RELAY"`, `"CCTP"`, `"LZ_OFT"`, `"LIFI"`, `"WETH"` |
+| `bridgeProviderFallback` | `boolean` | When `true`, fall back to another provider if the preferred bridge provider is unavailable |
 
 ### Fund Options
 
@@ -40,6 +42,8 @@ Fund mode implements input-driven deposit flows where users select the amount th
 |----------|------|---------|-------------|
 | `hideSwap` | `boolean` | `false` | Hide the Swap button in the fund screen header. Useful when swapping is not needed or desired in your integration |
 | `hideWallets` | `string[]` | `[]` | Array of wallet addresses to hide from the funding wallet selection. Useful when you want to prevent specific connected wallets from appearing as funding sources |
+| `fundMethodsList` | `FundMethodListOption[]` | — | Ordered list of funding methods to display. Accepted values: `"connected-wallet"`, `"crypto-transfer"`, `"cc-onramp"`, `"exchange"` |
+| `hideUnlistedMethods` | `boolean` | `false` | If `true`, methods not in `fundMethodsList` are hidden; if `false` (default) they are shown but disabled |
 
 ## Implementation
 
@@ -101,7 +105,9 @@ Control the default input mode and fund-specific UI options:
   defaultInputMode="fiat" // Start with fiat currency input (e.g. USD)
   fundOptions={{
     hideSwap: true, // Hide the Swap button
-    hideWallets: ["0x..."] // Hide specific wallets from funding selection
+    hideWallets: ["0x..."], // Hide specific wallets from funding selection
+    fundMethodsList: ["connected-wallet", "crypto-transfer"], // Only show these methods
+    hideUnlistedMethods: true, // Hide methods not in fundMethodsList
   }}
   onCheckoutComplete={({ sessionId }) => {
     console.log('Deposit completed:', sessionId)
@@ -117,6 +123,8 @@ Control the default input mode and fund-specific UI options:
 | `defaultInputMode="token"` | The amount input starts in token mode (default behavior) |
 | `fundOptions.hideSwap` | Removes the Swap button from the fund screen header, restricting the flow to deposits only |
 | `fundOptions.hideWallets` | Hides specified wallet addresses from the funding wallet selection |
+| `fundOptions.fundMethodsList` | Controls which funding methods are shown and in what order |
+| `fundOptions.hideUnlistedMethods` | When `true`, methods not in `fundMethodsList` are completely hidden |
 
 ### Fixed Amount Deposit
 

@@ -27,8 +27,10 @@ Swap mode provides a flexible interface for cross-chain token exchanges. Users c
 | `toChainId` | `number` | Pre-select destination chain |
 | `toToken` | `string` | Pre-select destination token |
 | `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
-| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
-| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"RELAY"`, `"CCTP"` |
+| `swapProvider` | `RouteProvider` | Preferred same-chain swap provider: `"AUTO"` (default), `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"`, `"LZ_OFT"`, `"LIFI"`, `"WETH"` |
+| `swapProviderFallback` | `boolean` | When `true`, fall back to another provider if the preferred swap provider is unavailable |
+| `bridgeProvider` | `RouteProvider` | Preferred bridge provider: `"AUTO"` (default), `"RELAY"`, `"CCTP"`, `"LZ_OFT"`, `"LIFI"`, `"WETH"` |
+| `bridgeProviderFallback` | `boolean` | When `true`, fall back to another provider if the preferred bridge provider is unavailable |
 
 ## Widget Implementation
 

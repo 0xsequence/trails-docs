@@ -1,0 +1,109 @@
+---
+title: GetFiatCurrencyList
+openapi: ../trails-api.gen.json post /rpc/Trails/GetFiatCurrencyList
+---
+
+## Overview
+
+The `GetFiatCurrencyList` endpoint returns the list of fiat currencies supported for onramp and fiat-denominated displays. Use this to populate currency selectors in fund flows and onramp integrations.
+
+## Use Cases
+
+- Build a currency picker for onramp flows
+- Display flags and symbols for supported currencies
+- Validate that a user's local currency is supported before showing fiat input options
+
+## Request Parameters
+
+This endpoint takes no parameters — send an empty request body.
+
+## Response
+
+- **currencies** (`FiatCurrency[]`): Array of supported fiat currency objects
+
+### FiatCurrency Object Structure
+
+Each currency includes:
+- **code** (string): ISO 4217 currency code (e.g. `"USD"`, `"EUR"`, `"GBP"`)
+- **symbol** (string): Currency symbol (e.g. `"$"`, `"€"`, `"£"`)
+- **name** (string): Full currency name (e.g. `"US Dollar"`)
+- **flag** (string): Emoji flag for the currency's primary country
+- **decimals** (number): Number of decimal places for display
+
+## Examples
+
+### Get All Supported Currencies
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetFiatCurrencyList', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { currencies } = await response.json();
+
+currencies.forEach(c => {
+  console.log(`${c.flag} ${c.name} (${c.code}): ${c.symbol}`);
+});
+```
+
+### Build a Currency Selector
+
+```tsx
+import { useEffect, useState } from 'react';
+
+interface FiatCurrency {
+  code: string;
+  symbol: string;
+  name: string;
+  flag: string;
+  decimals: number;
+}
+
+export const CurrencySelector = ({
+  onSelect
+}: {
+  onSelect: (code: string) => void;
+}) => {
+  const [currencies, setCurrencies] = useState<FiatCurrency[]>([]);
+
+  useEffect(() => {
+    fetch('https://trails-api.sequence.app/rpc/Trails/GetFiatCurrencyList', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': 'YOUR_ACCESS_KEY'
+      },
+      body: JSON.stringify({})
+    })
+      .then(res => res.json())
+      .then(({ currencies }) => setCurrencies(currencies));
+  }, []);
+
+  return (
+    <select onChange={(e) => onSelect(e.target.value)}>
+      {currencies.map(c => (
+        <option key={c.code} value={c.code}>
+          {c.flag} {c.name} ({c.code})
+        </option>
+      ))}
+    </select>
+  );
+};
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetExchangeRate" icon="arrows-rotate" href="/api-reference/endpoints/get-exchange-rate">
+    Get live exchange rates for a currency
+  </Card>
+
+  <Card title="Fund Mode" icon="wallet" href="/sdk/modes/fund">
+    Use fiat currencies in the fund widget
+  </Card>
+</CardGroup>

@@ -1,0 +1,147 @@
+---
+title: GetEarnPools
+openapi: ../trails-api.gen.json post /rpc/Trails/GetEarnPools
+---
+
+## Overview
+
+The `GetEarnPools` endpoint returns aggregated yield-bearing pool information from supported DeFi protocols such as Aave and Morpho. Use this to display earning opportunities to users and build Earn mode integrations.
+
+## Use Cases
+
+- Display yield pools with APY and TVL in your UI
+- Filter pools by chain or protocol
+- Power the Trails Earn mode with live pool data
+- Show users the best yield opportunities across chains
+
+## Request Parameters
+
+All fields are optional.
+
+- **chainIds** (number[]): Filter pools to specific chain IDs
+- **protocols** (string[]): Filter by protocol name (e.g. `"aave"`, `"morpho"`)
+- **minTvl** (number): Minimum total value locked (USD) filter
+- **maxApy** (number): Maximum APY filter
+
+## Response
+
+- **pools** (`EarnPool[]`): Array of yield pool objects
+- **timestamp** (string): ISO timestamp of when this data was fetched
+- **cached** (boolean): Whether the response is from cache
+
+### EarnPool Object Structure
+
+Each pool includes:
+- **id** (string): Unique pool identifier
+- **name** (string): Human-readable pool name
+- **protocol** (string): Protocol name (e.g. `"aave"`, `"morpho"`)
+- **chainId** (number): Chain the pool is deployed on
+- **apy** (number): Current annual percentage yield
+- **tvl** (number): Total value locked in USD
+- **token** (`PoolTokenInfo`): Deposit token details (symbol, name, address, decimals)
+- **depositAddress** (string): Contract address to deposit to
+- **isActive** (boolean): Whether the pool is currently accepting deposits
+- **poolUrl** (string, optional): URL to the pool on the protocol's UI
+- **protocolUrl** (string, optional): URL to the protocol's website
+- **wrappedTokenGatewayAddress** (string, optional): Gateway address for native token deposits
+
+## Examples
+
+### Get All Earn Pools
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetEarnPools', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { pools, timestamp, cached } = await response.json();
+
+console.log(`Fetched ${pools.length} pools (cached: ${cached})`);
+pools.forEach(pool => {
+  console.log(`${pool.name} on chain ${pool.chainId}: ${pool.apy.toFixed(2)}% APY, $${pool.tvl.toLocaleString()} TVL`);
+});
+```
+
+### Filter by Chain and Protocol
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetEarnPools', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    chainIds: [8453], // Base only
+    protocols: ['aave'],
+    minTvl: 1000000 // At least $1M TVL
+  })
+});
+
+const { pools } = await response.json();
+```
+
+### Build an Earn Pool List UI
+
+```tsx
+import { useEffect, useState } from 'react';
+
+interface EarnPool {
+  id: string;
+  name: string;
+  protocol: string;
+  chainId: number;
+  apy: number;
+  tvl: number;
+  token: { symbol: string; address: string };
+  depositAddress: string;
+  isActive: boolean;
+}
+
+export const EarnPoolList = ({ chainId }: { chainId?: number }) => {
+  const [pools, setPools] = useState<EarnPool[]>([]);
+
+  useEffect(() => {
+    fetch('https://trails-api.sequence.app/rpc/Trails/GetEarnPools', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': 'YOUR_ACCESS_KEY'
+      },
+      body: JSON.stringify({
+        chainIds: chainId ? [chainId] : undefined
+      })
+    })
+      .then(res => res.json())
+      .then(({ pools }) => setPools(pools.filter((p: EarnPool) => p.isActive)));
+  }, [chainId]);
+
+  return (
+    <ul>
+      {pools.map(pool => (
+        <li key={pool.id}>
+          <strong>{pool.name}</strong> — {pool.apy.toFixed(2)}% APY
+          ({pool.token.symbol}, chain {pool.chainId})
+        </li>
+      ))}
+    </ul>
+  );
+};
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Earn Mode" icon="seedling" href="/sdk/modes/earn">
+    Use earn pools in the Trails widget
+  </Card>
+
+  <Card title="GetChains" icon="link" href="/api-reference/endpoints/get-chains">
+    Discover supported chains for earn pools
+  </Card>
+</CardGroup>
