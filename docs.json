@@ -137,7 +137,21 @@
           {
             "group": "Chains & Discovery",
             "pages": [
-              "api-reference/endpoints/get-chains"
+              "api-reference/endpoints/get-chains",
+              "api-reference/endpoints/get-fiat-currency-list",
+              "api-reference/endpoints/get-exchange-rate"
+            ]
+          },
+          {
+            "group": "Earn",
+            "pages": [
+              "api-reference/endpoints/get-earn-pools"
+            ]
+          },
+          {
+            "group": "Intents (Advanced)",
+            "pages": [
+              "api-reference/endpoints/abort-intent"
             ]
           }
         ]

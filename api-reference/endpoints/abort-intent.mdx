@@ -1,0 +1,81 @@
+---
+title: AbortIntent
+openapi: ../trails-api.gen.json post /rpc/Trails/AbortIntent
+---
+
+## Overview
+
+The `AbortIntent` endpoint cancels an in-flight intent after you have submitted the abort transaction on-chain. Once the abort transaction is confirmed, call this endpoint to notify Trails so the intent status is updated to `ABORTED` and any recoverable funds are tracked.
+
+## Use Cases
+
+- Cancel a pending intent that has not yet been processed
+- Recover stuck or expired intents
+- Clean up failed cross-chain transactions
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique ID of the intent to abort
+- **chainId** (number): The chain ID where the abort transaction was submitted
+- **abortTransactionHash** (string): The transaction hash of the on-chain abort transaction
+
+## Response
+
+- **intentId** (string): The ID of the aborted intent
+- **status** (`IntentStatus`): Updated status of the intent (typically `ABORTED`)
+
+## Examples
+
+### Abort a Pending Intent
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/AbortIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_abc123',
+    chainId: 1,
+    abortTransactionHash: '0xabc123...'
+  })
+});
+
+const { intentId, status } = await response.json();
+console.log(`Intent ${intentId} is now ${status}`);
+```
+
+### With the Trails SDK
+
+```typescript
+import { SequenceTrails } from '0xtrails'
+
+const trails = new SequenceTrails({ accessKey: 'YOUR_ACCESS_KEY' })
+
+const result = await trails.abortIntent({
+  intentId: 'intent_abc123',
+  chainId: 1,
+  abortTransactionHash: '0xabc123...'
+})
+
+console.log('Abort result:', result.status)
+```
+
+<Info>
+You must submit the abort transaction on-chain first and wait for it to be confirmed before calling this endpoint. The `abortTransactionHash` must correspond to a valid on-chain transaction.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetIntentHistory" icon="clock-rotate-left" href="/api-reference/endpoints/get-intent-history">
+    Query intent history including aborted intents
+  </Card>
+
+  <Card title="GetIntent" icon="magnifying-glass" href="/api-reference/endpoints/get-intent">
+    Check current intent status
+  </Card>
+</CardGroup>
