@@ -37,7 +37,7 @@ Destructure what you need from `actionBuilder`:
 ```ts
 import { actionBuilder } from '0xtrails'
 
-const { swap, lend, deposit, assert, build } = actionBuilder
+const { swap, lend, deposit, assert, custom } = actionBuilder
 ```
 
 | Builder          | What it does                                                                        |
@@ -46,7 +46,7 @@ const { swap, lend, deposit, assert, build } = actionBuilder
 | `lend({...})`    | Supply into a money-market (Aave, Compound, Fluid, …)                               |
 | `deposit({...})` | Deposit into an ERC-4626 / vault-style market (Morpho, Yearn, SummerFi, Sky, …)     |
 | `assert({...})`  | On-chain guard (`balance >= X`, `deadline > now`, …) — whole batch reverts if false |
-| `build({...})`   | Wrap an arbitrary contract call (escape hatch)                                      |
+| `custom({...})`  | Wrap an arbitrary contract call (escape hatch)                                      |
 
 See [Building Actions](/sdk/composable-actions/building-actions) for the full API of each builder.
 

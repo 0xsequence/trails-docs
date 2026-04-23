@@ -1,13 +1,13 @@
 ---
 title: Building Actions
-description: "Full actionBuilder API: swap, lend, deposit, assert, and build"
+description: "Full actionBuilder API: swap, lend, deposit, assert, and custom"
 sidebarTitle: "Building Actions"
 ---
 
 ```ts
 import { actionBuilder, dynamic, self } from '0xtrails'
 
-const { swap, lend, deposit, assert, build } = actionBuilder
+const { swap, lend, deposit, assert, custom } = actionBuilder
 ```
 
 Amounts are always one of:
@@ -69,7 +69,7 @@ Typical use cases:
 
 - **Pre-flight quoting** — render expected output / price impact in the UI before the user commits, using `simulateSwap`.
 - **Pool liquidity check** — skip a pair or switch `fee` tier when `getPool` returns `null`.
-- **Custom compositions** — build `Call[]` directly and embed them with [`build(...)`](#build-arbitrary-contract-call-escape-hatch) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
+- **Custom compositions** — build `Call[]` directly and embed them with [`custom(...)`](#custom-arbitrary-contract-call-escape-hatch) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
 
 #### Chain-scoped adapter
 
@@ -123,7 +123,7 @@ if (!pool) {
 
 ##### `swapExactInputSingle`
 
-Build an approval + swap `Call[]` for an exact-input swap. Wrap in [`build(...)`](#build-arbitrary-contract-call-escape-hatch) to embed inside an intent, or send directly from a wallet.
+Build an approval + swap `Call[]` for an exact-input swap. Wrap in [`custom(...)`](#custom-arbitrary-contract-call-escape-hatch) to embed inside an intent, or send directly from a wallet.
 
 ```ts
 import { parseUnits } from 'viem'
@@ -237,7 +237,7 @@ assert({
 `assert` is the only builder that does **not** accept `dynamic()` — its values must be known at quote time.
 </Info>
 
-## `build` — arbitrary contract call (escape hatch)
+## `custom` — arbitrary contract call (escape hatch)
 
 Use when nothing above fits. Pair with `buildCall` and `erc20Utils` for ergonomic calldata — see [ERC-20 Helpers](/sdk/composable-actions/erc20-helpers).
 
@@ -245,19 +245,19 @@ Use when nothing above fits. Pair with `buildCall` and `erc20Utils` for ergonomi
 import { actionBuilder, erc20Utils } from '0xtrails'
 import { encodeFunctionData, parseUnits } from 'viem'
 
-const { build } = actionBuilder
+const { custom } = actionBuilder
 
 const MY_CONTRACT = '0x0000000000000000000000000000000000001234'
 
 const actions = [
-  build(
+  custom(
     erc20Utils.approve({
       tokenAddress: erc20Utils.USDC.addressOn('base'),
       spender: MY_CONTRACT,
       amount: parseUnits('100', 6),
     }),
   ),
-  build({
+  custom({
     to: MY_CONTRACT,
     data: encodeFunctionData({
       abi: stakingAbi,
