@@ -1,0 +1,80 @@
+---
+title: Dynamic Values
+description: "Runtime placeholders for amounts and addresses: dynamic() and self()"
+sidebarTitle: "Dynamic Values"
+---
+
+`dynamic()` and `self()` are runtime placeholders that resolve on the destination chain at execution time. They let you write action batches that adapt to whatever funds actually arrive, without predicting bridge fees or slippage.
+
+```ts
+import { dynamic, self } from '0xtrails'
+```
+
+## `dynamic()`
+
+Means "use whatever balance the intent wallet has at execution time". Accepted on any amount field of any builder **except** [`assert`](/sdk/composable-actions/building-actions#assert-on-chain-guard).
+
+The killer use case is chaining. You don't know exactly how much USDC will arrive on the destination chain (bridge fees, slippage, price moves), but you know you want to deposit all of it:
+
+```ts
+import { actionBuilder, dynamic } from '0xtrails'
+
+const { lend } = actionBuilder
+
+// Whatever USDC arrives, lend it all.
+const actions = [
+  lend({
+    marketId: 'base-usdc-aave-v3-lending',
+    amount: dynamic(),
+  }),
+]
+```
+
+### Multi-step chaining
+
+Each consumer marks its input `dynamic()`:
+
+```ts
+const { swap, lend } = actionBuilder
+
+const actions = [
+  swap({
+    tokenIn: 'USDC',
+    tokenOut: 'WETH',
+    amountIn: dynamic(),    // spend whatever USDC arrived
+    minAmountOut: '0.03',
+  }),
+  lend({
+    marketId: 'base-weth-aave-v3-lending',
+    amount: dynamic(),      // lend whatever WETH the swap produced
+  }),
+]
+```
+
+### Where `dynamic()` is accepted
+
+| Field            | Builders                         | Accepts `dynamic()` |
+| ---------------- | -------------------------------- | ------------------- |
+| `amount`         | `lend`, `deposit`                | Yes                 |
+| `amountIn`       | `swap` (EXACT_INPUT)             | Yes                 |
+| `amountOut`      | `swap` (EXACT_OUTPUT)            | Yes                 |
+| `minAmountOut`   | `swap` (EXACT_INPUT)             | Yes                 |
+| `maxAmountIn`    | `swap` (EXACT_OUTPUT)            | Yes                 |
+| `gte` / `deadline` | `assert`                       | **No**              |
+
+## `self()`
+
+Returns a placeholder address that resolves to the intent wallet at execution time.
+
+```ts
+import { actionBuilder, self } from '0xtrails'
+
+actionBuilder.swap({
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  amountIn: '100',
+  recipient: self(), // force WETH to stay on the intent wallet
+})
+```
+
+`swap` picks a sensible default (`self()` for intermediate actions, the user's wallet for the final action), so you rarely need it — it's there for unusual compositions where you want to be explicit.

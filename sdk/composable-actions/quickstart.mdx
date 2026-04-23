@@ -1,0 +1,108 @@
+---
+title: Quickstart
+description: "Compose multiple DeFi steps into a single cross-chain intent with useQuote"
+sidebarTitle: "Quickstart"
+---
+
+The whole point of Composable Actions is composition — more than one call on the destination chain. This example splits a single intent into three destination steps:
+
+1. **Deposit** 25 USDT into a Morpho vault.
+2. **Swap** the leftover USDT to USDC.
+3. **Lend** the resulting USDC into a Fluid USDC market.
+
+The user pays with USDC on Arbitrum. Trails bridges/swaps to deliver 75 USDT on Polygon, then runs the three steps from the intent wallet.
+
+```tsx
+import {
+  useQuote,
+  useEarnMarkets,
+  actionBuilder,
+  dynamic,
+} from '0xtrails'
+import { useAccount } from 'wagmi'
+
+const { deposit, swap, lend } = actionBuilder
+
+export function ComposedEarnButton() {
+  const { address } = useAccount()
+
+  // 1. Pick the two destination markets.
+  const { data: morphoMarkets } = useEarnMarkets({
+    chain: 'polygon',
+    type: 'vault',
+    provider: 'morpho',
+    token: 'USDT',
+    sortBy: 'rewardRateDesc',
+  })
+  const { data: fluidMarkets } = useEarnMarkets({
+    chain: 'polygon',
+    type: 'lending',
+    provider: 'fluid',
+    token: 'USDC',
+    sortBy: 'rewardRateDesc',
+  })
+  const morphoMarket = morphoMarkets?.[0] // Choose your desired USDT market
+  const fluidMarket = fluidMarkets?.[0]   // Choose your desired USDC market
+
+  // 2. Quote & send.
+  const { send, isLoadingQuote, quoteError } = useQuote({
+    from: { chain: 'arbitrum', token: 'USDC' },
+    to:   { chain: 'polygon',  token: 'USDT', amount: '75' },
+    actions: [
+      // a) Deposit 25 USDT → Morpho vault.
+      deposit({
+        marketId: morphoMarket?.id ?? '',
+        amount: '25',
+      }),
+
+      // b) Swap whatever USDT is left → USDC.
+      swap({
+        tokenIn: 'USDT',
+        tokenOut: 'USDC',
+        amountIn: dynamic(),
+        fee: '0.03', // pool tier 0.3%
+      }),
+
+      // c) Lend all the USDC we just received into Fluid.
+      lend({
+        marketId: fluidMarket?.id ?? '',
+        amount: dynamic(),
+      }),
+    ],
+  })
+
+  if (!morphoMarket || !fluidMarket) return <p>Loading markets…</p>
+  if (isLoadingQuote) return <p>Quoting…</p>
+  if (quoteError) return <p>Error: {quoteError.message}</p>
+
+  return (
+    <button disabled={!send} onClick={() => send?.()}>
+      Deposit 25 USDT → {morphoMarket.metadata.name} · lend rest →{' '}
+      {fluidMarket.metadata.name}
+    </button>
+  )
+}
+```
+
+## What's happening here
+
+- **Concrete amount** on the first action (`"25"`) splits off a fixed slice. **`dynamic()`** on subsequent actions consumes whatever the previous step produced — no need to predict slippage or bridge fees. See [Dynamic Values](/sdk/composable-actions/dynamic-values) for details.
+- Actions run **top-down** in the same destination batch. If any step reverts (including `assert(...)` guards you can sprinkle in), the whole destination batch reverts atomically.
+- `to.amount` (`"75"`) is the **destination budget** Trails aims to deliver. The split into `25` + the rest happens inside the intent wallet on the destination chain.
+
+## Tracking progress
+
+Pass `onStatusUpdate` to `useQuote` to observe each step as it happens:
+
+```ts
+useQuote({
+  /* … */
+  onStatusUpdate: (states) => console.log(states),
+})
+```
+
+## Next steps
+
+- Explore different actions in [Building Actions](/sdk/composable-actions/building-actions).
+- Learn how `dynamic()` and `self()` work under the hood in [Dynamic Values](/sdk/composable-actions/dynamic-values).
+- Discover markets and providers with [Markets & Providers](/sdk/composable-actions/markets-and-providers).

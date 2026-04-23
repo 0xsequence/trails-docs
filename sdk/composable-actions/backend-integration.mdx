@@ -1,0 +1,86 @@
+---
+title: Backend Integration
+description: "Use the Trails API client directly from a Node.js or server environment"
+sidebarTitle: "Backend Integration"
+---
+
+`useQuote` and `actionBuilder` live on the frontend — they assume React and a wallet in the same process. On a backend you go straight to the Trails API client instead. The same three stages still apply:
+
+1. Ask the API for the unsigned transactions that represent each step (e.g. `client.yieldCreateEnterAction` for lending/vaults).
+2. Hand them to `quoteIntent` as destination calls.
+3. `commitIntent` → user signs & submits the origin transaction → `executeIntent`.
+
+`quoteIntent`, `commitIntent`, and `executeIntent` are standalone functions re-exported from `0xtrails` that take the API client as the first argument.
+
+## Example: supply 50 USDC into Aave on Base, user pays from Arbitrum
+
+```ts
+import {
+  getTrailsClient,
+  quoteIntent,
+  commitIntent,
+  executeIntent,
+} from '0xtrails'
+
+const client = getTrailsClient({ apiKey: process.env.TRAILS_API_KEY })
+
+// 1. Get the unsigned transactions that enter the market.
+const response = await client.yieldCreateEnterAction({
+  earnMarketId: 'base-usdc-aave-v3-lending',
+  userWalletAddress: userEoa,
+  args: { amount: '50' },
+})
+const { transactions } = JSON.parse(response.payload)
+const destinationCalls = transactions.map((tx) => {
+  const parsed = JSON.parse(tx.unsignedTransaction)
+  return {
+    to: parsed.to,
+    data: parsed.data,
+    value: parsed.value ? BigInt(parsed.value) : undefined,
+  }
+})
+
+// 2. Quote the intent.
+const { intent } = await quoteIntent(client, {
+  ownerAddress: userEoa,
+  originChainId: 42161,        // Arbitrum
+  destinationChainId: 8453,    // Base
+  originTokenAddress: USDC_ARBITRUM,
+  destinationTokenAddress: USDC_BASE,
+  destinationCalls,
+  // …tradeType, amounts, slippage, fee option, etc.
+})
+
+// 3. Commit.
+await commitIntent(client, intent)
+
+// 4. The user signs & submits intent.originCalls in their wallet
+//    (viem / ethers / whatever) and returns the tx hash.
+
+// 5. Execute.
+await executeIntent(client, intent.intentId, depositTxHash)
+```
+
+## Browsing markets from a backend
+
+Symmetric with [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers) on the frontend — same filters, no React dependency:
+
+```ts
+const { items: markets } = await client.yieldGetMarkets({
+  chainId: '8453',
+  type: 'lending',
+  search: 'usdc',
+  sort: 'rewardRateDesc',
+  limit: 20,
+})
+
+const { items: providers } = await client.yieldGetProviders({})
+```
+
+## When to use which path
+
+| Scenario                                                   | Recommended path                                                       |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| React app, connected wallet in browser                     | [`useQuote` + `actionBuilder`](/sdk/composable-actions/quickstart)     |
+| Node.js server, CLI, or any non-React runtime              | Trails API client (`quoteIntent` / `commitIntent` / `executeIntent`)   |
+| React app needing to pre-compute intents on a server       | Mix: build calldata server-side via `yieldCreateEnterAction`, then ship it into `useQuote` as `to.destinationCalls` |
