@@ -84,6 +84,19 @@
               "sdk/configuration",
               "sdk/hooks",
               {
+                "group": "Composable Actions",
+                "pages": [
+                  "sdk/composable-actions/overview",
+                  "sdk/composable-actions/quickstart",
+                  "sdk/composable-actions/building-actions",
+                  "sdk/composable-actions/dynamic-values",
+                  "sdk/composable-actions/markets-and-providers",
+                  "sdk/composable-actions/backend-integration",
+                  "sdk/composable-actions/erc20-helpers",
+                  "sdk/composable-actions/supported-chains"
+                ]
+              },
+              {
                 "group": "Modes",
                 "pages": [
                   "sdk/modes/pay",
@@ -198,6 +211,10 @@
     {
       "source": "/overview/chain-abstraction",
       "destination": "/architecture/how-it-works"
+    },
+    {
+      "source": "/sdk/composable-actions",
+      "destination": "/sdk/composable-actions/overview"
     }
   ],
   "footer": {

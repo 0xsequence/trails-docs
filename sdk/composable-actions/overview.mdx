@@ -1,0 +1,65 @@
+---
+title: Overview
+description: "A small, typed DSL for describing what should happen on the destination chain of a Trails intent"
+sidebarTitle: "Overview"
+---
+
+Composable Actions are a small, typed DSL for describing **what should happen on the destination chain** of a Trails intent. Instead of hand-encoding calldata, you build a list of high-level steps — `swap`, `lend`, `deposit`, `assert`, `custom` — and pass them to `useQuote`. Trails takes care of quoting, bridging, and executing.
+
+Two integration styles are supported:
+
+1. **React apps** — use [`useQuote`](/sdk/hooks#usequote-hook) with `actions`. See the [Quickstart](/sdk/composable-actions/quickstart).
+2. **Backend** — use the `trailsClient` SDK directly (`yieldCreateEnterAction`, `quoteIntent`, `commitIntent`, `executeIntent`, …). See [Backend Integration](/sdk/composable-actions/backend-integration).
+
+## What Composable Actions are
+
+A Trails **intent** is a two-phase transaction:
+
+```mermaid
+flowchart LR
+    User["User's funds<br/>(origin chain)"]
+    Wallet["Intent wallet<br/>(destination chain)"]
+    Calls["Destination calls"]
+
+    User -->|bridge / swap| Wallet
+    Wallet --> Calls
+```
+
+1. The user signs **once** on the origin chain. Their funds are bridged and/or swapped to an **intent wallet** on the destination chain.
+2. Trails then runs the **destination calls** from that intent wallet.
+
+Composable Actions are a typed builder for those destination calls. Each builder returns a plain action descriptor; an array of them is what you hand to `useQuote`.
+
+## Available action builders
+
+Destructure what you need from `actionBuilder`:
+
+```ts
+import { actionBuilder } from '0xtrails'
+
+const { swap, lend, deposit, assert, custom } = actionBuilder
+```
+
+| Builder          | What it does                                                                        |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `swap({...})`    | On-chain swap via Uniswap V3 or SushiSwap V3                                        |
+| `lend({...})`    | Supply into a money-market (Aave, Compound, Fluid, …)                               |
+| `deposit({...})` | Deposit into an ERC-4626 / vault-style market (Morpho, Yearn, SummerFi, Sky, …)     |
+| `assert({...})`  | On-chain guard (`balance >= X`, `deadline > now`, …) — whole batch reverts if false |
+| `custom({...})`  | Wrap an arbitrary contract call (escape hatch)                                      |
+
+See [Building Actions](/sdk/composable-actions/building-actions) for the full API of each builder.
+
+<Info>
+**Enter-only.** `lend` and `deposit` only support supplying / depositing. Withdrawals are not part of the Trails intent pipeline — a user can withdraw from the protocol directly (see [Withdrawing](#withdrawing-directly-from-a-protocol) below).
+</Info>
+
+## Where to go next
+
+- [Quickstart](/sdk/composable-actions/quickstart) — a three-step example combining `deposit`, `swap`, and `lend` in a single intent.
+- [Building Actions](/sdk/composable-actions/building-actions) — the full `actionBuilder` API, one section per builder.
+- [Dynamic Values](/sdk/composable-actions/dynamic-values) — `dynamic()` and `self()` for runtime amount / address resolution.
+- [Markets & Providers](/sdk/composable-actions/markets-and-providers) — discover markets and providers.
+- [Backend Integration](/sdk/composable-actions/backend-integration) — same pipeline, no React dependency.
+- [ERC-20 Helpers](/sdk/composable-actions/erc20-helpers) — token registry, calldata builders, slippage helper.
+- [Supported Chains](/sdk/composable-actions/supported-chains) — chain identifiers and swap provider coverage.

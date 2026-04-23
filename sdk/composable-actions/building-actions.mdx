@@ -1,0 +1,269 @@
+---
+title: Building Actions
+description: "Full actionBuilder API: swap, lend, deposit, assert, and custom"
+sidebarTitle: "Building Actions"
+---
+
+```ts
+import { actionBuilder, dynamic, self } from '0xtrails'
+
+const { swap, lend, deposit, assert, custom } = actionBuilder
+```
+
+Amounts are always one of:
+
+- **`string`** — human-readable, e.g. `"50"` or `"0.03"`. Scaled by the token's decimals.
+- **`bigint`** — raw wei, used as-is.
+- **`dynamic()`** — "use the intent wallet's runtime balance at execution time". See [Dynamic Values](/sdk/composable-actions/dynamic-values).
+
+## `swap` — on-chain token swap
+
+Trade type is inferred from which amount you pass: `amountIn` → `EXACT_INPUT`, `amountOut` → `EXACT_OUTPUT`. Setting both (or neither) throws.
+
+```ts
+// EXACT_INPUT: spend 1 WETH, revert if output < 3000 USDC
+swap({
+  tokenIn: 'WETH',
+  tokenOut: 'USDC',
+  amountIn: '1',
+  minAmountOut: '3000',
+  fee: '0.05', // "0.01" | "0.05" | "0.3" (default) | "1"
+})
+
+// EXACT_OUTPUT: receive exactly 3000 USDC, spend at most 2 WETH
+swap({
+  tokenIn: 'WETH',
+  tokenOut: 'USDC',
+  amountOut: '3000',
+  maxAmountIn: '2',
+})
+
+// Route through SushiSwap instead of Uniswap V3
+swap({
+  provider: 'SUSHISWAP_V3',
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  amountIn: '100',
+})
+```
+
+**Defaults:**
+
+- `fee`: `"0.3"` (0.3% pool).
+- `provider`: `"UNISWAP_V3"`. If it isn't deployed on the destination chain, the error tells you to try SushiSwap.
+- `recipient`: the intent wallet for the final action; for intermediate actions, output flows back so the next action can consume it. Override only if you want to send output to a third party.
+
+### Swap-adjacent utilities
+
+For anything that isn't "build calldata for `useQuote`" — on-chain quoting, pool discovery, raw `Call[]` composition, address lookups — `0xtrails` exports the underlying chain-scoped helpers behind `swap`. The same adapter is exported for both Uniswap V3 and SushiSwap V3, with identical method names, parameters, and fee tiers.
+
+```ts
+import { uniswapV3, sushiswapV3 } from '0xtrails'
+```
+
+<Info>
+Low-level helpers take raw `bigint` wei — use viem's `parseUnits` to convert from human-readable amounts. Fee tiers take human strings: `"0.01"` / `"0.05"` / `"0.3"` / `"1"`.
+</Info>
+
+Typical use cases:
+
+- **Pre-flight quoting** — render expected output / price impact in the UI before the user commits, using `simulateSwap`.
+- **Pool liquidity check** — skip a pair or switch `fee` tier when `getPool` returns `null`.
+- **Custom compositions** — build `Call[]` directly and embed them with [`custom(...)`](#custom-arbitrary-contract-call-escape-hatch) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
+
+#### Chain-scoped adapter
+
+`uniswapV3.onChain(chain)` (or `sushiswapV3.onChain(chain)`) returns an adapter bound to a specific chain (name or chain ID):
+
+```ts
+import { uniswapV3 } from '0xtrails'
+
+const uni = uniswapV3.onChain('base')
+// or: uniswapV3.onChain(8453)
+```
+
+##### `simulateSwap`
+
+Dry-run a swap against the provider's QuoterV2 — no signing, no broadcast. Use this to render expected output and price impact before the user commits.
+
+```ts
+import { parseUnits } from 'viem'
+
+const quote = await uni.simulateSwap({
+  type: 'exactInputSingle',
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  fee: '0.05',
+  amountIn: parseUnits('100', 6), // 100 USDC
+})
+
+// quote.amountOut
+// quote.gasEstimate
+// quote.initializedTicksCrossed
+// quote.sqrtPriceX96After
+```
+
+`type` can be `"exactInputSingle"` or `"exactOutputSingle"`; pass `amountIn` with the former and `amountOut` with the latter.
+
+##### `getPool`
+
+Find the pool address for a pair and fee tier. Returns `null` when no pool exists — handy for switching fee tier or skipping the pair.
+
+```ts
+const pool = await uni.getPool({
+  token0: 'USDC',
+  token1: 'WETH',
+  fee: '0.05',
+})
+
+if (!pool) {
+  // Try a different fee tier or route
+}
+```
+
+##### `swapExactInputSingle`
+
+Build an approval + swap `Call[]` for an exact-input swap. Wrap in [`custom(...)`](#custom-arbitrary-contract-call-escape-hatch) to embed inside an intent, or send directly from a wallet.
+
+```ts
+import { parseUnits } from 'viem'
+
+const calls = uni.swapExactInputSingle({
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  fee: '0.05',
+  recipient: userEoa,
+  amountIn: parseUnits('100', 6),           // 100 USDC
+  amountOutMinimum: parseUnits('0.03', 18), // 0.03 WETH floor
+})
+```
+
+##### `swapExactOutputSingle`
+
+Build an approval + swap `Call[]` for an exact-output swap.
+
+```ts
+import { parseUnits } from 'viem'
+
+const calls = uni.swapExactOutputSingle({
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  fee: '0.05',
+  recipient: userEoa,
+  amountOut: parseUnits('0.03', 18),     // 0.03 WETH exactly
+  amountInMaximum: parseUnits('100', 6), // 100 USDC ceiling
+})
+```
+
+#### Address lookups
+
+Top-level helpers return contract addresses per chain:
+
+```ts
+uniswapV3.swapRouterAddressOn('base')
+uniswapV3.factoryAddressOn('base')
+
+sushiswapV3.swapRouterAddressOn('base')
+sushiswapV3.factoryAddressOn('base')
+```
+
+#### Capability checks
+
+Not every chain has both providers deployed. `isSupportedOn` returns `false` instead of throwing — useful for falling back between providers or warning the user.
+
+```ts
+import { uniswapV3, sushiswapV3 } from '0xtrails'
+
+const adapter = uniswapV3.isSupportedOn('base')
+  ? uniswapV3.onChain('base')
+  : sushiswapV3.isSupportedOn('base')
+    ? sushiswapV3.onChain('base')
+    : null
+
+if (!adapter) {
+  // Neither provider is deployed on this chain — surface a friendly error.
+}
+```
+
+## `lend` — supply into a money-market
+
+Use for Aave / Compound / Fluid-style lending. **Use [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers) to fetch the `marketId`.**
+
+```ts
+lend({
+  marketId: 'base-usdc-aave-v3-lending',
+  amount: '50',
+})
+```
+
+Optional: `receiverAddress` defaults to the connected user wallet, so aTokens / fTokens / cTokens land on the user's EOA automatically. Only override when you want the position to belong to a different owner.
+
+## `deposit` — deposit into a vault
+
+Use for vault-shaped markets (ERC-4626, Morpho, Yearn, SummerFi, Sky, …).
+
+```ts
+deposit({
+  marketId: 'base-usdc-morpho-v1-vault',
+  amount: '100',
+})
+```
+
+Optional params:
+
+- `receiverAddress` — **defaults to the connected user wallet** so vault shares land on the user's EOA.
+
+## `assert` — on-chain guard
+
+If the condition is false at execution time the entire batch reverts.
+
+```ts
+// Ensure the swap really produced >= 2400 USDC
+assert({ erc20Balance: { token: 'USDC', gte: '2400' } })
+
+// Native balance check
+assert({ nativeBalance: { gte: '0.5' } })
+
+// Deadline (unix timestamp)
+assert({ notExpired: { deadline: 1712600000 } })
+
+// Allowance check
+assert({
+  erc20Allowance: { token: 'USDC', spender: '0x…', gte: '1000' },
+})
+```
+
+<Info>
+`assert` is the only builder that does **not** accept `dynamic()` — its values must be known at quote time.
+</Info>
+
+## `custom` — arbitrary contract call (escape hatch)
+
+Use when nothing above fits. Pair with `buildCall` and `erc20Utils` for ergonomic calldata — see [ERC-20 Helpers](/sdk/composable-actions/erc20-helpers).
+
+```ts
+import { actionBuilder, erc20Utils } from '0xtrails'
+import { encodeFunctionData, parseUnits } from 'viem'
+
+const { custom } = actionBuilder
+
+const MY_CONTRACT = '0x0000000000000000000000000000000000001234'
+
+const actions = [
+  custom(
+    erc20Utils.approve({
+      tokenAddress: erc20Utils.USDC.addressOn('base'),
+      spender: MY_CONTRACT,
+      amount: parseUnits('100', 6),
+    }),
+  ),
+  custom({
+    to: MY_CONTRACT,
+    data: encodeFunctionData({
+      abi: stakingAbi,
+      functionName: 'stake',
+      args: [parseUnits('100', 6)],
+    }),
+  }),
+]
+```

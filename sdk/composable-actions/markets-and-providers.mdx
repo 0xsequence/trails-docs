@@ -1,0 +1,105 @@
+---
+title: Markets & Providers
+description: "Discover markets and supported providers at runtime"
+sidebarTitle: "Markets & Providers"
+---
+
+Every `lend` and `deposit` action needs a `marketId`. 
+
+## React hooks
+
+Use `useEarnMarkets` and `useEarnProviders` inside a React tree wrapped with `TrailsProvider`:
+
+```tsx
+import { useEarnMarkets, useEarnProviders } from '0xtrails'
+
+function MarketPicker() {
+  const { data: providers } = useEarnProviders()
+
+  const { data: markets, total, isLoading } = useEarnMarkets({
+    chain: 'base',
+    type: 'lending',         // "lending" | "vault" | "staking" | …
+    provider: 'aave',        // optional
+    search: 'usdc',          // optional free-text
+    sortBy: 'rewardRateDesc',
+    limit: 20,
+    offset: 0,
+  })
+  // markets[i].id → pass to lend / deposit
+}
+```
+
+### `useEarnMarkets` filters
+
+| Field      | Type                             | Description                                    |
+| ---------- | -------------------------------- | ---------------------------------------------- |
+| `chain`    | `ChainIdentifier`                | Chain name or ID                               |
+| `type`     | `"lending"` \| `"vault"` \| …    | Market category                                |
+| `provider` | `ProviderId`                     | Restrict to one protocol                       |
+| `token`    | `string`                         | Symbol or address of the supply token          |
+| `search`   | `string`                         | Free-text search over market names             |
+| `sortBy`   | `SortBy`                         | e.g. `"rewardRateDesc"`                        |
+| `limit`    | `number`                         | Page size                                      |
+| `offset`   | `number`                         | Page offset                                    |
+
+Each `EarnMarket` exposes `id`, `token`, `rewardRate`, `statistics.tvlUsd`, `metadata.*`, `providerId`, and more.
+
+## Non-React helpers
+
+For scripts, tests, or server code, the underlying helpers are also exported:
+
+```ts
+import { getEarnMarkets, getEarnProviders } from '0xtrails'
+
+const { items, total } = await getEarnMarkets({
+  chain: 'base',
+  type: 'lending',
+  provider: 'aave',
+  token: 'USDC',
+})
+
+const { items: providers } = await getEarnProviders({ limit: 50 })
+```
+
+See [Backend Integration](/sdk/composable-actions/backend-integration#browsing-markets-from-a-backend) for the equivalent methods on the Trails API client (`client.yieldGetMarkets`, `client.yieldGetProviders`).
+
+## End-to-end example
+
+Wire a market picker into a typed action:
+
+```tsx
+import {
+  useQuote,
+  useEarnMarkets,
+  actionBuilder,
+  dynamic,
+} from '0xtrails'
+
+const { lend } = actionBuilder
+
+function LendWithPicker() {
+  const { data: markets } = useEarnMarkets({
+    chain: 'base',
+    type: 'lending',
+    token: 'USDC',
+    sortBy: 'rewardRateDesc',
+    limit: 5,
+  })
+
+  const best = markets?.[0]
+
+  const { send } = useQuote({
+    from: { chain: 'arbitrum', token: 'USDC' },
+    to:   { chain: 'base',     token: 'USDC', amount: '100' },
+    actions: best
+      ? [lend({ marketId: best.id, amount: dynamic() })]
+      : [],
+  })
+
+  return (
+    <button disabled={!send} onClick={() => send?.()}>
+      Lend on {best?.metadata.name ?? '…'}
+    </button>
+  )
+}
+```
