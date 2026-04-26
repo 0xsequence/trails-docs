@@ -91,7 +91,6 @@
                   "sdk/composable-actions/building-actions",
                   "sdk/composable-actions/dynamic-values",
                   "sdk/composable-actions/markets-and-providers",
-                  "sdk/composable-actions/backend-integration",
                   "sdk/composable-actions/erc20-helpers",
                   "sdk/composable-actions/supported-chains"
                 ]

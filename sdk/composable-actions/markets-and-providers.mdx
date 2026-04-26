@@ -44,24 +44,7 @@ function MarketPicker() {
 
 Each `EarnMarket` exposes `id`, `token`, `rewardRate`, `statistics.tvlUsd`, `metadata.*`, `providerId`, and more.
 
-## Non-React helpers
-
-For scripts, tests, or server code, the underlying helpers are also exported:
-
-```ts
-import { getEarnMarkets, getEarnProviders } from '0xtrails'
-
-const { items, total } = await getEarnMarkets({
-  chain: 'base',
-  type: 'lending',
-  provider: 'aave',
-  token: 'USDC',
-})
-
-const { items: providers } = await getEarnProviders({ limit: 50 })
-```
-
-See [Backend Integration](/sdk/composable-actions/backend-integration#browsing-markets-from-a-backend) for the equivalent methods on the Trails API client (`client.yieldGetMarkets`, `client.yieldGetProviders`).
+Use these hooks in browser apps to discover supported markets and providers before building an action list.
 
 ## End-to-end example
 
@@ -71,13 +54,11 @@ Wire a market picker into a typed action:
 import {
   useQuote,
   useEarnMarkets,
-  actionBuilder,
+  lend,
   dynamic,
 } from '0xtrails'
 
-const { lend } = actionBuilder
-
-function LendWithPicker() {
+function LendWithMarketPicker() {
   const { data: markets } = useEarnMarkets({
     chain: 'base',
     type: 'lending',
@@ -86,19 +67,19 @@ function LendWithPicker() {
     limit: 5,
   })
 
-  const best = markets?.[0]
+  const market = markets... // Choose your market
 
   const { send } = useQuote({
     from: { chain: 'arbitrum', token: 'USDC' },
     to:   { chain: 'base',     token: 'USDC', amount: '100' },
-    actions: best
-      ? [lend({ marketId: best.id, amount: dynamic() })]
+    actions: market
+      ? [lend({ marketId: market.id, amount: dynamic() })]
       : [],
   })
 
   return (
     <button disabled={!send} onClick={() => send?.()}>
-      Lend on {best?.metadata.name ?? '…'}
+      Lend on {market?.metadata.name ?? '…'}
     </button>
   )
 }

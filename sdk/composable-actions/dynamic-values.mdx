@@ -12,14 +12,12 @@ import { dynamic, self } from '0xtrails'
 
 ## `dynamic()`
 
-Means "use whatever balance the intent wallet has at execution time". Accepted on any amount field of any builder **except** [`assert`](/sdk/composable-actions/building-actions#assert-on-chain-guard).
+Means "use whatever balance the intent wallet has at execution time". Accepted on any amount field of any builder **except** [`assertCondition`](/sdk/composable-actions/building-actions#assertcondition-on-chain-guard).
 
 The killer use case is chaining. You don't know exactly how much USDC will arrive on the destination chain (bridge fees, slippage, price moves), but you know you want to deposit all of it:
 
 ```ts
-import { actionBuilder, dynamic } from '0xtrails'
-
-const { lend } = actionBuilder
+import { lend, dynamic } from '0xtrails'
 
 // Whatever USDC arrives, lend it all.
 const actions = [
@@ -35,7 +33,7 @@ const actions = [
 Each consumer marks its input `dynamic()`:
 
 ```ts
-const { swap, lend } = actionBuilder
+import { swap, lend, dynamic } from '0xtrails'
 
 const actions = [
   swap({
@@ -51,25 +49,14 @@ const actions = [
 ]
 ```
 
-### Where `dynamic()` is accepted
-
-| Field            | Builders                         | Accepts `dynamic()` |
-| ---------------- | -------------------------------- | ------------------- |
-| `amount`         | `lend`, `deposit`                | Yes                 |
-| `amountIn`       | `swap` (EXACT_INPUT)             | Yes                 |
-| `amountOut`      | `swap` (EXACT_OUTPUT)            | Yes                 |
-| `minAmountOut`   | `swap` (EXACT_INPUT)             | Yes                 |
-| `maxAmountIn`    | `swap` (EXACT_OUTPUT)            | Yes                 |
-| `gte` / `deadline` | `assert`                       | **No**              |
-
 ## `self()`
 
-Returns a placeholder address that resolves to the intent wallet at execution time.
+Returns a placeholder address that resolves to the intent wallet at execution time, in case you need this address which is not known before executing.
 
 ```ts
-import { actionBuilder, self } from '0xtrails'
+import { swap, self } from '0xtrails'
 
-actionBuilder.swap({
+swap({
   tokenIn: 'USDC',
   tokenOut: 'WETH',
   amountIn: '100',

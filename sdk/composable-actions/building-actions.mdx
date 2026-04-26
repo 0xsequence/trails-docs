@@ -1,24 +1,32 @@
 ---
 title: Building Actions
-description: "Full actionBuilder API: swap, lend, deposit, assert, and custom"
+description: "Full builder API: swap, lend, deposit, assertCondition, and custom"
 sidebarTitle: "Building Actions"
 ---
 
 ```ts
-import { actionBuilder, dynamic, self } from '0xtrails'
-
-const { swap, lend, deposit, assert, custom } = actionBuilder
+import {
+  swap,
+  lend,
+  deposit,
+  assertCondition,
+  custom,
+  dynamic,
+  self,
+} from '0xtrails'
 ```
 
-Amounts are always one of:
+Amounts are generally one of:
 
 - **`string`** — human-readable, e.g. `"50"` or `"0.03"`. Scaled by the token's decimals.
 - **`bigint`** — raw wei, used as-is.
-- **`dynamic()`** — "use the intent wallet's runtime balance at execution time". See [Dynamic Values](/sdk/composable-actions/dynamic-values).
+- **`dynamic()`** — "use the intent wallet's runtime balance at execution time", accepted only on fields that spend a balance. See [Dynamic Values](/sdk/composable-actions/dynamic-values).
 
 ## `swap` — on-chain token swap
 
 Trade type is inferred from which amount you pass: `amountIn` → `EXACT_INPUT`, `amountOut` → `EXACT_OUTPUT`. Setting both (or neither) throws.
+
+`dynamic()` is allowed on `amountIn` for exact-input swaps and `maxAmountIn` for exact-output swaps. `amountOut` and `minAmountOut` must be concrete values because they are execution thresholds.
 
 ```ts
 // EXACT_INPUT: spend 1 WETH, revert if output < 3000 USDC
@@ -69,7 +77,7 @@ Typical use cases:
 
 - **Pre-flight quoting** — render expected output / price impact in the UI before the user commits, using `simulateSwap`.
 - **Pool liquidity check** — skip a pair or switch `fee` tier when `getPool` returns `null`.
-- **Custom compositions** — build `Call[]` directly and embed them with [`custom(...)`](#custom-arbitrary-contract-call-escape-hatch) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
+- **Custom compositions** — build `Call[]` directly and pass them through `to.calls` (`useQuote`) or `calls` (`useTrailsSendTransaction`) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
 
 #### Chain-scoped adapter
 
@@ -123,7 +131,7 @@ if (!pool) {
 
 ##### `swapExactInputSingle`
 
-Build an approval + swap `Call[]` for an exact-input swap. Wrap in [`custom(...)`](#custom-arbitrary-contract-call-escape-hatch) to embed inside an intent, or send directly from a wallet.
+Build an approval + swap `Call[]` for an exact-input swap. Pass the calls through `to.calls` / `calls` to embed inside an intent, or send them directly from a wallet.
 
 ```ts
 import { parseUnits } from 'viem'
@@ -212,29 +220,30 @@ deposit({
 Optional params:
 
 - `receiverAddress` — **defaults to the connected user wallet** so vault shares land on the user's EOA.
+- `useMaxAllowance` — when `true`, the resolver emits a max allowance approval instead of an exact-amount approval.
 
-## `assert` — on-chain guard
+## `assertCondition` — on-chain guard
 
 If the condition is false at execution time the entire batch reverts.
 
 ```ts
 // Ensure the swap really produced >= 2400 USDC
-assert({ erc20Balance: { token: 'USDC', gte: '2400' } })
+assertCondition({ erc20Balance: { token: 'USDC', gte: '2400' } })
 
 // Native balance check
-assert({ nativeBalance: { gte: '0.5' } })
+assertCondition({ nativeBalance: { gte: '0.5' } })
 
 // Deadline (unix timestamp)
-assert({ notExpired: { deadline: 1712600000 } })
+assertCondition({ notExpired: { deadline: 1712600000 } })
 
 // Allowance check
-assert({
+assertCondition({
   erc20Allowance: { token: 'USDC', spender: '0x…', gte: '1000' },
 })
 ```
 
 <Info>
-`assert` is the only builder that does **not** accept `dynamic()` — its values must be known at quote time.
+`assertCondition` is the only builder that does **not** accept `dynamic()` — its values must be known at quote time.
 </Info>
 
 ## `custom` — arbitrary contract call (escape hatch)
@@ -242,21 +251,20 @@ assert({
 Use when nothing above fits. Pair with `buildCall` and `erc20Utils` for ergonomic calldata — see [ERC-20 Helpers](/sdk/composable-actions/erc20-helpers).
 
 ```ts
-import { actionBuilder, erc20Utils } from '0xtrails'
+import { custom, erc20Utils } from '0xtrails'
 import { encodeFunctionData, parseUnits } from 'viem'
 
-const { custom } = actionBuilder
-
 const MY_CONTRACT = '0x0000000000000000000000000000000000001234'
+const usdc = erc20Utils.USDC.addressOn('base')
 
 const actions = [
-  custom(
-    erc20Utils.approve({
-      tokenAddress: erc20Utils.USDC.addressOn('base'),
+  custom({
+    ...erc20Utils.approve({
+      tokenAddress: usdc,
       spender: MY_CONTRACT,
       amount: parseUnits('100', 6),
     }),
-  ),
+  }),
   custom({
     to: MY_CONTRACT,
     data: encodeFunctionData({
@@ -267,3 +275,5 @@ const actions = [
   }),
 ]
 ```
+
+If custom calldata contains a `dynamic()` amount, pass `dynamicAmountToken` so the encoder knows which ERC-20 balance to hydrate at execution time. The only exception is a bare ERC-20 `approve(spender, dynamic())`, where the token is inferred from the call target.
