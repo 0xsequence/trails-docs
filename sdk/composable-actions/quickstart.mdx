@@ -1,0 +1,165 @@
+---
+title: Quickstart
+description: "Compose multiple DeFi steps into a single cross-chain intent"
+sidebarTitle: "Quickstart"
+---
+
+The whole point of Composable Actions is composition — more than one call on the destination chain. This example splits a single intent into four destination steps:
+
+1. **Deposit** 0.1 USDT into a Morpho vault.
+2. **Swap** the leftover USDT to USDC.
+3. **Assert** the intent wallet has at least 0.08 USDC before continuing.
+4. **Lend** the resulting USDC into a Fluid USDC market.
+
+The user pays with USDC on Arbitrum. Trails bridges/swaps to deliver 0.2 USDT on Polygon, then runs the four steps from the intent wallet.
+
+<Tip>
+The `marketId`s below are hard-coded for clarity. In a real app, use [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers#react-hooks) to discover what's available for a given chain / token / provider and grab the `id` from the result — no need to keep a list of IDs in your code.
+</Tip>
+
+## Use with `useTrailsSendTransaction`
+
+Use `useTrailsSendTransaction` when you want a button-driven flow with the Trails modal. Put the `actions` array directly in the hook config, then call `sendTransaction` with the destination token requirement.
+
+```tsx
+import {
+  useTrailsSendTransaction,
+  dynamic,
+  deposit,
+  swap,
+  lend,
+  assertCondition,
+  erc20Utils,
+} from '0xtrails'
+
+const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
+const fluidMarketId = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
+
+export function ComposedEarnSendTransactionButton({
+  recipient,
+}: {
+  recipient: `0x${string}`
+}) {
+  const { sendTransaction, isPending, error } = useTrailsSendTransaction({
+    actions: [
+      // a) Deposit 0.1 USDT -> Morpho vault.
+      deposit({
+        marketId: morphoMarketId,
+        amount: '0.1',
+      }),
+
+      // b) Swap whatever USDT is left -> USDC.
+      swap({
+        tokenIn: 'USDT',
+        tokenOut: 'USDC',
+        amountIn: dynamic(),
+        fee: '0.3', // pool tier 0.3%
+      }),
+
+      // c) Guard: make sure the swap really gave us at least 0.08 USDC.
+      assertCondition({
+        erc20Balance: { token: 'USDC', gte: '0.08' },
+      }),
+
+      // d) Lend all the USDC we just received into Fluid.
+      lend({
+        marketId: fluidMarketId,
+        amount: dynamic(),
+      }),
+    ],
+    onStatusUpdate: (transactionStates) => {
+      for (const state of transactionStates) {
+        console.log('Transaction:', state)
+      }
+    },
+  })
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDT.addressOn('polygon'),
+          tokenAmount: '200000', 
+        })
+      }
+    >
+      {error ? error.message : isPending ? 'Sending...' : 'Execute'}
+    </button>
+  )
+}
+```
+
+When origin fields are omitted, Trails opens the modal so the user can choose what token and chain to pay from.
+
+## Use with `useQuote`
+
+Use `useQuote` when you want to show quote state before sending and you don't want to use the widget. The same `actions` array goes directly into the hook config.
+
+```tsx
+import {
+  useQuote,
+  dynamic,
+  deposit,
+  swap,
+  lend,
+  assertCondition,
+} from '0xtrails'
+
+const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
+const fluidMarketId = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
+
+export function ComposedEarnQuoteButton() {
+  const { send, isLoadingQuote, quoteError } = useQuote({
+    from: { chain: 'arbitrum', token: 'USDC' },
+    to:   { chain: 'polygon',  token: 'USDT', amount: '0.2' },
+    actions: [
+      deposit({
+        marketId: morphoMarketId,
+        amount: '0.1',
+      }),
+      swap({
+        tokenIn: 'USDT',
+        tokenOut: 'USDC',
+        amountIn: dynamic(),
+        fee: '0.3',
+      }),
+      assertCondition({
+        erc20Balance: { token: 'USDC', gte: '0.08' },
+      }),
+      lend({
+        marketId: fluidMarketId,
+        amount: dynamic(),
+      }),
+    ],
+    onStatusUpdate: (transactionStates) => {
+      for (const state of transactionStates) {
+        console.log('Transaction:', state)
+      }
+    },
+  })
+
+  if (isLoadingQuote) return <p>Quoting…</p>
+  if (quoteError) return <p>Error: {quoteError.message}</p>
+
+  return (
+    <button disabled={!send} onClick={() => send?.()}>
+      Execute
+    </button>
+  )
+}
+```
+
+## What's happening here
+
+- **Concrete amount** on the first action (`"0.1"`) splits off a fixed slice. **`dynamic()`** on subsequent actions consumes whatever the previous step produced — no need to predict slippage or bridge fees. See [Dynamic Values](/sdk/composable-actions/dynamic-values) for details.
+- Actions run **top-down** in the same destination batch. If any step reverts — including [`assertCondition(...)`](/sdk/composable-actions/building-actions#assertcondition-on-chain-guard) guards — the whole destination batch reverts atomically, so partial state is never left behind.
+- `tokenAmount` in `useTrailsSendTransaction` and `to.amount` in `useQuote` both describe the destination budget Trails aims to deliver. The split into `0.1` + the rest happens inside the intent wallet on the destination chain.
+- `onStatusUpdate` fires as each hop lands — origin approval, bridge, destination batch — so you can wire it into a progress UI.
+
+## Next steps
+
+- Explore different actions in [Building Actions](/sdk/composable-actions/building-actions).
+- Learn how `dynamic()` and `self()` work under the hood in [Dynamic Values](/sdk/composable-actions/dynamic-values).
+- Discover markets and providers with [Markets & Providers](/sdk/composable-actions/markets-and-providers).

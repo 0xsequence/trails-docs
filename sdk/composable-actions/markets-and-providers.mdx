@@ -1,0 +1,84 @@
+---
+title: Markets & Providers
+description: "Discover markets and supported providers at runtime"
+sidebarTitle: "Markets & Providers"
+---
+
+Every `lend` and `deposit` action needs a `marketId`. 
+
+## React hooks
+
+Use `useEarnMarkets` and `useEarnProviders` inside a React tree wrapped with `TrailsProvider`:
+
+```tsx
+import { useEarnMarkets, useEarnProviders } from '0xtrails'
+
+function MarketPicker() {
+  const { data: providers } = useEarnProviders()
+
+  const { data: markets, total, isLoading } = useEarnMarkets({
+    chain: 'base',
+    type: 'lending',         // "lending" | "vault"
+    provider: 'aave',        // optional
+    search: 'usdc',          // optional free-text
+    sortBy: 'rewardRateDesc',
+    limit: 20,
+    offset: 0,
+  })
+  // markets[i].id → pass to lend / deposit
+}
+```
+
+### `useEarnMarkets` filters
+
+| Field      | Type                             | Description                                    |
+| ---------- | -------------------------------- | ---------------------------------------------- |
+| `chain`    | `ChainIdentifier`                | Chain name or ID                               |
+| `type`     | `"lending"` \| `"vault"` \| …    | Market category                                |
+| `provider` | `ProviderId`                     | Restrict to one protocol                       |
+| `search`   | `string`                         | Free-text search over market names             |
+| `sortBy`   | `SortBy`                         | e.g. `"rewardRateDesc"`                        |
+| `limit`    | `number`                         | Page size                                      |
+| `offset`   | `number`                         | Page offset                                    |
+
+Each `EarnMarket` exposes `id`, `rewardRate`, `statistics.tvlUsd`, `metadata.*`, `providerId`, and more.
+
+Use these hooks in browser apps to discover supported markets and providers before building an action list.
+
+## End-to-end example
+
+Wire a market picker into a typed action:
+
+```tsx
+import {
+  useQuote,
+  useEarnMarkets,
+  lend,
+} from '0xtrails'
+
+function LendWithMarketPicker() {
+  const { data: markets } = useEarnMarkets({
+    chain: 'base',
+    type: 'lending',
+    token: 'USDC',
+    sortBy: 'rewardRateDesc',
+    limit: 5,
+  })
+
+  const market = markets... // Choose your market
+
+  const { send } = useQuote({
+    from: { chain: 'arbitrum', token: 'USDC' },
+    to:   { chain: 'base',     token: 'USDC', amount: '100' },
+    actions: market
+      ? [lend({ marketId: market.id, amount: "100" })]
+      : [],
+  })
+
+  return (
+    <button disabled={!send} onClick={() => send?.()}>
+      Lend on {market?.metadata.name ?? '…'}
+    </button>
+  )
+}
+```

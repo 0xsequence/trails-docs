@@ -1,0 +1,67 @@
+---
+title: Dynamic Values
+description: "Runtime placeholders for amounts and addresses: dynamic() and self()"
+sidebarTitle: "Dynamic Values"
+---
+
+`dynamic()` and `self()` are runtime placeholders that resolve on the destination chain at execution time. They let you write action batches that adapt to whatever funds actually arrive, without predicting bridge fees or slippage.
+
+```ts
+import { dynamic, self } from '0xtrails'
+```
+
+## `dynamic()`
+
+Means "use whatever balance the intent wallet has at execution time". Accepted on any amount field of any builder **except** [`assertCondition`](/sdk/composable-actions/building-actions#assertcondition-on-chain-guard).
+
+The killer use case is chaining. You don't know exactly how much USDC will arrive on the destination chain (bridge fees, slippage, price moves), but you know you want to deposit all of it:
+
+```ts
+import { lend, dynamic } from '0xtrails'
+
+// Whatever USDC arrives, lend it all.
+const actions = [
+  lend({
+    marketId: 'base-usdc-aave-v3-lending',
+    amount: dynamic(),
+  }),
+]
+```
+
+### Multi-step chaining
+
+Each consumer marks its input `dynamic()`:
+
+```ts
+import { swap, lend, dynamic } from '0xtrails'
+
+const actions = [
+  swap({
+    tokenIn: 'USDC',
+    tokenOut: 'WETH',
+    amountIn: dynamic(),    // spend whatever USDC arrived
+    minAmountOut: '0.03',
+  }),
+  lend({
+    marketId: 'base-weth-aave-v3-lending',
+    amount: dynamic(),      // lend whatever WETH the swap produced
+  }),
+]
+```
+
+## `self()`
+
+Returns a placeholder address that resolves to the intent wallet at execution time, in case you need this address which is not known before executing.
+
+```ts
+import { swap, self } from '0xtrails'
+
+swap({
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  amountIn: '100',
+  recipient: self(), // force WETH to stay on the intent wallet
+})
+```
+
+`swap` picks a sensible default (`self()` for intermediate actions, the user's wallet for the final action), so you rarely need it — it's there for unusual compositions where you want to be explicit.

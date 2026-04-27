@@ -1,0 +1,18 @@
+---
+title: Supported Chains
+description: "Chain identifiers and swap provider coverage for composable actions"
+sidebarTitle: "Supported Chains"
+---
+
+## Chain identifiers
+
+Chain identifiers are either **names** or **chain IDs**. The following names are accepted wherever a `ChainIdentifier` is expected (`useQuote`, the action builders, `useEarnMarkets`, `uniswapV3.onChain(...)`, …):
+
+```
+apechain, arbitrum, arbitrum-nova, avalanche, avalanche-c, b3,
+base, binance, bsc, bnb, etherlink, gnosis, hyperevm, katana,
+mainnet, ethereum, monad, optimism, polygon, soneium, somnia,
+sonic, xai
+```
+
+Chain IDs (e.g. `8453` for Base, `42161` for Arbitrum) work interchangeably.

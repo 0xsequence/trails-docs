@@ -1,0 +1,105 @@
+---
+title: ERC-20 Helpers
+description: "Token registry, calldata builders, and slippage helper for composing actions"
+sidebarTitle: "ERC-20 Helpers"
+---
+
+Side-effect-free helpers for building ERC-20 calls and looking up tokens. Pair them with [`custom`](/sdk/composable-actions/building-actions#custom-arbitrary-contract-call-escape-hatch) for ergonomic custom calldata.
+
+```ts
+import { parseUnits } from 'viem'
+import {
+  erc20Utils,
+  buildCall,
+  buildApproveAndCall,
+  buildErc20Approve,
+  getAmountWithSlippage,
+} from '0xtrails'
+```
+
+## Token registry — `erc20Utils`
+
+Look up canonical token metadata (address + decimals) per chain.
+
+```ts
+erc20Utils.USDC.onChain('base')
+// → { address: "0x833…", decimals: 6, name: "USD Coin", imageUrl: "…" }
+
+erc20Utils.USDC.addressOn('base')
+erc20Utils.USDC.decimalsOn('base')
+```
+
+### Generic symbol lookup
+
+For symbols not pinned as top-level properties:
+
+```ts
+erc20Utils.token('WETH').onChain(42161)
+```
+
+### ERC-20 calldata builders
+
+Standard calls, amounts are raw `bigint` wei:
+
+```ts
+const amount = parseUnits('1', 6) // 1 USDC
+
+erc20Utils.approve({ tokenAddress, spender, amount })
+erc20Utils.transfer({ tokenAddress, to, amount })
+erc20Utils.transferFrom({ tokenAddress, from, to, amount })
+```
+
+Each returns a `Call`. To include one in an action list, spread it into `custom({ ...call })`:
+
+```ts
+import { custom, erc20Utils } from '0xtrails'
+import { parseUnits } from 'viem'
+
+custom({
+  ...erc20Utils.approve({
+    tokenAddress: erc20Utils.USDC.addressOn('base'),
+    spender: '0xMyContract…',
+    amount: parseUnits('100', 6),
+  }),
+})
+```
+
+## Composing calls — `buildCall` / `buildApproveAndCall`
+
+`buildCall` constructs a `Call` from an ABI + function name + args:
+
+```ts
+import { buildCall } from '0xtrails'
+
+const stake = buildCall({
+  to: STAKING_CONTRACT,
+  data: {
+    abi: stakingAbi,
+    functionName: 'stake',
+    args: [parseUnits('100', 6)],
+  },
+})
+```
+
+`buildApproveAndCall` bundles an approval **and** a follow-up call into a `[approve, call]` tuple:
+
+```ts
+import { buildApproveAndCall, erc20Utils } from '0xtrails'
+
+const [approve, stakeCall] = buildApproveAndCall({
+  token: erc20Utils.USDC.addressOn('base'),
+  call: stake,
+  // amount defaults to maxUint256
+})
+```
+
+## Slippage helper — `getAmountWithSlippage`
+
+Subtracts `bps` basis points (1 bp = 0.01%) from a raw `bigint` amount.
+
+```ts
+getAmountWithSlippage(parseUnits('1', 6), 50) // 1 USDC, 0.5% → 0.995 USDC
+getAmountWithSlippage(parseUnits('1', 6), 500) // 1 USDC, 5%  → 0.95 USDC
+```
+
+Handy for computing a safe `minAmountOut` or `amountOutMinimum` before handing it to [`swap`](/sdk/composable-actions/building-actions#swap-on-chain-token-swap) or the [chain-scoped Uniswap V3 / SushiSwap V3 adapters](/sdk/composable-actions/building-actions#swap-adjacent-utilities).

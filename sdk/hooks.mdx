@@ -322,9 +322,12 @@ const MultiWalletBalances = ({ addresses }: { addresses: string[] }) => {
 ```ts
 import {
   useQuote,
-  TradeType,
+  useTrailsSendTransaction,
   type UseQuoteReturn,
   type UseQuoteProps,
+  type UseTrailsSendTransactionParameters,
+  type UseTrailsSendTransactionReturnType,
+  type ActionItem,
   type SwapReturn,
   type Quote
 } from '0xtrails'
@@ -338,52 +341,29 @@ The `useQuote` hook provides real-time quotes for token swaps, cross-chain trans
 
 ```tsx
 import { useEffect } from 'react'
-import { useQuote, TradeType } from '0xtrails'
+import { useQuote } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
 
 export const SwapComponent = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
 
-  const { quote, swap, isLoadingQuote, quoteError, refetchQuote } = useQuote({
+  const { quote, send, isLoadingQuote, quoteError, refetchQuote } = useQuote({
     walletClient,
-    fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
-    fromChainId: 1, // Ethereum
-    toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // USDC
-    toChainId: 8453, // Base
-    swapAmount: '1000000', // 1 USDC
-    tradeType: TradeType.EXACT_INPUT,
-    toRecipient: address,
+    from: {
+      token: 'USDC',
+      chain: 'ethereum',
+      amount: '1',
+    },
+    to: {
+      token: 'USDC',
+      chain: 'base',
+      recipient: address,
+    },
     slippageTolerance: '0.005', // 0.5%
     onStatusUpdate: (states) => {
       console.log('Transaction states:', states)
     },
-    checkoutOnHandlers: {
-      triggerCheckoutStart: () => {
-        console.log("Checkout started")
-      },
-      triggerCheckoutSignatureConfirmed: () => {
-        console.log("Signature confirmed")
-      },
-      triggerCheckoutSignatureRequest: () => {
-        console.log("Signature request")
-      },
-      triggerCheckoutComplete: (
-        txStatus: "success" | "fail",
-        accountAddress?: string,
-      ) => {
-        console.log(`Checkout complete for account ${accountAddress}: ${txStatus}`)
-      },
-      triggerCheckoutStatusUpdate: (transactionStates: TransactionState[]) => {
-        console.log("Transaction states updated:", transactionStates)
-      },
-      triggerCheckoutQuote: (quote: any) => {
-        console.log("Quote received:", quote)
-      },
-      triggerCheckoutSignatureRejected: (error: any) => {
-        console.log("Signature rejected:", error)
-      },
-    }
   })
 
   // Quotes can become stale; refetch every ~30 seconds
@@ -395,10 +375,10 @@ export const SwapComponent = () => {
   }, [refetchQuote])
 
   const handleSwap = async () => {
-    if (!swap) return
+    if (!send) return
 
     try {
-      const result = await swap()
+      const result = await send()
       console.log('Swap completed:', result)
     } catch (error) {
       console.error('Swap failed:', error)
@@ -406,7 +386,7 @@ export const SwapComponent = () => {
   }
 
   if (isLoadingQuote) return <div>Getting quote...</div>
-  if (quoteError) return <div>Error: {String(quoteError)}</div>
+  if (quoteError) return <div>Error: {quoteError.message}</div>
   if (!quote) return <div>No quote available</div>
 
   return (
@@ -415,10 +395,10 @@ export const SwapComponent = () => {
         From: {quote.fromAmount} {quote.originToken.symbol}
       </div>
       <div>
-          To: {quote.toAmount} {quote.destinationToken.symbol}
+        To: {quote.toAmount} {quote.destinationToken.symbol}
       </div>
       <div>
-          Fee: {quote.fees?.totalFeeAmountUsdDisplay}
+        Fee: {quote.fees?.totalFeeAmountUsdDisplay}
       </div>
       <button onClick={handleSwap}>
         Execute Swap
@@ -433,48 +413,196 @@ export const SwapComponent = () => {
 ```ts
 type UseQuoteProps = {
   walletClient?: any
-  fromTokenAddress?: string | null
-  fromChainId?: number | null
-  toTokenAddress?: string | null
-  toChainId?: number | null
-  toCalldata?: string | null
-  swapAmount?: string | bigint
-  toRecipient?: string | null
-  tradeType?: TradeType | null
+  walletAddress?: string | null
+  from: {
+    token: string
+    chain: ChainIdentifier
+    amount?: string | bigint // EXACT_INPUT when set
+  }
+  to: {
+    token: string
+    chain: ChainIdentifier
+    recipient?: string | null
+    approve?: string | null
+    amount?: string | bigint // EXACT_OUTPUT when set
+    calls?: (Call | Call[])[] | null
+    calldata?: string | null // deprecated; prefer calls or actions
+  }
   slippageTolerance?: string | number | null
   onStatusUpdate?: ((transactionStates: TransactionState[]) => void) | null
   swapProvider?: RouteProvider | null
   bridgeProvider?: RouteProvider | null
+  swapProviderFallback?: boolean
+  bridgeProviderFallback?: boolean
   checkoutOnHandlers?: Partial<CheckoutOnHandlers>
-  paymasterUrl?: string
   selectedFeeOption?: FeeOption | null
   abortSignal?: AbortSignal
   apiKey?: string | null
   nodeGatewayEnv?: 'prod' | 'dev' | 'local' | 'cors-anywhere'
   isSmartWallet?: boolean | null
+  mode?: 'pay' | 'fund' | 'earn' | 'swap' | 'withdraw' | null
+  intentProtocolVersion?: IntentProtocolVersion | null
+  actions?: ActionItem[]
 }
 
 type UseQuoteReturn = {
   quote: Quote | null
-  swap: (() => Promise<SwapReturn | null>) | null
+  send: ((options?: SendOptions) => Promise<SwapReturn | null>) | null
   isLoadingQuote: boolean
-  quoteError: unknown
+  quoteError: QuoteError | null
   quoteErrorPrettified: string
-  refetchQuote: () => void
+  refetchQuote: () => Promise<void>
   abort: () => void
+  feeOptions: FeeOption[]
+  isRecipientContract: boolean | null
+  isSenderContractOnOrigin: boolean | null
+  isSenderContractOnDestination: boolean | null
 }
 
-enum TradeType {
-  EXACT_INPUT = 'EXACT_INPUT',  // User specifies exact input amount
-  EXACT_OUTPUT = 'EXACT_OUTPUT' // User specifies exact output amount
+type ActionItem =
+  | LendActionItem
+  | SwapActionItem
+  | DepositActionItem
+  | CustomActionItem
+  | AssertActionItem
+```
+
+### useTrailsSendTransaction Hook
+
+`useTrailsSendTransaction` creates a button-driven transaction flow with the Trails modal. It accepts most `useQuote` options except `from`, `to`, `walletClient`, and `selectedFeeOption`; pass destination requirements when calling `sendTransaction`.
+
+```tsx
+import { useTrailsSendTransaction } from '0xtrails'
+
+const { sendTransaction, isPending, error } = useTrailsSendTransaction()
+
+sendTransaction({
+  to: '0x1234567890123456789012345678901234567890',
+  value: 1000000000000000n, // 0.001 native token
+})
+```
+
+#### Types
+
+```ts
+type TrailsSendTransactionVariables = {
+  to?: `0x${string}`
+  value?: bigint
+  data?: `0x${string}`
+  tokenAddress?: `0x${string}`
+  tokenAmount?: string
+  fromTokenAddress?: `0x${string}`
+  fromChainId?: number
+  fromAmount?: string
 }
 
-enum RouteProvider {
-  AUTO = 'AUTO',
-  CCTP = 'CCTP',
-  RELAY = 'RELAY',
-  SUSHI = 'SUSHI',
-  ZEROX = 'ZEROX'
+type UseTrailsSendTransactionParameters =
+  Omit<UseQuoteProps, 'from' | 'to' | 'walletClient' | 'selectedFeeOption'> & {
+    calls?: DestinationCallsInput
+    onSuccess?: (data: SwapReturn, variables: TrailsSendTransactionVariables) => void
+    onError?: (error: Error, variables: TrailsSendTransactionVariables) => void
+    onSettled?: (
+      data: SwapReturn | undefined,
+      error: Error | null,
+      variables: TrailsSendTransactionVariables,
+    ) => void
+    receiptActionButtonText?: string
+    onReceiptAction?: () => void
+  }
+
+type UseTrailsSendTransactionReturnType = {
+  sendTransaction: (variables: TrailsSendTransactionVariables) => void
+  sendTransactionAsync: (variables: TrailsSendTransactionVariables) => Promise<SwapReturn>
+  retry: () => void
+  data: SwapReturn | undefined
+  error: Error | null
+  isPending: boolean
+  isSuccess: boolean
+  isError: boolean
+  isIdle: boolean
+  status: 'idle' | 'pending' | 'error' | 'success'
+  reset: () => void
+  variables: TrailsSendTransactionVariables | undefined
+}
+```
+
+## Earn Markets and Providers
+
+```ts
+import {
+  useEarnMarkets,
+  useEarnProviders,
+  type UseEarnMarketsParams,
+  type UseEarnMarketsReturn,
+  type UseEarnProvidersParams,
+  type UseEarnProvidersReturn,
+} from '0xtrails'
+```
+
+### useEarnMarkets Hook
+
+Fetch earn markets for `lend` and `deposit` actions. Use the returned market `id` as a `marketId`.
+
+```tsx
+import { useEarnMarkets } from '0xtrails'
+
+const { data, total, isLoading, error, refetch } = useEarnMarkets({
+  chain: 'polygon',
+  type: 'vault',
+  provider: 'morpho',
+  sortBy: 'rewardRateDesc',
+  search: 'USDT'
+})
+```
+
+#### Types
+
+```ts
+type UseEarnMarketsParams = {
+  chain?: ChainIdentifier
+  provider?: ProviderId
+  type?: 'lending' | 'vault'
+  sortBy?: 'statusEnterAsc' | 'statusEnterDesc' | 'statusExitAsc' | 'statusExitDesc' | 'rewardRateAsc' | 'rewardRateDesc'
+  limit?: number
+  offset?: number
+  search?: string
+}
+
+type UseEarnMarketsReturn = {
+  data: EarnMarket[] | undefined
+  total: number
+  isLoading: boolean
+  error: Error | null
+  refetch: () => void
+}
+```
+
+### useEarnProviders Hook
+
+Fetch supported earn providers.
+
+```tsx
+import { useEarnProviders } from '0xtrails'
+
+const { data, total, isLoading, error, refetch } = useEarnProviders({
+  limit: 50,
+})
+```
+
+#### Types
+
+```ts
+type UseEarnProvidersParams = {
+  limit?: number
+  offset?: number
+}
+
+type UseEarnProvidersReturn = {
+  data: Provider[] | undefined
+  total: number
+  isLoading: boolean
+  error: Error | null
+  refetch: () => void
 }
 ```
 
