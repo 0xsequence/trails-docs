@@ -15,14 +15,6 @@ Gasless transactions let users pay network fees using ERC-20 tokens (USDC, USDT)
 | Permit signatures | EIP-2612 permits enable gasless token approvals |
 | Flexible fee options | SDK shows available fee token options automatically |
 
-## How Gasless Works
-
-Trails supports two approaches for gasless transactions:
-
-1. **ERC-20 Fee Tokens** (Default) — Users sign a permit, and Trails' relayer submits the transaction. The fee is deducted from the user's ERC-20 balance.
-
-2. **4337 Paymasters** — For apps with their own paymaster infrastructure, Trails can route through ERC-4337 bundlers.
-
 ## Basic Gasless Payment
 
 When using the SDK, gasless fee options are automatically displayed if the user's origin token supports permits:

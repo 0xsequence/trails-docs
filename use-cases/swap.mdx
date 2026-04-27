@@ -1,32 +1,8 @@
 ---
 title: 'Swap'
-description: 'Leverage trails to swap & bridge tokens cross-chain seamlessly for your app.'
+description: 'Code examples for adding cross-chain token swaps to your app with Trails.'
 icon: 'arrows-rotate'
 ---
-
-## Swap with Trails
-
-Trails enables seamless token swapping across multiple blockchain networks in 1-click, allowing users to exchange tokens without manually bridging assets or dealing with multiple DEXs available via an integrated widget or API.
-
-## Enhanced Swapping Experience
-
-Traditional cross-chain swapping requires users to:
-- Approve any ERC20 tokens 
-- Bridge tokens to the target chain
-- Find and interact with DEXs on multiple networks
-- Pay gas fees on each chain
-- Wait for bridge confirmations
-
-We optimize the UX flow from any wallet to enable swaps across multiple liquidity sources & chains. All interactions are executed in a single confirmation for the user. Notably, this works across any wallet or application, ERC-7702 or 4337 is not required for batching transactions.
-
-## Use Cases
-
-Ideal for a variety of token exchange scenarios:
-
-- Cross-chain token swaps (e.g., ETH on Mainnet → USDC on Base)
-- Same-chain token exchanges with optimal routing
-- Portfolio rebalancing across chains
-- Converting between stablecoins with minimal slippage
 
 ## Examples
 
@@ -184,17 +160,6 @@ export const CustomSwapComponent = () => {
   )
 }
 ```
-
-## Why Swap with Trails?
-
-- **Unified Liquidity**: Access tokens from the user's wallet across all supported chains in one transaction
-- **High Performance Balance Retrieval**: A high-performant indexer is natively integrated to query the entirety of a user's balance for smooth UX and price retrieval
-- **Reduced Complexity**: Eliminate manual bridging and multi-step swaps (Approval and Transfer)
-- **Customized Branding**: Brand or theme the widget however you'd like to be native to your protocol or application
-- **Seamless UX**: Automatic routing finds optimal swap paths for low slippage for improved UX
-- **Gasless & Alt-fee token options**: Support for gasless or alternative gas tokens like USDC for transactions to reduce friction
-- **Real-time Quotes**: Live pricing and route optimization
-- **Chain Abstraction**: Built from the ground up to support multichain environments and abstract underlying chains.
 
 ## Next Steps
 
