@@ -1426,7 +1426,6 @@ These are advanced functions for direct intent management. Most developers shoul
 
 ```ts
 import {
-  calculateIntentAddress,
   calculateOriginAndDestinationIntentAddresses,
   commitIntent,
   sendOriginTransaction,
@@ -1450,21 +1449,6 @@ type TrailsFee = {
   amountUsd: number
   token: Token
 }
-```
-
-### calculateIntentAddress
-
-Calculates the intent contract address for a given set of parameters.
-
-**Signature**: `(params: IntentParams) => Promise<string>`
-
-**Usage**:
-```ts
-const intentAddress = await calculateIntentAddress({
-  fromChainId: 1,
-  toChainId: 8453,
-  // ... other params
-})
 ```
 
 ### calculateOriginAndDestinationIntentAddresses
