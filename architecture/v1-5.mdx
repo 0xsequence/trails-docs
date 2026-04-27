@@ -140,7 +140,7 @@ See the full [Composable Actions documentation](/sdk/composable-actions/overview
 `intentProtocol` is an optional override on `TrailsProvider` and `useQuote`. The default is `"v1.5"`.
 
 ```tsx
-import { TrailsProvider, IntentProtocolVersion } from '0xtrails'
+import { TrailsProvider } from '0xtrails'
 
 // Default — no configuration needed.
 <TrailsProvider config={{ trailsApiKey: "..." }}>
@@ -151,7 +151,7 @@ import { TrailsProvider, IntentProtocolVersion } from '0xtrails'
 <TrailsProvider
   config={{
     trailsApiKey: "...",
-    intentProtocol: IntentProtocolVersion.v1,
+    intentProtocol: "v1",
   }}
 >
   {children}
