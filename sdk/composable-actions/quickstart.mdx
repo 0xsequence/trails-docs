@@ -32,7 +32,7 @@ import {
   erc20Utils,
 } from '0xtrails'
 
-const morphoMarketId = 'polygon-usdt-fusdt-0x6f5e34eff43d9ab7c977512509c53840b5efba85-4626-vault'
+const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
 const fluidMarketId = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
 
 export function ComposedEarnSendTransactionButton({
@@ -41,7 +41,6 @@ export function ComposedEarnSendTransactionButton({
   recipient: `0x${string}`
 }) {
   const { sendTransaction, isPending, error } = useTrailsSendTransaction({
-    mode: 'earn',
     actions: [
       // a) Deposit 0.1 USDT -> Morpho vault.
       deposit({
@@ -82,7 +81,7 @@ export function ComposedEarnSendTransactionButton({
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDT.addressOn('polygon'),
-          tokenAmount: '200000', // 0.2 USDT, raw units
+          tokenAmount: '200000', 
         })
       }
     >
@@ -108,7 +107,7 @@ import {
   assertCondition,
 } from '0xtrails'
 
-const morphoMarketId = 'polygon-usdt-fusdt-0x6f5e34eff43d9ab7c977512509c53840b5efba85-4626-vault'
+const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
 const fluidMarketId = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
 
 export function ComposedEarnQuoteButton() {

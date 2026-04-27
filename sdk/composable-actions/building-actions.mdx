@@ -61,7 +61,7 @@ swap({
 - `provider`: `"UNISWAP_V3"`. If it isn't deployed on the destination chain, the error tells you to try SushiSwap.
 - `recipient`: the intent wallet for the final action; for intermediate actions, output flows back so the next action can consume it. Override only if you want to send output to a third party.
 
-### Swap-adjacent utilities
+## Swap utilities
 
 For anything that isn't "build calldata for `useQuote`" — on-chain quoting, pool discovery, raw `Call[]` composition, address lookups — `0xtrails` exports the underlying chain-scoped helpers behind `swap`. The same adapter is exported for both Uniswap V3 and SushiSwap V3, with identical method names, parameters, and fee tiers.
 
@@ -79,7 +79,7 @@ Typical use cases:
 - **Pool liquidity check** — skip a pair or switch `fee` tier when `getPool` returns `null`.
 - **Custom compositions** — build `Call[]` directly and pass them through `to.calls` (`useQuote`) or `calls` (`useTrailsSendTransaction`) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
 
-#### Chain-scoped adapter
+### Chain-scoped adapter
 
 `uniswapV3.onChain(chain)` (or `sushiswapV3.onChain(chain)`) returns an adapter bound to a specific chain (name or chain ID):
 
@@ -90,7 +90,7 @@ const uni = uniswapV3.onChain('base')
 // or: uniswapV3.onChain(8453)
 ```
 
-##### `simulateSwap`
+### `simulateSwap`
 
 Dry-run a swap against the provider's QuoterV2 — no signing, no broadcast. Use this to render expected output and price impact before the user commits.
 
@@ -111,9 +111,9 @@ const quote = await uni.simulateSwap({
 // quote.sqrtPriceX96After
 ```
 
-`type` can be `"exactInputSingle"` or `"exactOutputSingle"`; pass `amountIn` with the former and `amountOut` with the latter.
+`type` can be `"exactInputSingle"` or `"exactOutputSingle"`, pass `amountIn` with the former and `amountOut` with the latter.
 
-##### `getPool`
+### `getPool`
 
 Find the pool address for a pair and fee tier. Returns `null` when no pool exists — handy for switching fee tier or skipping the pair.
 
@@ -129,7 +129,7 @@ if (!pool) {
 }
 ```
 
-##### `swapExactInputSingle`
+### `swapExactInputSingle`
 
 Build an approval + swap `Call[]` for an exact-input swap. Pass the calls through `to.calls` / `calls` to embed inside an intent, or send them directly from a wallet.
 
@@ -146,7 +146,7 @@ const calls = uni.swapExactInputSingle({
 })
 ```
 
-##### `swapExactOutputSingle`
+### `swapExactOutputSingle`
 
 Build an approval + swap `Call[]` for an exact-output swap.
 
@@ -163,7 +163,7 @@ const calls = uni.swapExactOutputSingle({
 })
 ```
 
-#### Address lookups
+### Address lookups
 
 Top-level helpers return contract addresses per chain:
 
@@ -175,7 +175,7 @@ sushiswapV3.swapRouterAddressOn('base')
 sushiswapV3.factoryAddressOn('base')
 ```
 
-#### Capability checks
+### Capability checks
 
 Not every chain has both providers deployed. `isSupportedOn` returns `false` instead of throwing — useful for falling back between providers or warning the user.
 
@@ -220,7 +220,6 @@ deposit({
 Optional params:
 
 - `receiverAddress` — **defaults to the connected user wallet** so vault shares land on the user's EOA.
-- `useMaxAllowance` — when `true`, the resolver emits a max allowance approval instead of an exact-amount approval.
 
 ## `assertCondition` — on-chain guard
 

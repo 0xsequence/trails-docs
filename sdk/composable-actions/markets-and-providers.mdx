@@ -18,7 +18,7 @@ function MarketPicker() {
 
   const { data: markets, total, isLoading } = useEarnMarkets({
     chain: 'base',
-    type: 'lending',         // "lending" | "vault" | "staking" | …
+    type: 'lending',         // "lending" | "vault"
     provider: 'aave',        // optional
     search: 'usdc',          // optional free-text
     sortBy: 'rewardRateDesc',
@@ -36,13 +36,12 @@ function MarketPicker() {
 | `chain`    | `ChainIdentifier`                | Chain name or ID                               |
 | `type`     | `"lending"` \| `"vault"` \| …    | Market category                                |
 | `provider` | `ProviderId`                     | Restrict to one protocol                       |
-| `token`    | `string`                         | Symbol or address of the supply token          |
 | `search`   | `string`                         | Free-text search over market names             |
 | `sortBy`   | `SortBy`                         | e.g. `"rewardRateDesc"`                        |
 | `limit`    | `number`                         | Page size                                      |
 | `offset`   | `number`                         | Page offset                                    |
 
-Each `EarnMarket` exposes `id`, `token`, `rewardRate`, `statistics.tvlUsd`, `metadata.*`, `providerId`, and more.
+Each `EarnMarket` exposes `id`, `rewardRate`, `statistics.tvlUsd`, `metadata.*`, `providerId`, and more.
 
 Use these hooks in browser apps to discover supported markets and providers before building an action list.
 
@@ -55,7 +54,6 @@ import {
   useQuote,
   useEarnMarkets,
   lend,
-  dynamic,
 } from '0xtrails'
 
 function LendWithMarketPicker() {
@@ -73,7 +71,7 @@ function LendWithMarketPicker() {
     from: { chain: 'arbitrum', token: 'USDC' },
     to:   { chain: 'base',     token: 'USDC', amount: '100' },
     actions: market
-      ? [lend({ marketId: market.id, amount: dynamic() })]
+      ? [lend({ marketId: market.id, amount: "100" })]
       : [],
   })
 
