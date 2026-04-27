@@ -550,8 +550,8 @@ const { data, total, isLoading, error, refetch } = useEarnMarkets({
   chain: 'polygon',
   type: 'vault',
   provider: 'morpho',
-  token: 'USDT',
   sortBy: 'rewardRateDesc',
+  search: 'USDT'
 })
 ```
 
@@ -562,7 +562,6 @@ type UseEarnMarketsParams = {
   chain?: ChainIdentifier
   provider?: ProviderId
   type?: 'lending' | 'vault'
-  token?: string
   sortBy?: 'statusEnterAsc' | 'statusEnterDesc' | 'statusExitAsc' | 'statusExitDesc' | 'rewardRateAsc' | 'rewardRateDesc'
   limit?: number
   offset?: number
