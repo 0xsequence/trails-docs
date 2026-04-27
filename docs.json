@@ -43,6 +43,7 @@
               "use-cases/swap",
               "use-cases/fund",
               "use-cases/earn",
+              "use-cases/compose-actions",
               "overview/cross-chain-execution"
             ]
           },

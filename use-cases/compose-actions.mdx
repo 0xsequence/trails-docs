@@ -1,0 +1,282 @@
+---
+title: 'Compose Actions'
+description: 'Chain multiple DeFi steps into a single cross-chain intent using the composable actions builders.'
+icon: 'layer-group'
+---
+
+## How composable actions work
+
+Composable Actions are a typed DSL for describing what happens on the destination chain after Trails bridges and swaps funds. Instead of encoding calldata by hand, you build a list of high-level steps and pass them to `useQuote` or `useTrailsSendTransaction`. Trails handles quoting, bridging, and executing.
+
+```ts
+import { swap, lend, deposit, assertCondition, custom, dynamic } from '0xtrails'
+```
+
+Each builder returns an action descriptor. An array of them is what you pass to the hook. Actions run top-down in the same destination batch. If any step reverts, the entire batch reverts atomically.
+
+Two integration styles are available:
+
+- **`useTrailsSendTransaction`** — trigger the Trails modal, let the user choose their origin token and chain
+- **`useQuote`** — preview the quote in your own UI before sending
+
+## Supply into a lending protocol
+
+Use `lend` to supply into any Aave, Compound, or Fluid-style money market. Pass a `marketId` from [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers):
+
+```tsx
+import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
+
+export function LendButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending } = useTrailsSendTransaction({
+    actions: [
+      lend({
+        marketId: 'base-usdc-aave-v3-lending',
+        amount: '100',
+      }),
+    ],
+  })
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDC.addressOn('base'),
+          tokenAmount: '100000000', // 100 USDC (6 decimals)
+        })
+      }
+    >
+      {isPending ? 'Sending...' : 'Supply 100 USDC to Aave'}
+    </button>
+  )
+}
+```
+
+The user selects what token and chain to pay from. Trails bridges and swaps to deliver 100 USDC on Base, then calls `supply()` on the Aave pool.
+
+## Deposit into a vault
+
+Use `deposit` for ERC-4626 and vault-style markets (Morpho, Yearn, SummerFi, Sky):
+
+```tsx
+import { useTrailsSendTransaction, deposit, erc20Utils } from '0xtrails'
+
+export function MorphoDepositButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending } = useTrailsSendTransaction({
+    actions: [
+      deposit({
+        marketId: 'base-usdc-morpho-v1-vault',
+        amount: '100',
+      }),
+    ],
+  })
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDC.addressOn('base'),
+          tokenAmount: '100000000',
+        })
+      }
+    >
+      {isPending ? 'Sending...' : 'Deposit 100 USDC to Morpho'}
+    </button>
+  )
+}
+```
+
+Vault shares land on the user's wallet by default. Pass `receiverAddress` to redirect them.
+
+## Chain multiple DeFi steps
+
+Use `dynamic()` to consume whatever the previous step produced without predicting bridge fees or slippage. This example delivers 0.2 USDT on Polygon, splits it across four destination steps:
+
+```tsx
+import {
+  useTrailsSendTransaction,
+  deposit,
+  swap,
+  lend,
+  assertCondition,
+  dynamic,
+  erc20Utils,
+} from '0xtrails'
+
+const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
+const fluidMarketId  = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
+
+export function ComposedEarnButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending, error } = useTrailsSendTransaction({
+    actions: [
+      // 1. Deposit 0.1 USDT into a Morpho vault
+      deposit({
+        marketId: morphoMarketId,
+        amount: '0.1',
+      }),
+
+      // 2. Swap all remaining USDT to USDC
+      swap({
+        tokenIn: 'USDT',
+        tokenOut: 'USDC',
+        amountIn: dynamic(), // spend whatever USDT is left
+        fee: '0.3',
+      }),
+
+      // 3. Guard: revert the whole batch if the swap returned less than 0.08 USDC
+      assertCondition({
+        erc20Balance: { token: 'USDC', gte: '0.08' },
+      }),
+
+      // 4. Lend all resulting USDC into a Fluid market
+      lend({
+        marketId: fluidMarketId,
+        amount: dynamic(),
+      }),
+    ],
+    onStatusUpdate: (states) => {
+      for (const state of states) console.log('Transaction:', state)
+    },
+  })
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDT.addressOn('polygon'),
+          tokenAmount: '200000', // 0.2 USDT
+        })
+      }
+    >
+      {error ? error.message : isPending ? 'Sending...' : 'Execute'}
+    </button>
+  )
+}
+```
+
+`dynamic()` on `amountIn` and `amount` means "use whatever the intent wallet holds at that point". A concrete value like `"0.1"` splits off a fixed slice. Actions run sequentially and any failed `assertCondition` reverts the whole batch, so partial state is never left behind.
+
+## Preview a quote before sending
+
+Use `useQuote` when you want to show the user a breakdown before they commit. Pass the same `actions` array alongside `from` and `to` fields:
+
+```tsx
+import {
+  useQuote,
+  deposit,
+  swap,
+  lend,
+  assertCondition,
+  dynamic,
+} from '0xtrails'
+
+const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
+const fluidMarketId  = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
+
+export function ComposedEarnQuoteUI() {
+  const { send, isLoadingQuote, quoteError } = useQuote({
+    from: { chain: 'arbitrum', token: 'USDC' },
+    to:   { chain: 'polygon',  token: 'USDT', amount: '0.2' },
+    actions: [
+      deposit({ marketId: morphoMarketId, amount: '0.1' }),
+      swap({ tokenIn: 'USDT', tokenOut: 'USDC', amountIn: dynamic(), fee: '0.3' }),
+      assertCondition({ erc20Balance: { token: 'USDC', gte: '0.08' } }),
+      lend({ marketId: fluidMarketId, amount: dynamic() }),
+    ],
+    onStatusUpdate: (states) => {
+      for (const state of states) console.log('Transaction:', state)
+    },
+  })
+
+  if (isLoadingQuote) return <p>Quoting...</p>
+  if (quoteError) return <p>Error: {quoteError.message}</p>
+
+  return (
+    <button disabled={!send} onClick={() => send?.()}>
+      Execute
+    </button>
+  )
+}
+```
+
+## Discover market IDs at runtime
+
+Hard-coding market IDs is fine for known protocols. For a dynamic UI, use `useEarnMarkets` to fetch available markets and grab the `id` from the result:
+
+```tsx
+import { useEarnMarkets, useQuote, lend } from '0xtrails'
+
+function LendWithMarketPicker() {
+  const { data: markets, isLoading } = useEarnMarkets({
+    chain: 'base',
+    type: 'lending',
+    search: 'usdc',
+    sortBy: 'rewardRateDesc',
+    limit: 5,
+  })
+
+  const market = markets?.[0] // top market by yield
+
+  const { send } = useQuote({
+    from: { chain: 'arbitrum', token: 'USDC' },
+    to:   { chain: 'base',     token: 'USDC', amount: '100' },
+    actions: market
+      ? [lend({ marketId: market.id, amount: '100' })]
+      : [],
+  })
+
+  if (isLoading) return <p>Loading markets...</p>
+
+  return (
+    <button disabled={!send} onClick={() => send?.()}>
+      Lend on {market?.metadata.name ?? '...'}
+    </button>
+  )
+}
+```
+
+## Use a protocol not covered by the builders
+
+Use `custom` as an escape hatch for any protocol. Pair it with `erc20Utils` and `buildCall` to keep calldata ergonomic:
+
+```tsx
+import { custom, erc20Utils, buildCall } from '0xtrails'
+import { parseUnits } from 'viem'
+import { stakingAbi } from './abi'
+
+const STAKING_CONTRACT = '0x...'
+const usdc = erc20Utils.USDC.addressOn('base')
+
+const actions = [
+  custom({
+    ...erc20Utils.approve({
+      tokenAddress: usdc,
+      spender: STAKING_CONTRACT,
+      amount: parseUnits('100', 6),
+    }),
+  }),
+  custom({
+    ...buildCall({
+      to: STAKING_CONTRACT,
+      data: {
+        abi: stakingAbi,
+        functionName: 'stake',
+        args: [parseUnits('100', 6)],
+      },
+    }),
+  }),
+]
+```
+
+## SDK reference
+
+- [Overview](/sdk/composable-actions/overview) - How composable actions fit into the Trails intent model
+- [Building Actions](/sdk/composable-actions/building-actions) - Full API for `swap`, `lend`, `deposit`, `assertCondition`, `custom`
+- [Dynamic Values](/sdk/composable-actions/dynamic-values) - How `dynamic()` and `self()` resolve at runtime
+- [Markets and Providers](/sdk/composable-actions/markets-and-providers) - Discover market IDs with `useEarnMarkets`
+- [ERC-20 Helpers](/sdk/composable-actions/erc20-helpers) - Token registry, `buildCall`, `buildApproveAndCall`, slippage helper
