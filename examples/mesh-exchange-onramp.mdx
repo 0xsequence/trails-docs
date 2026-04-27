@@ -1,0 +1,168 @@
+---
+title: 'Mesh Exchange Onramp'
+description: 'Enable users to fund directly from centralized exchanges like Coinbase, Binance, and Robinhood using the Mesh Connect integration.'
+icon: 'building-columns'
+---
+
+The Mesh integration lets users initiate a transfer directly from their CEX account (Coinbase, Binance, Kraken, Robinhood, and others) without leaving your app. Mesh handles the OAuth connection and transfer — Trails receives the funds and routes them to the destination.
+
+This launched on April 2, 2025 and requires no separate Mesh account or API keys on your side. Trails manages the Mesh session server-side.
+
+## Prerequisites
+
+- A Trails API key from [dashboard.trails.build](https://dashboard.trails.build)
+- The `@0xtrails/trails` SDK installed
+
+## Setup
+
+### 1. Add the `onramp` prop to `TrailsWidget`
+
+Pass an `onramp` config object with `mesh` enabled. At minimum, set `environment`:
+
+```tsx
+import { TrailsWidget } from '0xtrails/widget'
+
+<TrailsWidget
+  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+  mode="fund"
+  onramp={{
+    mesh: {
+      environment: 'production',
+    },
+  }}
+/>
+```
+
+This enables the "Fund from exchange" option inside the fund flow. Users will see a list of available exchanges to connect.
+
+### 2. Pre-select the exchange flow
+
+To skip the funding method selector and open the exchange flow directly, pass `fundMethod="onramp-exchange"`:
+
+```tsx
+<TrailsWidget
+  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+  mode="fund"
+  fundMethod="onramp-exchange"
+  onramp={{
+    mesh: {
+      environment: 'production',
+    },
+  }}
+/>
+```
+
+### 3. Restrict to specific exchanges
+
+The `exchanges` array filters which exchange integrations are shown. Values are Mesh integration keys (e.g. `"coinbase"`, `"binance"`, `"robinhoodDirect"`). If omitted, all supported exchanges are listed.
+
+```tsx
+<TrailsWidget
+  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+  mode="fund"
+  onramp={{
+    mesh: {
+      environment: 'production',
+      exchanges: ['coinbase', 'robinhoodDirect'],
+    },
+  }}
+/>
+```
+
+## Using sandbox mode
+
+During development, use `environment: 'sandbox'` to test the flow without real funds. A yellow banner is shown inside the widget when sandbox is active.
+
+```tsx
+<TrailsWidget
+  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+  mode="fund"
+  onramp={{
+    mesh: {
+      environment: 'sandbox',
+    },
+  }}
+/>
+```
+
+## Full example
+
+```tsx
+import { TrailsProvider } from '0xtrails'
+import { TrailsWidget } from '0xtrails/widget'
+
+export function App() {
+  return (
+    <TrailsProvider config={{ trailsApiKey: process.env.NEXT_PUBLIC_TRAILS_API_KEY }}>
+      <FundWithExchange />
+    </TrailsProvider>
+  )
+}
+
+function FundWithExchange() {
+  return (
+    <TrailsWidget
+      mode="fund"
+      toChainId={8453}
+      toToken="USDC"
+      toAddress="0xYourRecipientAddress"
+      fundMethod="onramp-exchange"
+      onramp={{
+        mesh: {
+          environment: 'production',
+        },
+      }}
+      onCheckoutComplete={({ sessionId }) => {
+        console.log('Exchange transfer initiated:', sessionId)
+      }}
+    />
+  )
+}
+```
+
+## How the auth flow works
+
+1. The user selects an exchange from the list.
+2. Mesh Connect opens an OAuth popup or redirect to the exchange's login.
+3. After authentication, Mesh Connect displays a transfer confirmation showing the amount, token, and destination.
+4. The user confirms. Mesh initiates the withdrawal from their exchange account.
+5. Once the transfer is detected on-chain, Trails routes it to the destination as configured.
+
+The Trails widget shows a pending state while the exchange processes the withdrawal. Session tokens are stored locally for the duration of the session (5 minutes) so the user does not have to re-authenticate if they retry.
+
+## Supported exchanges
+
+Available exchanges are returned dynamically from the Mesh API. The current list includes Coinbase, Binance, Kraken, Robinhood, and others. On desktop, Kraken Direct is excluded from the list (Mesh limitation). On mobile, all integrations are available.
+
+To get the current list programmatically, the widget fetches from `getMeshIntegrations` at load time. You can also query the Trails API directly if you need the list server-side.
+
+## `fundOptions` integration
+
+The Mesh exchange flow can be combined with `fundOptions.fundMethodsList` to control what funding methods appear in the selector:
+
+```tsx
+<TrailsWidget
+  mode="fund"
+  onramp={{
+    mesh: {
+      environment: 'production',
+    },
+  }}
+  fundOptions={{
+    fundMethodsList: ['connected-wallet', 'crypto-transfer', 'exchange'],
+    hideUnlistedMethods: true,
+  }}
+/>
+```
+
+Accepted values in `fundMethodsList`: `"connected-wallet"`, `"crypto-transfer"`, `"cc-onramp"`, `"exchange"`.
+
+## Troubleshooting
+
+**Exchange list is empty**: Confirm `trailsApiKey` and `trailsApiUrl` are set correctly. The exchange list fetch requires a valid API key.
+
+**Popup blocked**: Mesh Connect opens a popup window. If the browser blocks it, the widget shows a "Retry" button. Encourage users to allow popups for your domain, or trigger the flow from a user gesture (button click) rather than programmatically.
+
+**Session expired**: The Mesh session is valid for 5 minutes. If the session expires before the user completes the transfer, a "Refresh Session" button appears to restart the flow.
+
+**Sandbox not showing real exchanges**: In sandbox mode, Mesh returns test integrations. Switch to `environment: 'production'` to see real exchange options.

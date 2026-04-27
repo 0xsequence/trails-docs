@@ -6,7 +6,7 @@ icon: 'network-wired'
 
 ## Mainnet Chains
 
-Trails supports 18 mainnet chains with full cross-chain routing capabilities:
+Trails supports the following mainnet chains with full cross-chain routing capabilities:
 
 | Chain | Chain ID | Native Token |
 |-------|----------|--------------|
@@ -26,12 +26,14 @@ Trails supports 18 mainnet chains with full cross-chain routing capabilities:
 | Xai | 660279 | XAI |
 | Katana | 747474 | ETH |
 | Etherlink | 42793 | XTZ |
-| Somnia | 5031 | SOMI |
+| Berachain | 80094 | BERA |
+| Sonic | 146 | S |
 | Monad | 143 | MON |
+| Somnia | 5031 | SOMI |
 
-## Token Support Legend
-
-- **✓** = Native token available on chain
+<Note>
+Berachain, Sonic, Monad, and Somnia are newly integrated chains shipping with v1.5. Route coverage and supported token pairs will expand over time.
+</Note>
 
 ## Stablecoin Details
 
@@ -60,28 +62,33 @@ USDC is available on most major chains. Chains with CCTP support enable native U
 | Avalanche | `0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7` |
 | BNB Chain | `0x55d398326f99059fF775485246999027B3197955` |
 
-## Supported Bridges & Liquidity
+## Supported Bridges and Liquidity
 
-Trails routes transactions through the optimal liquidity sources:
+Trails routes transactions through the optimal liquidity source for each transfer:
 
 | Provider | Type | Description |
 |----------|------|-------------|
-| **Relay** | Bridge/Filler | Fast cross-chain execution with instant finality |
+| **Relay** | Bridge / Filler | Fast cross-chain execution via intent-based filler network |
 | **CCTP V2** | Bridge | Native USDC cross-chain transfers via Circle |
-| **SushiSwap** | DEX | Cross-chain routing with deep onchain liquidity |
+| **SushiSwap** | DEX | On-chain swap routing with V3 concentrated liquidity |
+| **0x Protocol** | DEX aggregator | Best execution routing across multiple DEXs |
+| **LayerZero OFT** | Bridge | Omnichain Fungible Token bridge for native cross-chain transfers |
+| **LayerZero Stargate** | Bridge | Native asset bridging via unified Stargate liquidity pools |
+| **Gas.zip** | Bridge | Gas-optimized cross-chain routing |
 
-<Note>
-Additional bridges and liquidity sources can be integrated on request. Contact us if you need a specific provider.
-</Note>
+See [Route Providers](/sdk/quote-providers) for details on configuring bridge and swap providers.
 
 ## Request a New Chain
 
-Need a chain that's not listed? [Contact us](mailto:support@sequence.xyz) to request integration.
+Need a chain that's not listed? [Contact us](https://t.me/build_with_trails) to request integration.
 
 ## Related Resources
 
 <CardGroup cols={2}>
   <Card title="API Reference" icon="code" href="/api-reference/endpoints/get-chains">
     GetChains API endpoint
+  </Card>
+  <Card title="Route Providers" icon="route" href="/sdk/quote-providers">
+    Configure bridge and swap providers
   </Card>
 </CardGroup>

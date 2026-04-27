@@ -18,9 +18,10 @@ import { TrailsProvider } from '0xtrails'
 <TrailsProvider
   config={{
     trailsApiKey: "...",
-    trailsApiUrl: "...", // optional
-    sequenceIndexerUrl: "...", // optional
-    sequenceNodeGatewayUrl: "..." // optional
+    trailsApiUrl: "...",            // optional
+    sequenceIndexerUrl: "...",      // optional
+    sequenceNodeGatewayUrl: "...",  // optional
+    intentProtocol: "v1.5",        // optional — defaults to v1.5
   }}
 >
   <App />
@@ -41,6 +42,7 @@ import { TrailsProvider } from '0xtrails'
 | `walletConnectProjectId` | `string` | No | WalletConnect project ID for wallet connections. |
 | `slippageTolerance` | `string \| number` | No | Default slippage tolerance for swaps (e.g., `0.005` for 0.5%). |
 | `debug` | `boolean` | No | Enable debug logging (default: `false`). |
+| `intentProtocol` | `"v1" \| "v1.5"` | No | Override intent protocol version (default: `"v1.5"`). See [Protocol v1.5](/architecture/v1-5). |
 
 ## Chains
 

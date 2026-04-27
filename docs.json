@@ -55,7 +55,8 @@
               "examples/transaction-history",
               "examples/tokens-chains-prices",
               "examples/refunds",
-              "examples/x402"
+              "examples/x402",
+              "examples/mesh-exchange-onramp"
             ]
           },
           {
@@ -63,6 +64,7 @@
             "pages": [
               "architecture/how-it-works",
               "architecture/protocol",
+              "architecture/v1-5",
               "architecture/pricing-fees",
               "architecture/alt-fee-tokens",
               "architecture/unified-liquidity",
