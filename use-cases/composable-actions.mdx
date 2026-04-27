@@ -4,7 +4,22 @@ description: 'Chain multiple DeFi steps into a single cross-chain intent using t
 icon: 'layer-group'
 ---
 
-For a concept overview, see [Composable Actions](/sdk/composable-actions/overview). For the full builder API, see [Building Actions](/sdk/composable-actions/building-actions).
+## Composable Actions with Trails
+
+Composable Actions allow developers to easily specify multiple actions to take on a destination chain that can compose with multiple protocols. For example, staking in a liquid staking token and then depositing that token into a vault. This means a user can sign a single transaction and multiple onchain interactions can take place from virtually any chain as the starting point.
+
+Instead of encoding calldata by hand, you build a list of high-level steps — `swap`, `lend`, `deposit`, `assertCondition`, `custom` — and pass them to `useQuote` or `useTrailsSendTransaction`. Trails handles quoting, bridging, and executing.
+
+## Use Cases
+
+Ideal for a variety of multi-step DeFi scenarios:
+
+- Stake a token and deposit the staked derivative into a lending protocol in one transaction
+- Swap to a vault asset and deposit, starting from any token on any chain
+- Split funds across multiple protocols atomically — if any step fails, the whole batch reverts
+- Chain yield strategies across chains without requiring the user to touch intermediate steps
+
+For a deeper look at the protocol model, see [Composable Actions Overview](/sdk/composable-actions/overview). For the full builder API, see [Building Actions](/sdk/composable-actions/building-actions).
 
 ## Supply into a lending protocol
 
