@@ -6,6 +6,10 @@ icon: 'layer-group'
 
 ## How composable actions work
 
+Composable Actions let you chain any number of sequential DeFi steps into a single cross-chain transaction. A user can stake a token, receive the staked derivative, and deposit it into a lending protocol on a different chain — all in one intent, with no manual bridging or intermediate steps.
+
+This gives developers a straightforward way to build powerful primitives on top of onchain infrastructure: complex multi-protocol flows that would otherwise require multiple transactions, manual coordination, and careful UX handling are reduced to a list of typed steps. Users get a single confirmation with a predictable outcome.
+
 Composable Actions are a typed DSL for describing what happens on the destination chain after Trails bridges and swaps funds. Instead of encoding calldata by hand, you build a list of high-level steps and pass them to `useQuote` or `useTrailsSendTransaction`. Trails handles quoting, bridging, and executing.
 
 ```ts
