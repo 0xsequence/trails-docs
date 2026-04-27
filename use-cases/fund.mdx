@@ -62,89 +62,95 @@ export const BaseDeposit = () => {
 
 
 
-### Depositing Fixed Amount into a DeFi Yield Vault
+### Depositing into a lending protocol
 
-Trails is able to call any smart contract function on the destination chain. A common pattern is to fund a DeFi vault, for example depositing into an Aave pool on Base:
+For protocols like Aave, Compound, and Fluid that are natively supported, use the `lend` composable action. This handles approval, the supply call, and dynamic amount resolution without encoding any calldata by hand:
 
-<CodeGroup>
-```tsx AaveDeposit.tsx
-import { TrailsWidget } from '0xtrails/widget'
-import { encodeFunctionData } from 'viem'
-import { aaveABI } from './abi.ts'
+```tsx
+import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
 
-export const AaveDepositExample = () => {
-  // Aave V3 Pool contract on Base
-  const AAVE_POOL_CONTRACT = "0xa0d9C1E9E48Ca30c8d8C3B5D69FF5dc1f6DFfC24"
-  
-  // Encode the deposit function call on Aave
-  const depositCalldata = encodeFunctionData({
-    abi: aaveABI,
-    functionName: 'depositETH',
-    args: [
-      "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5", // pool address
-      "0x97...", // receiver's address
-      0, // referralCode
+export function AaveLendButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending } = useTrailsSendTransaction({
+    actions: [
+      lend({
+        marketId: 'base-usdc-aave-v3-lending',
+        amount: '100',
+      }),
     ],
   })
 
   return (
-    <TrailsWidget
-      apiKey="YOUR_API_KEY"
-      mode="fund"
-      toAddress={AAVE_POOL_CONTRACT}
-      toAmount="100" // 100 USDC
-      toChainId={8453} // Base
-      toToken="USDC"
-      toCalldata={depositCalldata}
-      theme="auto"
-      onCheckoutComplete={({ sessionId }) => {
-        console.log('Aave deposit completed:', sessionId)
-      }}
-    />
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDC.addressOn('base'),
+          tokenAmount: '100000000', // 100 USDC (6 decimals)
+        })
+      }
+    >
+      {isPending ? 'Sending...' : 'Supply 100 USDC to Aave'}
+    </button>
   )
 }
 ```
 
-```typescript abi.ts
-export const aaveABI = [
-  {
-    type: "function",
-    name: "depositETH",
-    stateMutability: "payable",
-    inputs: [
-      { name: "pool", type: "address" },
-      { name: "onBehalfOf", type: "address" },
-      { name: "referralCode", type: "uint16" },
+Use `useEarnMarkets` to discover available market IDs rather than hard-coding them. See [Markets and Providers](/sdk/composable-actions/markets-and-providers).
+
+### Depositing into a vault
+
+For ERC-4626 and vault-style protocols (Morpho, Yearn, SummerFi), use the `deposit` composable action. The amount resolves at execution time so slippage and bridge output are handled automatically:
+
+```tsx
+import { useTrailsSendTransaction, deposit, erc20Utils } from '0xtrails'
+
+export function YearnDepositButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending } = useTrailsSendTransaction({
+    actions: [
+      deposit({
+        marketId: 'katana-usdc-yearn-v3-vault',
+        amount: '100',
+      }),
     ],
-    outputs: [],
-  },
-] as const
+  })
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDC.addressOn('katana'),
+          tokenAmount: '100000000',
+        })
+      }
+    >
+      {isPending ? 'Sending...' : 'Deposit 100 USDC to Yearn'}
+    </button>
+  )
+}
 ```
-</CodeGroup>
 
-### Depositing variable amount into a DeFi Yield Vault
+### Depositing into a custom contract
 
-Additionally, Trails is easily integrated with virtually any ERC-4626 yield vault. For many use cases, you can simple encode the static calldata directly and pass it to Trails directly. However, for user-selected amounts where the amount is part of the calldata, you must encode it with a placeholder amount so the widget replaces it with the exact bridged/swapped output at execution time which we have a handy utility for to identify the data to replace.
-
-For example, a user can select any amount with any token to deposit into a USDC yearn vault on Katana:
+If your target protocol is not covered by the `lend` or `deposit` builders, use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` in the widget's `toCalldata`. The widget replaces this constant with the actual bridged/swapped output at execution time:
 
 <CodeGroup>
-```tsx YearnDeposit.tsx
+```tsx CustomVaultDeposit.tsx
 import { TrailsWidget } from '0xtrails/widget'
 import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
-import { yearnVaultABI } from './abi.ts'
+import { customVaultABI } from './abi.ts'
 
-export const YearnDepositExample = () => {
-  // ERC-4626 vault contract on destination chain
-  const YEARN_VAULT_CONTRACT = "0x80c34BD3A3569E126e7055831036aa7b212cB159" // USDC Yearn Vault on Katana - replace with target vault address
+export const CustomVaultDeposit = () => {
+  const VAULT_CONTRACT = "0x..." // your contract address
 
-  // Encode the deposit call with placeholder amount which will be replaced at execution time automatically
   const depositCalldata = encodeFunctionData({
-    abi: yearnVaultABI,
+    abi: customVaultABI,
     functionName: 'deposit',
     args: [
-      TRAILS_ROUTER_PLACEHOLDER_AMOUNT, // amount (auto-filled at runtime based on user's input)
+      TRAILS_ROUTER_PLACEHOLDER_AMOUNT, // replaced with actual output at execution
       "0x...", // receiver address
     ],
   })
@@ -153,8 +159,8 @@ export const YearnDepositExample = () => {
     <TrailsWidget
       apiKey="YOUR_API_KEY"
       mode="fund"
-      toAddress={YEARN_VAULT_CONTRACT}
-      toChainId={747474} // Katana
+      toAddress={VAULT_CONTRACT}
+      toChainId={747474}
       toToken="USDC"
       toCalldata={depositCalldata}
       theme="auto"
@@ -167,7 +173,7 @@ export const YearnDepositExample = () => {
 ```
 
 ```typescript abi.ts
-export const yearnVaultABI = [
+export const customVaultABI = [
   {
     type: "function",
     name: "deposit",
@@ -248,7 +254,7 @@ Quotes expire after **10 minutes**.
 
 Explore more about configuring and customizing funding flows:
 
-- [**Compose Actions**](/use-cases/compose-actions) - Programmatic DeFi deposits using `lend`, `deposit`, and `swap` builders without the widget
+- [**Composable Actions**](/use-cases/composable-actions) - Programmatic DeFi deposits using `lend`, `deposit`, and `swap` builders without the widget
 
 - [**Fund Mode Configuration**](/sdk/modes/fund) - Complete configuration options and parameters for fund mode
 - [**SDK Configuration**](/sdk/configuration) - Widget setup, callbacks, and event handling  
