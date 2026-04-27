@@ -26,13 +26,12 @@ bun add 0xtrails
 ```tsx
 import { TrailsWidget } from '0xtrails/widget'
 
-export function Checkout() {
+export function Deposit() {
   return (
     <TrailsWidget
       apiKey="YOUR_API_KEY"
-      mode="pay"
-      toAddress="0xYourMerchantAddress"
-      toAmount="10"
+      mode="fund"
+      toAddress="0xYourDepositAddress"
       toChainId={8453}
       toToken="USDC"
     />
@@ -40,7 +39,7 @@ export function Checkout() {
 }
 ```
 
-User pays with any token from any chain → You receive exactly 10 USDC on Base.
+User deposits any token from any chain → Arrives as USDC on Base.
 
 <Note>
 **Get an API key**: Sign up and create an API key on the [Trails Dashboard](https://dashboard.trails.build/landing)
