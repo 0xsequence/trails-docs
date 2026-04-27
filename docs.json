@@ -43,7 +43,7 @@
               "use-cases/swap",
               "use-cases/fund",
               "use-cases/earn",
-              "use-cases/compose-actions",
+              "use-cases/composable-actions",
               "overview/cross-chain-execution"
             ]
           },
@@ -215,6 +215,10 @@
     {
       "source": "/sdk/composable-actions",
       "destination": "/sdk/composable-actions/overview"
+    },
+    {
+      "source": "/use-cases/compose-actions",
+      "destination": "/use-cases/composable-actions"
     }
   ],
   "footer": {
