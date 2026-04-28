@@ -4,18 +4,11 @@ description: 'How Trails supports common flows for DeFi protocols, yield opportu
 icon: 'wallet'
 ---
 
-
 ## Earn with Trails
 
-A variety of applications enable users to earn yield on their assets by depositing liquidity into various protocols. This is a complex task as developers must manually integrate various protocols across chains that also meets their target risk profile. Then once integrated, users must find a bridge, manually move their liquidity to the desired chain, potentially swap to the vault or pool asset, and finally deposit into the protocol.
+Trails simplifies DeFi yield deposits by natively integrating with protocols across chains — surfacing APY, TVL, and other metrics, and handling all swapping and bridging to the vault or pool token in a single transaction.
 
-Trails simplifies this by natively integrating with various DeFi protocols for easy integration - highlighting APY, TVL and other metrics important for users. Additionally, developers can specify any arbitrary logic and pass it to trails for more complex or custom flows.
-
-For users, all the complexity is handled for them including swapping and bridging to the corresponding vault or pool token in a single transaction to immediately begin earning yield.
-
-## Use Cases
-
-Ideal for a variety of yield-generating and staking scenarios:
+## Use cases
 
 - Deposit into lending protocols like Aave or Morpho
 - Fund yield aggregator vaults like Yearn Finance
@@ -23,22 +16,21 @@ Ideal for a variety of yield-generating and staking scenarios:
 
 ## Examples
 
-### Deposit into a user-selected Aave or Morpho vault
+### Deposit into a user-selected vault
 
-Trails has integrated multiple DeFi pools and vaults across several protocols such as Aave and Morpho that your users can select from out of the box.
+Trails has integrated multiple DeFi pools and vaults across Aave, Morpho, and others. Users can pick from the integrated set out of the box:
 
 <CodeGroup>
-```tsx AaveDeposit.tsx
-import { TrailsWidget } from '0xtrails/widget'
+```tsx EarnWidget.tsx
+import { Earn } from '0xtrails/widget'
 
 export const App = () => {
   return (
-    <TrailsWidget
+    <Earn
       apiKey="YOUR_API_KEY"
-      mode="earn"
       renderInline={true}
       theme="auto"
-      onCheckoutComplete={({ sessionId }) => {
+      onEarnSuccess={({ sessionId }) => {
         console.log('Deposit completed:', sessionId)
       }}
     />
@@ -49,42 +41,39 @@ export const App = () => {
 
 ### Deposit into a specific DeFi pool
 
-You can also use Trails with any lending pool that you define. The user can select any token they hold in their wallet from any supported chain to automatically swap to the corresponding pool token for a deposit. The calldata can be changed to support virtually any function and contract that you specify.
-
-For example, depositing USDC into an Aave pool on Base:
+Pass a `to.calldata` to target any contract and function. The user can pay from any token on any chain:
 
 <CodeGroup>
 ```tsx AaveDeposit.tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Earn } from '0xtrails/widget'
 import { encodeFunctionData } from 'viem'
 import { aaveABI } from './abi.ts'
 
 export const AaveDepositExample = () => {
-  // Aave V3 Pool contract on Base
   const AAVE_POOL_CONTRACT = "0xa0d9C1E9E48Ca30c8d8C3B5D69FF5dc1f6DFfC24"
-  
-  // Encode the deposit function call on Aave
+
   const depositCalldata = encodeFunctionData({
     abi: aaveABI,
     functionName: 'depositETH',
     args: [
       "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5", // pool address
-      "0x97c4a952b46becad0663f76357d3776ba11566e1", // user's wallet address
+      "0x97c4a952b46becad0663f76357d3776ba11566e1", // user wallet
       0, // referralCode
     ],
   })
 
   return (
-    <TrailsWidget
+    <Earn
       apiKey="YOUR_API_KEY"
-      mode="earn"
-      toAddress={AAVE_POOL_CONTRACT}
-      toAmount="100" // 100 USDC
-      toChainId={8453} // Base
-      toToken="USDC"
-      toCalldata={depositCalldata}
+      to={{
+        recipient: AAVE_POOL_CONTRACT,
+        currency: "USDC",
+        chain: "base",
+        amount: "100",
+        calldata: depositCalldata,
+      }}
       theme="auto"
-      onCheckoutComplete={({ sessionId }) => {
+      onEarnSuccess={({ sessionId }) => {
         console.log('Aave deposit completed:', sessionId)
       }}
     />
@@ -109,15 +98,10 @@ export const aaveABI = [
 ```
 </CodeGroup>
 
-## Next Steps
+## Next steps
 
-Learn more about configuring and customizing earn flows:
-
-- [**Earn Mode Configuration**](/sdk/modes/earn) - Complete configuration options and parameters for earn mode
-- [**Composable Actions**](/use-cases/composable-actions) - Chain `lend`, `deposit`, and `swap` into a single intent without encoding calldata by hand
-- [**SDK Configuration**](/sdk/configuration) - Widget setup, callbacks, and event handling
-- [**Widget Theming**](/sdk/theming) - Customize the appearance to match your brand
-- [**Tokens & Chains**](/sdk/tokens-and-chains) - Configure supported tokens and DeFi protocols
-- [**Customization Guide**](/sdk/customization) - Advanced customization options for earn flows
-
-
+- [**Earn mode configuration**](/sdk/modes/earn) — complete configuration options
+- [**Composable actions**](/use-cases/composable-actions) — chain `lend`, `deposit`, and `swap` without encoding calldata by hand
+- [**SDK configuration**](/sdk/configuration) — widget setup and event handling
+- [**Theming**](/sdk/theming) — customize appearance
+- [**Tokens and chains**](/sdk/tokens-and-chains) — supported protocols

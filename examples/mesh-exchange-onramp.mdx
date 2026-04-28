@@ -11,20 +11,19 @@ This launched on April 2, 2025 and requires no separate Mesh account or API keys
 ## Prerequisites
 
 - A Trails API key from [dashboard.trails.build](https://dashboard.trails.build)
-- The `@0xtrails/trails` SDK installed
+- The `0xtrails` SDK installed
 
 ## Setup
 
-### 1. Add the `onramp` prop to `TrailsWidget`
+### 1. Add the `onramp` prop to `Fund`
 
 Pass an `onramp` config object with `mesh` enabled. At minimum, set `environment`:
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Fund } from '0xtrails/widget'
 
-<TrailsWidget
-  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
-  mode="fund"
+<Fund
+  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
   onramp={{
     mesh: {
       environment: 'production',
@@ -37,13 +36,12 @@ This enables the "Fund from exchange" option inside the fund flow. Users will se
 
 ### 2. Pre-select the exchange flow
 
-To skip the funding method selector and open the exchange flow directly, pass `fundMethod="onramp-exchange"`:
+To skip the funding method selector and open the exchange flow directly, pass `paymentMethod="EXCHANGE"`:
 
 ```tsx
-<TrailsWidget
-  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
-  mode="fund"
-  fundMethod="onramp-exchange"
+<Fund
+  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+  paymentMethod="EXCHANGE"
   onramp={{
     mesh: {
       environment: 'production',
@@ -57,9 +55,8 @@ To skip the funding method selector and open the exchange flow directly, pass `f
 The `exchanges` array filters which exchange integrations are shown. Values are Mesh integration keys (e.g. `"coinbase"`, `"binance"`, `"robinhoodDirect"`). If omitted, all supported exchanges are listed.
 
 ```tsx
-<TrailsWidget
-  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
-  mode="fund"
+<Fund
+  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
   onramp={{
     mesh: {
       environment: 'production',
@@ -74,9 +71,8 @@ The `exchanges` array filters which exchange integrations are shown. Values are 
 During development, use `environment: 'sandbox'` to test the flow without real funds. A yellow banner is shown inside the widget when sandbox is active.
 
 ```tsx
-<TrailsWidget
-  trailsApiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
-  mode="fund"
+<Fund
+  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
   onramp={{
     mesh: {
       environment: 'sandbox',
@@ -88,31 +84,28 @@ During development, use `environment: 'sandbox'` to test the flow without real f
 ## Full example
 
 ```tsx
-import { TrailsProvider } from '0xtrails'
-import { TrailsWidget } from '0xtrails/widget'
+import { Fund } from '0xtrails/widget'
 
 export function App() {
-  return (
-    <TrailsProvider config={{ trailsApiKey: process.env.NEXT_PUBLIC_TRAILS_API_KEY }}>
-      <FundWithExchange />
-    </TrailsProvider>
-  )
+  return <FundWithExchange />
 }
 
 function FundWithExchange() {
   return (
-    <TrailsWidget
-      mode="fund"
-      toChainId={8453}
-      toToken="USDC"
-      toAddress="0xYourRecipientAddress"
-      fundMethod="onramp-exchange"
+    <Fund
+      apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+      to={{
+        recipient: "0xYourRecipientAddress",
+        currency: "USDC",
+        chain: "base",
+      }}
+      paymentMethod="EXCHANGE"
       onramp={{
         mesh: {
           environment: 'production',
         },
       }}
-      onCheckoutComplete={({ sessionId }) => {
+      onFundingSuccess={({ sessionId }) => {
         console.log('Exchange transfer initiated:', sessionId)
       }}
     />
@@ -138,28 +131,26 @@ To get the current list programmatically, the widget fetches from `getMeshIntegr
 
 ## `fundOptions` integration
 
-The Mesh exchange flow can be combined with `fundOptions.fundMethodsList` to control what funding methods appear in the selector:
+The Mesh exchange flow can be combined with `fundMethodsList` to control what funding methods appear in the selector:
 
 ```tsx
-<TrailsWidget
-  mode="fund"
+<Fund
+  apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
   onramp={{
     mesh: {
       environment: 'production',
     },
   }}
-  fundOptions={{
-    fundMethodsList: ['connected-wallet', 'crypto-transfer', 'exchange'],
-    hideUnlistedMethods: true,
-  }}
+  fundMethodsList={['wallet', 'direct-transfer', 'onramp-mesh']}
+  hideUnlistedFundMethods={true}
 />
 ```
 
-Accepted values in `fundMethodsList`: `"connected-wallet"`, `"crypto-transfer"`, `"cc-onramp"`, `"exchange"`.
+Accepted values in `fundMethodsList`: `"wallet"`, `"direct-transfer"`, `"onramp-mesh"`, `"onramp-meld"`.
 
 ## Troubleshooting
 
-**Exchange list is empty**: Confirm `trailsApiKey` and `trailsApiUrl` are set correctly. The exchange list fetch requires a valid API key.
+**Exchange list is empty**: Confirm `apiKey` is set correctly. The exchange list fetch requires a valid API key.
 
 **Popup blocked**: Mesh Connect opens a popup window. If the browser blocks it, the widget shows a "Retry" button. Encourage users to allow popups for your domain, or trigger the flow from a user gesture (button click) rather than programmatically.
 

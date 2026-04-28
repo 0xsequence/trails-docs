@@ -20,29 +20,28 @@ Trails integrates with multiple liquidity sources and bridge providers to find t
 
 ## Configuration
 
-### Widget-Level Configuration
+### Widget-level configuration
 
-Specify route providers when initializing the widget:
+Specify route providers on any focused component:
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Swap } from '0xtrails/widget'
 
-<TrailsWidget
-  mode="swap"
+<Swap
+  apiKey="YOUR_API_KEY"
   swapProvider="SUSHI"    // Provider for on-chain swaps
   bridgeProvider="RELAY"  // Provider for cross-chain bridging
-  toAddress="0x..."
-  toChainId={8453}
-  toToken="USDC"
+  from={{ currency: "USDC", chain: "ethereum" }}
+  to={{ currency: "USDC", chain: "base" }}
 />
 ```
 
-### Hook-Level Configuration
+### Hook-level configuration
 
 When using the `useQuote` hook, you can specify both swap and bridge providers:
 
 ```tsx
-import { useQuote, TradeType, RouteProvider } from '@0xtrails/trails'
+import { useQuote, TradeType, RouteProvider } from '0xtrails'
 
 const { quote, swap } = useQuote({
   walletClient,
@@ -64,7 +63,8 @@ const { quote, swap } = useQuote({
 The `AUTO` setting lets Trails intelligently select the best provider for each transaction based on cost, speed, liquidity, and reliability. Use this unless you have a specific reason to lock to a particular provider.
 
 ```tsx
-<TrailsWidget
+<Swap
+  apiKey="YOUR_API_KEY"
   swapProvider="AUTO"    // Default
   bridgeProvider="AUTO"  // Default
 />
@@ -79,7 +79,7 @@ Relay provides fast cross-chain transfers through an intent-based filler network
 - Good coverage across major EVM chains
 
 ```tsx
-<TrailsWidget bridgeProvider="RELAY" />
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="RELAY" />
 ```
 
 ### CCTP
@@ -91,9 +91,10 @@ Circle's Cross-Chain Transfer Protocol enables native USDC bridging without wrap
 - Best choice when users need exact USDC amounts at destination
 
 ```tsx
-<TrailsWidget
+<Swap
+  apiKey="YOUR_API_KEY"
   bridgeProvider="CCTP"
-  toToken="USDC"
+  to={{ currency: "USDC" }}
 />
 ```
 
@@ -105,7 +106,7 @@ SushiSwap provides on-chain swap routing using its V3 concentrated liquidity poo
 - Works well when deep Sushi liquidity exists for the token pair
 
 ```tsx
-<TrailsWidget swapProvider="SUSHI" />
+<Swap apiKey="YOUR_API_KEY" swapProvider="SUSHI" />
 ```
 
 ### 0x Protocol
@@ -113,7 +114,7 @@ SushiSwap provides on-chain swap routing using its V3 concentrated liquidity poo
 0x aggregates liquidity across multiple DEXs to find optimal swap rates. It optimizes for both price and gas.
 
 ```tsx
-<TrailsWidget swapProvider="ZEROX" />
+<Swap apiKey="YOUR_API_KEY" swapProvider="ZEROX" />
 ```
 
 ### LayerZero (LZ_OFT / LZ_STARGATE)
@@ -128,8 +129,8 @@ LayerZero is an omnichain messaging protocol that powers two distinct bridge pro
 - AUTO will select the appropriate LayerZero route when it is optimal
 
 ```tsx
-<TrailsWidget bridgeProvider="LZ_OFT" />   // For OFT-enabled tokens
-<TrailsWidget bridgeProvider="LZ_STARGATE" /> // For Stargate native asset routes
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_OFT" />    // For OFT-enabled tokens
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_STARGATE" /> // For Stargate native asset routes
 ```
 
 ### Gas.zip
@@ -140,7 +141,7 @@ Gas.zip is a gas-optimized routing provider that reduces the total gas cost of c
 - AUTO will select Gas.zip when it provides the best cost efficiency
 
 ```tsx
-<TrailsWidget bridgeProvider="GASZIP" />
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="GASZIP" />
 ```
 
 ## Best Practices

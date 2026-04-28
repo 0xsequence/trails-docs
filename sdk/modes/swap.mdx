@@ -1,112 +1,157 @@
 ---
-title: Swap Mode
-description: "Technical reference for implementing cross-chain token swaps"
+title: Swap
+description: "Cross-chain token swaps with the focused Swap component"
 sidebarTitle: "Swap"
 ---
 
 ## Overview
 
-Swap mode provides a flexible interface for cross-chain token exchanges. Users control both input and output selections, with the widget handling optimal routing across bridges and DEXs.
+Swap mode provides a flexible interface for cross-chain token exchanges. Users control both input and output, with the widget handling optimal routing across bridges and DEXs.
 
-**Trade Types**: Supports both `EXACT_INPUT` and `EXACT_OUTPUT` trade types.
+**Trade types**: `EXACT_INPUT` and `EXACT_OUTPUT`.
 
-## Configuration
-
-### Required Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `mode` | `"swap"` | Sets the widget to swap mode |
-
-### Optional Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `fromChainId` | `number` | Pre-select source chain |
-| `fromToken` | `string` | Pre-select source token |
-| `toChainId` | `number` | Pre-select destination chain |
-| `toToken` | `string` | Pre-select destination token |
-| `slippageTolerance` | `string \| number` | Slippage tolerance (default: 0.5%) |
-| `swapProvider` | `RouteProvider` | Preferred same-chain swap provider: `"AUTO"` (default), `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"`, `"LZ_OFT"`, `"LIFI"`, `"WETH"` |
-| `swapProviderFallback` | `boolean` | When `true`, fall back to another provider if the preferred swap provider is unavailable |
-| `bridgeProvider` | `RouteProvider` | Preferred bridge provider: `"AUTO"` (default), `"RELAY"`, `"CCTP"`, `"LZ_OFT"`, `"LZ_STARGATE"`, `"GASZIP"`, `"LIFI"`, `"WETH"` |
-| `bridgeProviderFallback` | `boolean` | When `true`, fall back to another provider if the preferred bridge provider is unavailable |
-
-## Widget Implementation
-
-### Basic Swap Widget
-
-Minimal configuration - users select everything:
+## Quick start
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Swap } from '0xtrails/widget'
 
-<TrailsWidget
+<Swap
   apiKey="YOUR_API_KEY"
-  mode="swap"
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Swap completed:', sessionId)
-  }}
+  from={{ currency: "ETH", chain: "ethereum" }}
+  to={{ currency: "USDC", chain: "base" }}
+/>
+```
+
+User picks the amount in the UI.
+
+## Props
+
+### Required
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `apiKey` | `string` | Trails API key |
+
+### Source (optional)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `from.currency` | `string` | Pre-select source token symbol or address |
+| `from.chain` | `ChainIdentifier` | Pre-select source chain — name, ID, or viem Chain |
+| `from.amount` | `string \| number` | Pre-fill source amount |
+| `from.walletAddress` | `string` | Source wallet address (defaults to connected wallet) |
+
+### Destination (optional)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `to.currency` | `string` | Pre-select or lock destination token |
+| `to.chain` | `ChainIdentifier` | Pre-select or lock destination chain |
+| `to.amount` | `string \| number` | Pre-fill destination amount |
+| `to.defaultCurrency` | `string` | Default destination token — user can change |
+| `to.defaultChain` | `ChainIdentifier` | Default destination chain — user can change |
+| `to.calldata` | `string` | ABI-encoded calldata to execute after the swap lands |
+
+### Payment method (optional)
+
+`paymentMethod` controls the source funding method. Omit to default to the connected wallet.
+
+| Value | Method |
+|-------|--------|
+| `"CONNECTED_WALLET"` | Connected wallet (default) |
+| `"CRYPTO_TRANSFER"` | QR code / address deposit |
+| `"CREDIT_DEBIT_CARD"` | Fiat on-ramp |
+| `"EXCHANGE"` | CEX transfer |
+
+### Route options (optional)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
+| `swapProvider` | `RouteProvider` | Preferred same-chain swap provider |
+| `bridgeProvider` | `RouteProvider` | Preferred bridge provider |
+| `swapProviderFallback` | `boolean` | Fall back if preferred swap provider is unavailable |
+| `bridgeProviderFallback` | `boolean` | Fall back if preferred bridge provider is unavailable |
+
+### Lifecycle callbacks
+
+| Callback | Signature | When it fires |
+|----------|-----------|---------------|
+| `onSwapStart` | `({ sessionId }) => void` | User begins the swap flow |
+| `onSwapSuccess` | `({ sessionId }) => void` | Swap completes successfully |
+| `onSwapError` | `({ sessionId, error }) => void` | Swap encounters an error |
+
+## Examples
+
+### Basic swap — user picks everything
+
+```tsx
+import { Swap } from '0xtrails/widget'
+
+<Swap
+  apiKey="YOUR_API_KEY"
+  onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
 >
   <button>Swap Tokens</button>
-</TrailsWidget>
+</Swap>
 ```
 
-### Pre-configured Swap
-
-Pre-select chains and tokens:
+### Pre-configured cross-chain swap
 
 ```tsx
-<TrailsWidget
+<Swap
   apiKey="YOUR_API_KEY"
-  mode="swap"
-  fromChainId={1} // Ethereum
-  fromToken="USDC"
-  toChainId={8453} // Base
-  toToken="ETH"
-  slippageTolerance="0.01" // 1%
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Swap completed:', sessionId)
-  }}
->
-  <button>Swap USDC to ETH</button>
-</TrailsWidget>
+  from={{ currency: "ETH", chain: "ethereum" }}
+  to={{ currency: "USDC", chain: "base" }}
+  onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
+/>
 ```
 
-### Custom Route Provider
-
-Specify routing preference:
+### Lock destination, let user pick source
 
 ```tsx
-<TrailsWidget
+<Swap
   apiKey="YOUR_API_KEY"
-  mode="swap"
-  bridgeProvider="CCTP"  // Use Circle's CCTP for USDC cross-chain
-  swapProvider="SUSHI"   // Use SushiSwap for on-chain swaps
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Swap completed:', sessionId)
-  }}
->
-  <button>Swap via CCTP</button>
-</TrailsWidget>
+  to={{ currency: "USDC", chain: "base" }}
+  onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
+/>
 ```
 
-## Headless Implementation with useQuote
+### Cross-chain swap with a fixed output amount
 
-For custom UI implementations, use the `useQuote` hook directly:
+```tsx
+<Swap
+  apiKey="YOUR_API_KEY"
+  from={{ currency: "USDC", chain: "ethereum" }}
+  to={{ currency: "USDC", chain: "base", amount: "100" }}
+  onSwapSuccess={({ sessionId }) => console.log("bridged", sessionId)}
+/>
+```
 
-### Basic useQuote Implementation
+### Custom bridge provider
+
+```tsx
+<Swap
+  apiKey="YOUR_API_KEY"
+  bridgeProvider="CCTP"
+  from={{ currency: "USDC", chain: "ethereum" }}
+  to={{ currency: "USDC", chain: "base" }}
+/>
+```
+
+## Headless implementation
+
+For custom UI, use the `useQuote` hook directly:
 
 ```tsx
 import { useQuote, TradeType } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
-import { useState, useEffect } from 'react'
 
 export const CustomSwap = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
-  
-  const { quote, swap, isLoadingQuote, quoteError, refetchQuote } = useQuote({
+
+  const { quote, swap, isLoadingQuote, quoteError } = useQuote({
     walletClient,
     fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC on Ethereum
     fromChainId: 1,
@@ -115,196 +160,24 @@ export const CustomSwap = () => {
     swapAmount: '1000000', // 1 USDC (6 decimals)
     tradeType: TradeType.EXACT_INPUT,
     toRecipient: address,
-    slippageTolerance: '0.005', // 0.5%
-    onStatusUpdate: (states) => {
-      console.log('Transaction status:', states)
-    },
+    slippageTolerance: '0.005',
   })
-  
-  // Refresh quotes every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetchQuote?.()
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [refetchQuote])
-  
-  const handleSwap = async () => {
-    if (!swap) return
-    
-    try {
-      const result = await swap()
-      console.log('Swap result:', result)
-    } catch (error) {
-      console.error('Swap failed:', error)
-    }
-  }
-  
+
   if (isLoadingQuote) return <div>Loading quote...</div>
-  if (quoteError) return <div>Error: {String(quoteError)}</div>
-  if (!quote) return <div>No quote available</div>
-  
+  if (!quote) return null
+
   return (
     <div>
-      <h3>Quote</h3>
       <p>From: {quote.originAmountFormatted} {quote.originToken.symbol}</p>
       <p>To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol}</p>
-      <p>Fee: {quote.totalFeeAmountUsdDisplay}</p>
-      <p>Rate: 1 {quote.originToken.symbol} = {quote.destinationTokenRate} {quote.destinationToken.symbol}</p>
-      <p>Est. Time: {quote.completionEstimateSeconds}s</p>
-      <button onClick={handleSwap}>Execute Swap</button>
+      <button onClick={() => swap?.()}>Execute Swap</button>
     </div>
   )
 }
 ```
 
-### Trade Types
+## See also
 
-#### EXACT_INPUT
-
-User specifies exact input amount; output amount varies:
-
-```tsx
-const { quote } = useQuote({
-  // ... other props
-  swapAmount: '100000000', // 100 USDC exactly
-  tradeType: TradeType.EXACT_INPUT,
-})
-// User sends exactly 100 USDC, receives ~0.039 ETH (varies with price)
-```
-
-#### EXACT_OUTPUT
-
-User specifies exact output amount; input amount varies:
-
-```tsx
-const { quote } = useQuote({
-  // ... other props
-  swapAmount: '100000000000000000', // 0.1 ETH exactly
-  tradeType: TradeType.EXACT_OUTPUT,
-})
-// User receives exactly 0.1 ETH, sends ~256 USDC (varies with price)
-```
-
-### Quote Types
-
-```ts
-type UseQuoteProps = {
-  walletClient?: WalletClient
-  fromTokenAddress?: string | null
-  fromChainId?: number | null
-  toTokenAddress?: string | null
-  toChainId?: number | null
-  swapAmount?: string | bigint
-  toRecipient?: string | null
-  tradeType?: TradeType | null
-  slippageTolerance?: string | number | null
-  onStatusUpdate?: (txs: TransactionState[]) => void | null
-}
-
-type UseQuoteReturn = {
-  quote: Quote | null
-  swap: (() => Promise<SwapReturn | null>) | null
-  isLoadingQuote: boolean
-  quoteError: unknown
-  refetchQuote: (() => Promise<void>) | null
-}
-```
-
-## Quote Refresh Strategy
-
-Quotes can become stale. Implement refresh logic:
-
-```tsx
-// Refresh every 30 seconds
-useEffect(() => {
-  const interval = setInterval(() => {
-    refetchQuote?.()
-  }, 30000)
-  return () => clearInterval(interval)
-}, [refetchQuote])
-
-// Refresh on window focus
-useEffect(() => {
-  const handleFocus = () => refetchQuote?.()
-  window.addEventListener('focus', handleFocus)
-  return () => window.removeEventListener('focus', handleFocus)
-}, [refetchQuote])
-```
-
-## Event Handling
-
-### Widget Events
-
-```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="swap"
-  onCheckoutStart={({ sessionId }) => {
-    console.log('Swap started:', sessionId)
-  }}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Swap completed:', sessionId)
-  }}
-  onCheckoutError={({ sessionId, error }) => {
-    console.error('Swap failed:', error)
-  }}
-/>
-```
-
-### useQuote Transaction Status
-
-```tsx
-const { quote, swap } = useQuote({
-  // ... other props
-  onStatusUpdate: (states) => {
-    states.forEach(state => {
-      console.log(`${state.chainId}: ${state.status}`)
-      // States: 'pending', 'executing', 'completed', 'failed'
-    })
-  },
-})
-```
-
-## Error Handling
-
-```tsx
-import { getIsUserRejectionError, InsufficientBalanceError } from '0xtrails'
-
-const handleSwap = async () => {
-  try {
-    await swap()
-  } catch (error) {
-    if (getIsUserRejectionError(error)) {
-      console.log('User rejected transaction')
-    } else if (error instanceof InsufficientBalanceError) {
-      console.error('Insufficient balance')
-    } else {
-      console.error('Swap failed:', error)
-    }
-  }
-}
-```
-
-## Use Cases
-
-- **Cross-chain Token Exchange**: Swap any token to any other token across chains
-- **Portfolio Rebalancing**: Shift holdings between chains and tokens
-- **Yield Optimization**: Move assets to chains with better yields
-- **Gas Token Acquisition**: Get native tokens for new chains
-- **Arbitrage**: Take advantage of price differences across chains
-
-## Technical Notes
-
-- Quotes automatically factor in gas costs and fees
-- Multiple liquidity sources are queried for optimal routing
-- Supports both same-chain and cross-chain swaps
-- Native token wrapping/unwrapping is handled automatically
-- Slippage protection is built-in
-
-## See Also
-
-- [Use Case Examples](/use-cases/swap) - Implementation patterns
-- [Quote Providers](/sdk/quote-providers) - Provider comparison and selection
-- [Hooks Reference](/sdk/hooks) - useQuote hook details
-- [Configuration](/sdk/configuration) - Additional configuration options
+- [Swap use cases](/use-cases/swap) — portfolio rebalancing, stablecoin conversion
+- [Hooks reference](/sdk/hooks) — `useQuote` details
+- [Quote providers](/sdk/quote-providers) — CCTP, Relay, SushiSwap, and more

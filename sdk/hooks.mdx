@@ -622,8 +622,7 @@ This constant provides a placeholder value for amounts when encoding calldata in
 
 **Example**:
 ```tsx
-import { TrailsWidget } from "0xtrails"
-
+import { Fund } from '0xtrails/widget'
 import { encodeFunctionData } from 'viem'
 import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 
@@ -635,17 +634,17 @@ export const Example = () => {
     })
 
     return (
-        // Use in fund mode widget
-        <TrailsWidget
+        <Fund
             apiKey="YOUR_API_KEY"
-            mode="fund"
-            toAddress="0x..." // Staking contract
-            toCalldata={calldata}
-            toChainId={1}
-            toToken="ETH"
+            to={{
+                recipient: "0x...", // Staking contract
+                currency: "ETH",
+                chain: "ethereum",
+                calldata,
+            }}
         >
             <button>Stake ETH</button>
-        </TrailsWidget >
+        </Fund>
     )
 }
 ```
@@ -1393,7 +1392,7 @@ const quote = await client.quoteIntent({
 ## Advanced: Intent Functions
 
 <Warning>
-These are advanced functions for direct intent management. Most developers should use the TrailsWidget or useQuote hook instead.
+These are advanced functions for direct intent management. Most developers should use the focused components or `useQuote` hook instead.
 </Warning>
 
 ```ts

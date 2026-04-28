@@ -1,198 +1,116 @@
 ---
 title: Configuration
-description: "Complete configuration options for the Trails SDK"
+description: "Complete configuration reference for the Trails SDK"
 ---
 
-## Configuration Options
+## Focused components
 
-Trails is easy to get started, however we have deep configuration options to address most use cases.
+### Shared props
 
-### Core Props
+All focused components accept these optional props in addition to their mode-specific props.
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `apiKey` | `string` | Yes | Your project access key provided by Trails |
-| `mode` | `"pay" \| "fund" \| "earn" \| "swap" \| "withdraw"` | Yes | Widget operation mode |
-| `toAddress` | `string` | No | Destination address for payments |
-| `toAmount` | `string` | No | Exact amount for payments (used in pay mode) |
-| `toChainId` | `number \| string` | No | Controlled destination chain ID (locks selection) |
-| `toToken` | `string` | No | Controlled destination token symbol or contract address (locks selection) |
-| `defaultToChainId` | `number \| string` | No | Default destination chain ID (user can change) |
-| `defaultToToken` | `string` | No | Default destination token symbol or contract address (user can change) |
-| `toCalldata` | `string` | No | Custom calldata for contract interactions |
-| `fromChainId` | `number \| string` | No | Default origin chain ID (preselects source chain) |
-| `fromToken` | `string` | No | Default origin token symbol or contract address (preselects source token) |
-| `fromAccount` | `string` | No | Preselect a connected wallet address if multiple wallets are connected |
-| `defaultInputMode` | `"fiat" \| "token"` | No | Default input mode for fund/withdraw modes: `"fiat"` starts with USD input, `"token"` starts with token input |
-| `fundMethod` | `"wallet" \| "crypto-transfer" \| "onramp" \| "onramp-exchange"` | No | Pre-select the active funding method. Applies across modes; in fund mode it also controls the initial destination flow |
+#### Appearance
 
-<Note>
-Recipient inputs in the widget support `.eth` ENS names, resolve them to addresses, and show ENS avatars when available.
-</Note>
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `theme` | `"light" \| "dark" \| "auto"` | `"auto"` | Color theme; `auto` follows system preference |
+| `customCss` | `string \| Record<string, string>` | — | Custom CSS to inject into the widget |
+| `disableCss` | `boolean` | `false` | Disable default CSS injection |
+| `renderInline` | `boolean` | `false` | Render inline instead of as a modal |
+| `buttonText` | `string` | — | Custom CTA button text |
 
-### UI & Rendering Options
+#### App metadata
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `renderInline` | `boolean` | No | Render widget inline instead of as a modal (default: `false`) |
-| `children` | `React.ReactNode` | No | Custom button content (when not renderInline) |
-| `buttonText` | `string` | No | Custom text for the trigger button (auto-generated if not provided) |
-| `theme` | `"light" \| "dark" \| "auto"` | No | Color theme; `auto` follows system preference (default: `"auto"`) |
-| `customCss` | `string \| Record<string, string>` | No | Custom CSS styles to apply to the component |
-| `disableCss` | `boolean` | No | Disable default CSS injection (for custom styling) |
-| `toast` | `boolean` | No | Show toast notifications for transaction updates |
-| `hideDisconnect` | `boolean` | No | Hide the disconnect button in the widget |
-| `payMessage` | `string` | No | Custom message to display during payment flow |
-
-### Wallet & Connection Options
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `walletConnectProjectId` | `string` | No | WalletConnect project ID for WalletConnect integration |
-| `walletOptions` | `string[]` | No | Array of wallet connector IDs to show (e.g., `["metamask", "walletconnect"]`) |
-| `isSmartWallet` | `boolean` | No | Indicate if the connected wallet is a smart wallet (for ERC-4337 support) |
-| `decoupleWagmi` | `boolean` | No | Decouple from wagmi provider (use external wagmi config) |
-| `wagmiConnectors` | `Connector[]` | No | Custom wagmi connectors to use |
-| `hideAddWallet` | `boolean` | No | Hide the "Add wallet" option in the widget |
-
-### Transaction Options
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `paymasterUrls` | `Array<{ chainId: number; url: string }>` | No | Configure per-chain paymaster endpoints for gasless transactions |
-| `swapProvider` | `RouteProvider` | No | Preferred same-chain swap provider: `"AUTO"` (default), `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
-| `swapProviderFallback` | `boolean` | No | When `true`, fall back to another provider if the preferred swap provider is unavailable |
-| `bridgeProvider` | `RouteProvider` | No | Preferred bridge provider: `"AUTO"` (default), `"RELAY"`, `"CCTP"`, `"LZ_OFT"`, `"LZ_STARGATE"`, `"GASZIP"`, `"LIFI"`, `"WETH"` |
-| `bridgeProviderFallback` | `boolean` | No | When `true`, fall back to another provider if the preferred bridge provider is unavailable |
-| `slippageTolerance` | `number \| string` | No | Slippage tolerance for swaps (e.g., `0.005` for 0.5%) |
-| `priceImpactWarningThresholdBps` | `number` | No | Price impact threshold in basis points before showing a warning (e.g., `500` for 5%) |
-| `priceImpactWarningMessage` | `string` | No | Custom message to display when price impact exceeds threshold |
-| `priceImpactFallbackBridgeUrl` | `string` | No | URL to redirect users when price impact is too high |
-
-### App Metadata (for WalletConnect)
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `appName` | `string` | No | Your app's name (shown in wallet connect dialogs) |
-| `appUrl` | `string` | No | Your app's URL |
-| `appImageUrl` | `string` | No | Your app's logo URL |
-| `appDescription` | `string` | No | Short description of your app |
-
-### Fund Mode Options
-
-The `fundOptions` prop provides fine-grained control over fund mode behavior:
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `fundOptions.hideSwap` | `boolean` | Hide the Swap button in the fund screen header (default: `false`) |
-| `fundOptions.hideWallets` | `string[]` | Array of wallet addresses to hide from the funding wallet selection |
-| `fundOptions.fundMethodsList` | `FundMethodListOption[]` | Ordered list of funding methods to display. Accepted values: `"connected-wallet"`, `"crypto-transfer"`, `"cc-onramp"`, `"exchange"` |
-| `fundOptions.hideUnlistedMethods` | `boolean` | If `true`, methods not in `fundMethodsList` are hidden; if `false` (default) they are shown but disabled |
+Used in wallet connection dialogs (WalletConnect, etc.):
 
 ```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="fund"
-  fundOptions={{
-    hideSwap: true,
-    fundMethodsList: ["connected-wallet", "crypto-transfer"],
-    hideUnlistedMethods: true,
-  }}
-/>
+appMetadata={{
+  name: "My App",
+  url: "https://myapp.com",
+  imageUrl: "https://myapp.com/logo.png",
+  description: "Short description",
+}}
 ```
 
-## Smart Contract Interactions
+#### Wallet options
 
-Execute custom contract calls with payments:
+| Prop | Type | Description |
+|------|------|-------------|
+| `walletConnectProjectId` | `string` | WalletConnect project ID |
+| `walletOptions` | `string[]` | Wallet connector IDs to show (e.g. `["metamask", "walletconnect"]`) |
+| `wagmiConnectors` | `Connector[]` | Custom wagmi connectors |
+| `decoupleWagmi` | `boolean` | Decouple from external wagmi provider |
+| `hideDisconnect` | `boolean` | Hide the disconnect button |
+| `hideAddWallet` | `boolean` | Hide "Add wallet" option |
+| `isSmartWallet` | `boolean` | Signal that the connected wallet is a smart wallet |
+
+#### Route options
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
+| `swapProvider` | `RouteProvider` | Preferred same-chain swap provider |
+| `swapProviderFallback` | `boolean` | Fall back if preferred swap provider is unavailable |
+| `bridgeProvider` | `RouteProvider` | Preferred bridge provider |
+| `bridgeProviderFallback` | `boolean` | Fall back if preferred bridge provider is unavailable |
+| `priceImpactWarningThresholdBps` | `number` | Basis points before showing a price impact warning |
+| `priceImpactWarningMessage` | `string` | Custom price impact warning message |
+| `priceImpactFallbackBridgeUrl` | `string` | URL to redirect when price impact is too high |
+| `intentProtocolVersion` | `IntentProtocolVersion` | Force a specific intent protocol version |
+
+#### Debug / dev
 
 ```tsx
-import { encodeFunctionData } from 'viem'
-
-const calldata = encodeFunctionData({
-  abi: contractABI,
-  functionName: 'mintNFT',
-  args: [recipient, tokenId]
-})
-
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x..." // Contract address
-  toAmount="0.1"
-  toChainId={1}
-  toToken="ETH"
-  toCalldata={calldata}
-  onCheckoutComplete={(result) => {
-    console.log('NFT minted:', result)
-  }}
-/>
+dev={{
+  debug: true,
+  sequenceIndexerUrl: "https://...",
+  trailsApiUrl: "https://...",
+}}
 ```
 
-## Event Handling Examples
+#### General callbacks
 
-### Complete Event Handling
-```tsx
-import { getIsUserRejectionError } from '0xtrails'
+These callbacks are available on all focused components (in addition to mode-specific lifecycle callbacks):
 
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x..."
-  toAmount="1"
-  toChainId={8453}
-  toToken="USDC"
-  onOriginConfirmation={({ txHash, chainId, sessionId }) => {
-    console.log('Origin tx confirmed:', { txHash, chainId, sessionId })
-  }}
-  onDestinationConfirmation={({ txHash, chainId, sessionId }) => {
-    console.log('Destination tx confirmed:', { txHash, chainId, sessionId })
-  }}
-  onCheckoutStatusUpdate={({ sessionId, transactionStates }) => {
-    transactionStates.forEach((state, index) => {
-      console.log(`Step ${index + 1}: ${state.label} - ${state.state}`)
-      if (state.state === 'confirmed') {
-        console.log('Transaction confirmed:', state.transactionHash)
-      }
-    })
-  }}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Transaction completed successfully:', sessionId)
-  }}
-  onCheckoutError={({ sessionId, error }) => {
-    console.error('Transaction failed:', sessionId, error)
-    
-    // Check if user rejected the transaction
-    if (getIsUserRejectionError(error)) {
-      console.log('User rejected the transaction')
-      // Handle user rejection (e.g., show "Transaction cancelled" message)
-    } else {
-      // Handle other errors (show error notification, retry logic, etc.)
-    }
-  }}
-/>
-```
+| Callback | When it fires |
+|----------|---------------|
+| `onOpen` | Widget modal opens |
+| `onClose` | Widget modal closes |
+| `onOriginConfirmation` | Origin-chain transaction confirmed |
+| `onDestinationConfirmation` | Destination-chain transaction confirmed |
+| `onQuote` | Quote is received |
+| `onSignRequest` | Wallet signature requested |
+| `onSign` | Wallet signature obtained |
+| `onSignReject` | User rejected the signature |
+| `onApproveRequest` | ERC-20 approval requested |
+| `onApprove` | ERC-20 approval confirmed |
+| `onApproveReject` | User rejected the approval |
+| `onStatus` | Transaction status update |
 
-### Handling User Rejection
+### ChainIdentifier
 
-User rejection occurs when a user declines to sign a transaction in their wallet. This is handled through the `onCheckoutError` callback:
+All `chain` fields accept a `ChainIdentifier`, which can be:
+- A chain name string: `"base"`, `"ethereum"`, `"polygon"`, `"arbitrum"`, `"optimism"`, `"avalanche"`, `"bsc"`, `"katana"`, etc.
+- A numeric chain ID: `8453`, `1`, `137`, etc.
+- A viem `Chain` object
 
-```tsx
-import { getIsUserRejectionError, TrailsWidget } from '0xtrails'
+### PaymentMethod
 
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x..."
-  onCheckoutError={({ sessionId, error }) => {
-    if (getIsUserRejectionError(error)) {
-      // User cancelled the transaction
-      showNotification('Transaction cancelled by user')
-    } else {
-      // Other error occurred
-      showNotification('Transaction failed: ' + error)
-    }
-  }}
-/>
-```
+The `paymentMethod` prop on focused components accepts:
 
+| Value | Method |
+|-------|--------|
+| `"CONNECTED_WALLET"` | Connected wallet (default when omitted) |
+| `"CRYPTO_TRANSFER"` | QR code / address deposit |
+| `"CREDIT_DEBIT_CARD"` | Fiat on-ramp (credit/debit card) |
+| `"EXCHANGE"` | CEX transfer (Coinbase, Binance, etc.) |
+
+### Mode-specific props
+
+See the individual mode pages for full prop details:
+- [Pay](/sdk/modes/pay) — `to.recipient`, `to.currency`, `to.chain`, `to.amount`, `payMessage`, `onPaymentStart/Success/Error`
+- [Fund](/sdk/modes/fund) — `to`, `fundMethodsList`, `hideUnlistedFundMethods`, `hideSwap`, `onFundingStart/Success/Error`
+- [Swap](/sdk/modes/swap) — `from`, `to`, `onSwapStart/Success/Error`
+- [Withdraw](/sdk/modes/withdraw) — `from`, `to`, `onWithdrawStart/Success/Error`
+- [Earn](/sdk/modes/earn) — `to` with `calldata`, `onEarnStart/Success/Error`
 

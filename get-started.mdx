@@ -21,29 +21,44 @@ bun add 0xtrails
 ```
 </CodeGroup>
 
-## Add the Widget
+## Add a component
+
+Pick the component that matches your use case and import it from `0xtrails/widget`:
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Fund } from '0xtrails/widget'
 
 export function Deposit() {
   return (
-    <TrailsWidget
+    <Fund
       apiKey="YOUR_API_KEY"
-      mode="fund"
-      toAddress="0xYourAddress"
-      toChainId={8453}
-      toToken="USDC"
+      to={{
+        recipient: "0xYourAddress",
+        currency: "USDC",
+        chain: "base",
+      }}
     />
   )
 }
 ```
 
-User deposits any token from any chain → Arrives as USDC on Base.
+User deposits any token from any chain. Arrives as USDC on Base.
 
 <Note>
 **Get an API key**: Sign up and create an API key on the [Trails Dashboard](https://dashboard.trails.build/landing)
 </Note>
+
+## Components
+
+| Component | Use case |
+|-----------|---------|
+| `<Pay />` | Accept a fixed payment (e.g. 25 USDC) to a recipient |
+| `<Fund />` | Deposit funds into a wallet, chain, or protocol |
+| `<Swap />` | Cross-chain token exchange |
+| `<Withdraw />` | Off-ramp or move funds out |
+| `<Earn />` | DeFi yield deposits |
+
+All are imported from `0xtrails/widget`.
 
 ## Starter Templates
 
@@ -69,10 +84,10 @@ User deposits any token from any chain → Arrives as USDC on Base.
     Cross-chain token swaps
   </Card>
   <Card title="Fund" icon="wallet" href="/use-cases/fund">
-    Protocol deposits, trustless deposit addresses, chain onboarding, built-in onramps, and more
+    Protocol deposits, chain onboarding, built-in onramps
   </Card>
   <Card title="Earn" icon="chart-line" href="/use-cases/earn">
-    Integrated DeFi Yield Deposits
+    Integrated DeFi yield deposits
   </Card>
 </CardGroup>
 

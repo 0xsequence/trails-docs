@@ -48,7 +48,7 @@ Trails + x402 creates a powerful payment flow:
        │
        ▼
 ┌──────────────────────┐
-│  onCheckoutComplete  │
+│  onPaymentSuccess    │
 │     (Callback)       │
 └──────┬───────────────┘
        │
@@ -166,7 +166,7 @@ The `withPaymentInterceptor` automatically handles EIP-712 signature creation an
 
 <CodeGroup>
 ```tsx components/PayWidget.tsx
-import { TrailsWidget } from "0xtrails/widget"
+import { Pay } from "0xtrails/widget"
 import type { TrailsWidgetRef } from "0xtrails/widget"
 import { useState, useCallback, useRef } from "react"
 import { useWalletClient, useSwitchChain } from "wagmi"
@@ -227,17 +227,18 @@ export default function PayWidget() {
 
   return (
     <div className="space-y-4">
-      <TrailsWidget
+      <Pay
         ref={widgetRef}
         apiKey="YOUR_API_KEY"
-        mode="pay"
         theme="auto"
-        toAddress="0xYourAddress"
-        toAmount="0.1"
-        toChainId={8453} // Base
-        toToken="USDC"
+        to={{
+          recipient: "0xYourAddress",
+          currency: "USDC",
+          chain: "base",
+          amount: "0.1",
+        }}
         buttonText="Pay & Get Access"
-        onCheckoutComplete={handleTrailsComplete}
+        onPaymentSuccess={handleTrailsComplete}
         customCss={`
           --trails-border-radius-button: 9999px;
           --trails-primary: #4285F4;
@@ -254,7 +255,7 @@ export default function PayWidget() {
 </CodeGroup>
 
 <Tip>
-The `onCheckoutComplete` callback is the bridge between Trails and x402. It fires when the cross-chain payment succeeds, then triggers the x402 signature flow.
+The `onPaymentSuccess` callback is the bridge between Trails and x402. It fires when the cross-chain payment succeeds, then triggers the x402 signature flow.
 </Tip>
 
 ### Backend Setup
@@ -383,14 +384,15 @@ The `paymentMiddleware` intercepts requests to protected routes and verifies the
 ### Step 1: User Initiates Payment (Trails)
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xYourAddress"
-  toAmount="0.1"
-  toChainId={8453} // Base
-  toToken="USDC"
-  onCheckoutComplete={handleTrailsComplete}
+  to={{
+    recipient: "0xYourAddress",
+    currency: "USDC",
+    chain: "base",
+    amount: "0.1",
+  }}
+  onPaymentSuccess={handleTrailsComplete}
 />
 ```
 
@@ -416,7 +418,7 @@ const handleTrailsComplete = useCallback(async (data) => {
 }, [walletClient])
 ```
 
-When `onCheckoutComplete` fires:
+When `onPaymentSuccess` fires:
 1. API client is configured with the user's wallet
 2. HTTP request is made to protected endpoint
 3. x402 interceptor prompts for EIP-712 signature

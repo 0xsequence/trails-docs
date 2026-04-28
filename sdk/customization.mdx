@@ -7,11 +7,10 @@ sidebarTitle: "Customization"
 To customise the widget, pass CSS variables through the `customCss` prop. You can pass a string of CSS declarations or a key-value object — both formats work.
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Pay } from '0xtrails/widget'
 
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
   customCss={`
     --trails-primary: rgb(99 102 241);
     --trails-border-radius-button: 8px;
@@ -19,9 +18,8 @@ import { TrailsWidget } from '0xtrails/widget'
 />
 
 // Object form also accepted
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
   customCss={{
     '--trails-primary': 'var(--your-brand-primary)',
     '--trails-bg-primary': 'var(--your-brand-background)',
@@ -34,9 +32,8 @@ import { TrailsWidget } from '0xtrails/widget'
 Override the primary colour and its interactive states:
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
   customCss={`
     --trails-primary: rgb(99 102 241);
     --trails-primary-hover: rgb(79 70 229);
@@ -105,9 +102,8 @@ customCss={`
 Use the `theme` prop for light/dark/auto. If you need to override colours for a specific theme, combine `theme` with `customCss`:
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
   theme="dark"
   customCss={`
     --trails-bg-primary: rgb(15 23 42);
@@ -135,9 +131,8 @@ customCss={`
 To apply a fully custom stylesheet without Trails' defaults interfering:
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
   disableCss={true}
 />
 ```

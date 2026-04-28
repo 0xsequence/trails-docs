@@ -6,13 +6,12 @@ sidebarTitle: "Theming & Customization"
 To brand the widget to your application, use the `theme` prop for light/dark/auto mode and `customCss` to override any CSS variable.
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Pay } from '0xtrails/widget'
 
 export const App = () => {
   return (
-    <TrailsWidget
+    <Pay
       apiKey="YOUR_API_KEY"
-      mode="pay"
       theme="light"
       customCss={`
         --trails-font-family: "Inter", sans-serif;
@@ -26,7 +25,7 @@ export const App = () => {
       <button className="custom-button-styles">
         Pay with Trails
       </button>
-    </TrailsWidget>
+    </Pay>
   )
 }
 ```
