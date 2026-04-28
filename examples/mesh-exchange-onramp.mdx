@@ -1,12 +1,12 @@
 ---
-title: 'Mesh Exchange Onramp'
-description: 'Enable users to fund directly from centralized exchanges like Coinbase, Binance, and Robinhood using the Mesh Connect integration.'
+title: 'Exchange Onramp'
+description: 'Enable users to fund directly from centralized exchanges like Coinbase, Binance, and Robinhood.'
 icon: 'building-columns'
 ---
 
-The Mesh integration lets users initiate a transfer directly from their CEX account (Coinbase, Binance, Kraken, Robinhood, and others) without leaving your app. Mesh handles the OAuth connection and transfer — Trails receives the funds and routes them to the destination.
+The exchange onramp lets users initiate a transfer directly from their CEX account (Coinbase, Binance, Robinhood, and others) without leaving your app. The OAuth connection and transfer are handled automatically — Trails receives the funds and routes them to the destination.
 
-This launched on April 2, 2025 and requires no separate Mesh account or API keys on your side. Trails manages the Mesh session server-side.
+No separate account or additional API keys are required. Trails manages the exchange session server-side.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ This launched on April 2, 2025 and requires no separate Mesh account or API keys
 
 ### 1. Add the `onramp` prop to `Fund`
 
-Pass an `onramp` config object with `mesh` enabled. At minimum, set `environment`:
+Pass an `onramp` config object with the environment set:
 
 ```tsx
 import { Fund } from '0xtrails/widget'
@@ -52,7 +52,7 @@ To skip the funding method selector and open the exchange flow directly, pass `p
 
 ### 3. Restrict to specific exchanges
 
-The `exchanges` array filters which exchange integrations are shown. Values are Mesh integration keys (e.g. `"coinbase"`, `"binance"`, `"robinhoodDirect"`). If omitted, all supported exchanges are listed.
+The `exchanges` array filters which exchanges are shown. If omitted, all supported exchanges are listed.
 
 ```tsx
 <Fund
@@ -116,22 +116,20 @@ function FundWithExchange() {
 ## How the auth flow works
 
 1. The user selects an exchange from the list.
-2. Mesh Connect opens an OAuth popup or redirect to the exchange's login.
-3. After authentication, Mesh Connect displays a transfer confirmation showing the amount, token, and destination.
-4. The user confirms. Mesh initiates the withdrawal from their exchange account.
+2. An OAuth popup or redirect opens to the exchange's login.
+3. After authentication, a transfer confirmation is shown with the amount, token, and destination.
+4. The user confirms and the withdrawal is initiated from their exchange account.
 5. Once the transfer is detected on-chain, Trails routes it to the destination as configured.
 
-The Trails widget shows a pending state while the exchange processes the withdrawal. Session tokens are stored locally for the duration of the session (5 minutes) so the user does not have to re-authenticate if they retry.
+The widget shows a pending state while the exchange processes the withdrawal. Session tokens are stored locally for 5 minutes so the user does not have to re-authenticate if they retry.
 
 ## Supported exchanges
 
-Available exchanges are returned dynamically from the Mesh API. The current list includes Coinbase, Binance, Kraken, Robinhood, and others. On desktop, Kraken Direct is excluded from the list (Mesh limitation). On mobile, all integrations are available.
+Available exchanges are returned dynamically. The current list includes Coinbase, Binance, Robinhood, and others.
 
-To get the current list programmatically, the widget fetches from `getMeshIntegrations` at load time. You can also query the Trails API directly if you need the list server-side.
+## `fundMethodsList` integration
 
-## `fundOptions` integration
-
-The Mesh exchange flow can be combined with `fundMethodsList` to control what funding methods appear in the selector:
+The exchange flow can be combined with `fundMethodsList` to control what funding methods appear in the selector:
 
 ```tsx
 <Fund
@@ -152,8 +150,8 @@ Accepted values in `fundMethodsList`: `"wallet"`, `"direct-transfer"`, `"onramp-
 
 **Exchange list is empty**: Confirm `apiKey` is set correctly. The exchange list fetch requires a valid API key.
 
-**Popup blocked**: Mesh Connect opens a popup window. If the browser blocks it, the widget shows a "Retry" button. Encourage users to allow popups for your domain, or trigger the flow from a user gesture (button click) rather than programmatically.
+**Popup blocked**: The exchange connection opens a popup window. If the browser blocks it, the widget shows a "Retry" button. Trigger the flow from a user gesture (button click) rather than programmatically, and encourage users to allow popups for your domain.
 
-**Session expired**: The Mesh session is valid for 5 minutes. If the session expires before the user completes the transfer, a "Refresh Session" button appears to restart the flow.
+**Session expired**: The exchange session is valid for 5 minutes. If it expires before the user completes the transfer, a "Refresh Session" button appears to restart the flow.
 
-**Sandbox not showing real exchanges**: In sandbox mode, Mesh returns test integrations. Switch to `environment: 'production'` to see real exchange options.
+**Sandbox not showing real exchanges**: In sandbox mode, test integrations are returned. Switch to `environment: 'production'` to see real exchange options.
