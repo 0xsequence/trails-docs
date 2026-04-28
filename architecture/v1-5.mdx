@@ -1,91 +1,45 @@
 ---
-title: 'Protocol v1.5'
-description: 'What changed in Trails v1.5: PERMIT-based token approvals, HydrateProxy runtime injection, and Composable Actions.'
+title: 'HydrateProxy and Composable Actions'
+description: 'How HydrateProxy enables dynamic on-chain value injection, and how Composable Actions expose it as a typed developer interface.'
 icon: 'bolt'
 ---
 
-Trails v1.5 ships three improvements that make cross-chain intents cheaper, more flexible, and more composable:
-
-1. **PERMIT flow** — EIP-2612 tokens skip the separate approval transaction entirely.
-2. **HydrateProxy** — Destination calldata is committed malleable: exact amounts are injected at execution time, not quote time.
-3. **Composable Actions** — The `actions: []` array in `useQuote` and `useTrailsSendTransaction` is the high-level interface over HydrateProxy.
-
-v1.5 is the default as of the current SDK. You do not need to set `intentProtocol` unless you have a specific reason to downgrade to v1.
+HydrateProxy is a contract module that makes destination calldata malleable: exact token amounts are resolved on-chain at execution time rather than locked in at quote time. Composable Actions are the typed developer interface over HydrateProxy — instead of encoding calldata and hydration payloads manually, you express destination execution as a list of typed steps.
 
 ---
 
-## PERMIT flow
+## HydrateProxy
 
-### The problem with v1
+When a cross-chain intent includes a destination contract call, the calldata must describe what to do with the bridged funds. The challenge: the exact amount that arrives at the destination isn't known when you build the intent — it depends on bridge output, fees, and route selection.
 
-For ERC-20 tokens, an intent requires the user's funds to move from their wallet to an intent address. In v1 this required two user signatures on the origin chain:
+Without HydrateProxy, you'd have to commit a fixed amount at quote time. If the actual bridged output differed from that figure, the destination call would fail or leave dust.
 
-1. An ERC-20 `approve` transaction (paying gas).
-2. The intent signature.
+HydrateProxy replaces fixed amounts with hydration instructions. Instead of committing `deposit(1000000)` into the signed payload, you commit a rule: "at execution time, read the ERC-20 balance of the intent wallet and substitute it at offset N in the calldata." The actual value is resolved on-chain when the funds arrive — whatever came through is what gets used.
 
-### How v1.5 handles it
-
-For tokens that implement [EIP-2612](https://eips.ethereum.org/EIPS/eip-2612) (USDC, DAI, and most modern ERC-20s), the SDK requests a single gasless `permit` signature instead of an on-chain approval. The permit is bundled with the intent and submitted together — the user signs once, and the token approval + intent initiation happen atomically.
-
-This is what the "1-click" claim means for EIP-2612 tokens: no approval transaction, no waiting for it to land, no second confirmation prompt.
-
-```
-v1:   approve tx (gas) → sign intent → done (2 interactions)
-v1.5: sign permit + intent together → done (1 interaction)
-```
-
-For tokens that do not support EIP-2612, the flow falls back to a standard approval before the intent signature. No configuration is required — the SDK detects permit support automatically.
-
-### What this requires from you
-
-Nothing. The SDK handles permit detection and signing internally. If you are passing an ERC-20 token on the origin chain, v1.5 will automatically attempt a permit signature before falling back to an on-chain approval.
-
----
-
-## HydrateProxy and malleable calldata
-
-### The problem with static calldata commitment
-
-In v1, when your intent included destination calldata (a contract call on the destination chain), the exact amount had to be known at quote time and locked into the signed payload. If the bridged amount differed from the quoted amount due to slippage or bridge fees, the destination call would either fail or leave dust.
-
-### How HydrateProxy solves it
-
-v1.5 introduces `HydrateProxy`, a contract module that receives a compact description of what values to inject, reads those values from the chain at execution time, and substitutes them into the calldata before forwarding the call.
-
-Instead of committing `deposit(1000000)` at quote time, you commit a hydration instruction: "when executing, read the ERC-20 balance of the intent wallet and substitute it at offset N in the calldata." The actual number is determined at the moment of execution — whatever arrived is what gets deposited.
-
-This is what makes `dynamic()` work in Composable Actions:
+This is what `dynamic()` expresses at the SDK level:
 
 ```ts
 import { lend, dynamic } from '0xtrails'
 
-// Lend whatever USDC actually arrives — no need to predict bridge output.
 const actions = [
   lend({
     marketId: 'base-usdc-aave-v3-lending',
-    amount: dynamic(),
+    amount: dynamic(), // resolved to actual on-chain balance at execution
   }),
 ]
 ```
 
-### Malleable vs static calldata
+### Security model
 
-| | Static (v1) | Malleable (v1.5) |
-|---|---|---|
-| Amount in signed payload | Fixed at quote time | Placeholder; hydrated at execution time |
-| Slippage risk | Destination call can fail if amount differs | Execution uses actual on-chain balance |
-| Use case | Known exact amounts | `dynamic()`, `self()`, multi-step chaining |
-| Commitment security | Full calldata committed | Hydration rules committed; values resolved on-chain |
-
-HydrateProxy enforces that only the pre-committed hydration rules can modify the calldata. The relayer cannot inject arbitrary values — the substitution logic is locked in the signed payload and verified on-chain.
+HydrateProxy enforces that only the pre-committed hydration rules can modify the calldata. The relayer cannot inject arbitrary values — the substitution logic is locked into the signed payload and verified on-chain. What you commit is what executes.
 
 ---
 
 ## Composable Actions
 
-Composable Actions are the high-level interface over HydrateProxy. Instead of encoding calldata and hydration payloads manually, you express destination execution as a typed list of steps.
+Composable Actions are the developer interface over HydrateProxy. Instead of encoding calldata and hydration payloads by hand, you express destination execution as a typed list of steps. The SDK handles encoding.
 
-### Passing actions to `useQuote`
+### With `useQuote`
 
 ```tsx
 import { useQuote, dynamic, swap, lend } from '0xtrails'
@@ -107,7 +61,9 @@ const { send, isLoadingQuote } = useQuote({
 })
 ```
 
-### Passing actions to `useTrailsSendTransaction`
+Bridge to Base USDC, swap to WETH on arrival, then supply the WETH to Aave — all from a single user confirmation on the origin chain.
+
+### With `useTrailsSendTransaction`
 
 ```tsx
 import { useTrailsSendTransaction, dynamic, deposit } from '0xtrails'
@@ -121,7 +77,7 @@ const { sendTransaction, isPending } = useTrailsSendTransaction({
   ],
 })
 
-// Trigger the Trails modal — user picks origin token and chain.
+// Trails modal opens — user picks source chain and token.
 sendTransaction({
   to: recipientAddress,
   tokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // USDC on Base
@@ -129,38 +85,30 @@ sendTransaction({
 })
 ```
 
-Both hooks convert the `actions` array into hydrated calldata using v1.5 encoding before submitting the quote.
+Whatever USDC arrives on Base gets deposited into the Morpho vault at the actual arrived amount — no prediction required.
 
-See the full [Composable Actions documentation](/sdk/composable-actions/overview) for available builders, dynamic values, and market discovery.
+See the full [Composable Actions documentation](/sdk/composable-actions/overview) for available action builders, `dynamic()` and `self()` value helpers, and market discovery.
+
+---
+
+## PERMIT flow
+
+For ERC-20 tokens that implement [EIP-2612](https://eips.ethereum.org/EIPS/eip-2612) (USDC, DAI, and most modern ERC-20s), the SDK requests a single gasless `permit` signature instead of an on-chain approval transaction. The permit is bundled with the intent and submitted together — token approval and intent initiation happen atomically in one user confirmation.
+
+The SDK detects permit support automatically. For tokens that don't implement EIP-2612, it falls back to a standard on-chain approval. No configuration is required.
 
 ---
 
 ## `intentProtocol` option
 
-`intentProtocol` is an optional override on `TrailsProvider` and `useQuote`. The default is `"v1.5"`.
+`intentProtocol` is an optional override on `TrailsProvider` and `useQuote`. The current protocol (HydrateProxy, Composable Actions, and PERMIT flow) is the default — no configuration is needed.
 
 ```tsx
 import { TrailsProvider } from '0xtrails'
 
-// Default — no configuration needed.
 <TrailsProvider config={{ trailsApiKey: "..." }}>
-  {children}
-</TrailsProvider>
-
-// Explicit override (not recommended unless you have a specific reason).
-<TrailsProvider
-  config={{
-    trailsApiKey: "...",
-    intentProtocol: "v1",
-  }}
->
   {children}
 </TrailsProvider>
 ```
 
-You can also pass `intentProtocolVersion` per-quote in `useQuote` if you need to mix protocols within the same app, though this is an edge case.
-
-| Setting | Behavior |
-|---|---|
-| `"v1.5"` (default) | PERMIT flow, HydrateProxy for dynamic calldata, Composable Actions support |
-| `"v1"` | Legacy behavior: on-chain approval + infinite permit to entrypoint, static calldata |
+You can pass `intentProtocolVersion` per-quote in `useQuote` if you need to force a specific version for a particular call, but this is an edge case.
