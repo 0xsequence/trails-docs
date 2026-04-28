@@ -157,6 +157,73 @@ Show only fiat and exchange onramps, hide the rest:
 />
 ```
 
+### Exchange onramp
+
+Users can transfer directly from a CEX account (Coinbase, Binance, Robinhood, and others) without leaving your app. The OAuth connection and transfer are handled automatically — Trails receives the funds and routes them to the destination. No separate account or additional API keys are required.
+
+Pass the `onramp` prop to enable the exchange flow. At minimum, set `environment`:
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  onramp={{
+    mesh: {
+      environment: 'production',
+    },
+  }}
+/>
+```
+
+To open the exchange flow directly instead of showing the funding method selector:
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  paymentMethod="EXCHANGE"
+  onramp={{
+    mesh: {
+      environment: 'production',
+    },
+  }}
+  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+/>
+```
+
+To restrict which exchanges appear, pass an `exchanges` array:
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  onramp={{
+    mesh: {
+      environment: 'production',
+      exchanges: ['coinbase', 'robinhoodDirect'],
+    },
+  }}
+/>
+```
+
+For development and testing, use `environment: 'sandbox'`. A yellow banner is shown inside the widget when sandbox is active.
+
+**How the auth flow works:**
+
+1. User selects an exchange from the list.
+2. An OAuth popup opens to the exchange's login.
+3. After authentication, a transfer confirmation is shown with the amount, token, and destination.
+4. User confirms and the withdrawal is initiated from their exchange account.
+5. Once detected on-chain, Trails routes the funds to the destination.
+
+The widget shows a pending state while the exchange processes the withdrawal. Session tokens are stored locally for 5 minutes so the user does not have to re-authenticate if they retry.
+
+**Troubleshooting:**
+
+- *Exchange list is empty* — confirm `apiKey` is valid; the exchange list fetch requires a valid API key.
+- *Popup blocked* — trigger the flow from a user gesture (button click) rather than programmatically, and encourage users to allow popups for your domain.
+- *Session expired* — the exchange session is valid for 5 minutes; a "Refresh Session" button appears if it expires.
+
+---
+
 ### Protocol deposit with dynamic calldata
 
 For ERC-4626 vaults and staking contracts where the deposit amount is a function parameter, use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT`. Trails replaces it with the actual bridged/swapped output at execution time.

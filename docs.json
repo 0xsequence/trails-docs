@@ -55,8 +55,7 @@
               "examples/transaction-history",
               "examples/tokens-chains-prices",
               "examples/refunds",
-              "examples/x402",
-              "examples/mesh-exchange-onramp"
+              "examples/x402"
             ]
           },
           {
