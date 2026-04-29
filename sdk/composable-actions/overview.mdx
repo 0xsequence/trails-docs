@@ -11,6 +11,8 @@ Two browser integration styles are supported:
 1. **Quote-first flow** — use [`useQuote`](/sdk/hooks#usequote-hook) with `actions` when you want to build your own UI and preview a quote before sending it.
 2. **Send-transaction flow** — use `useTrailsSendTransaction` with `actions` when you want to trigger the Trails Widget.
 
+Token amounts passed to `useQuote` and `useTrailsSendTransaction` are human-readable decimal strings, so `"0.2"` means 0.2 USDC / USDT / ETH depending on the selected token.
+
 ## What Composable Actions are
 
 A Trails **intent** is a two-phase transaction:
@@ -41,7 +43,7 @@ import { swap, lend, deposit, assertCondition, custom } from '0xtrails'
 | Builder                   | What it does                                                                        |
 | ------------------------- | ----------------------------------------------------------------------------------- |
 | `swap({...})`             | On-chain swap via Uniswap V3 or SushiSwap V3                                        |
-| `lend({...})`             | Supply into a money-market (Aave, Compound, Fluid, …)                               |
+| `lend({...})`             | Supply into supported lending markets such as Aave                                  |
 | `deposit({...})`          | Deposit into an ERC-4626 / vault-style market (Morpho, Yearn, SummerFi, Sky, …)     |
 | `assertCondition({...})`  | On-chain guard (`balance >= X`, `deadline > now`, …) — whole batch reverts if false |
 | `custom({...})`           | Wrap an arbitrary contract call (escape hatch)                                      |

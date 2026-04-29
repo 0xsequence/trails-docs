@@ -41,18 +41,21 @@ import { Swap } from '0xtrails/widget'
 When using the `useQuote` hook, you can specify both swap and bridge providers:
 
 ```tsx
-import { useQuote, TradeType, RouteProvider } from '0xtrails'
+import { useQuote, RouteProvider } from '0xtrails'
 
-const { quote, swap } = useQuote({
+const { quote, send } = useQuote({
   walletClient,
-  fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  fromChainId: 1,
-  toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
-  toChainId: 8453,
-  swapAmount: '1000000',
-  tradeType: TradeType.EXACT_INPUT,
-  swapProvider: RouteProvider.AUTO,     // Optional: defaults to AUTO
-  bridgeProvider: RouteProvider.RELAY,  // Optional: specify preferred bridge
+  from: {
+    token: 'USDC',
+    chain: 'ethereum',
+    amount: '1', // human-readable USDC amount
+  },
+  to: {
+    token: 'USDC',
+    chain: 'base',
+  },
+  swapProvider: 'AUTO',    // Optional: defaults to AUTO
+  bridgeProvider: 'RELAY', // Optional: specify preferred bridge
 })
 ```
 

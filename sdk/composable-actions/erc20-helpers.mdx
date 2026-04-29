@@ -102,4 +102,4 @@ getAmountWithSlippage(parseUnits('1', 6), 50) // 1 USDC, 0.5% → 0.995 USDC
 getAmountWithSlippage(parseUnits('1', 6), 500) // 1 USDC, 5%  → 0.95 USDC
 ```
 
-Handy for computing a safe `minAmountOut` or `amountOutMinimum` before handing it to [`swap`](/sdk/composable-actions/building-actions#swap-on-chain-token-swap) or the [chain-scoped Uniswap V3 / SushiSwap V3 adapters](/sdk/composable-actions/building-actions#swap-adjacent-utilities).
+Handy for computing a safe `minAmountOut` or `amountOutMinimum` before handing it to [`swap`](/sdk/composable-actions/building-actions#swap-on-chain-token-swap) or the [chain-scoped Uniswap V3 / SushiSwap V3 adapters](/sdk/composable-actions/building-actions#swap-utilities).

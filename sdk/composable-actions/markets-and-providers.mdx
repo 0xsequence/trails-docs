@@ -4,16 +4,16 @@ description: "Discover markets and supported providers at runtime"
 sidebarTitle: "Markets & Providers"
 ---
 
-Every `lend` and `deposit` action needs a `marketId`. 
+Every `lend` and `deposit` action needs a `marketId`.
 
 ## React hooks
 
-Use `useEarnMarkets` and `useEarnProviders` inside a React tree wrapped with `TrailsProvider`:
+Use `useEarnMarkets`, `useEarnProviders`, and `useEarnBalances` inside a React tree wrapped with `TrailsProvider`:
 
 ```tsx
-import { useEarnMarkets, useEarnProviders } from '0xtrails'
+import { useEarnMarkets, useEarnProviders, useEarnBalances } from '0xtrails'
 
-function MarketPicker() {
+function MarketPicker({ walletAddress }: { walletAddress: `0x${string}` }) {
   const { data: providers } = useEarnProviders()
 
   const { data: markets, total, isLoading } = useEarnMarkets({
@@ -25,7 +25,14 @@ function MarketPicker() {
     limit: 20,
     offset: 0,
   })
+
+  const { data: balances } = useEarnBalances({
+    walletAddress,
+    chain: 'base',
+  })
+
   // markets[i].id → pass to lend / deposit
+  // balances[i].yieldId → match against market.id
 }
 ```
 
@@ -43,7 +50,46 @@ function MarketPicker() {
 
 Each `EarnMarket` exposes `id`, `rewardRate`, `statistics.tvlUsd`, `metadata.*`, `providerId`, and more.
 
-Use these hooks in browser apps to discover supported markets and providers before building an action list.
+Use these hooks in browser apps to discover supported markets, providers, and the user's existing earn positions before building an action list.
+
+### `useEarnBalances`
+
+Fetch a wallet's earn balances for one chain:
+
+```tsx
+const { data: balances, errors, isLoading } = useEarnBalances({
+  walletAddress: '0x9ec762D784B653E168d93eA3078B023d8958dBc6',
+  chain: 'polygon',
+})
+```
+
+Fetch balances across multiple chains in a single backend request:
+
+```tsx
+const { data: balances } = useEarnBalances({
+  walletAddress,
+  chains: ['polygon', 'ethereum', 'base'],
+})
+```
+
+Restrict the lookup to one market:
+
+```tsx
+const { data: balances } = useEarnBalances({
+  walletAddress,
+  chain: 'polygon',
+  marketId: 'polygon-usdc-aave-v3-lending',
+})
+```
+
+| Field           | Type                | Description                                      |
+| --------------- | ------------------- | ------------------------------------------------ |
+| `walletAddress` | `string`            | Wallet whose earn positions should be fetched    |
+| `chain`         | `ChainIdentifier`   | Single chain name, ID, or viem chain object      |
+| `chains`        | `ChainIdentifier[]` | Multiple chains; mutually exclusive with `chain` |
+| `marketId`      | `string`            | Optional market ID to filter one position        |
+| `arguments`     | `object`            | Optional market-specific balance arguments       |
+| `enabled`       | `boolean`           | Set `false` to disable the query                 |
 
 ## End-to-end example
 
@@ -60,7 +106,7 @@ function LendWithMarketPicker() {
   const { data: markets } = useEarnMarkets({
     chain: 'base',
     type: 'lending',
-    token: 'USDC',
+    search: 'USDC',
     sortBy: 'rewardRateDesc',
     limit: 5,
   })

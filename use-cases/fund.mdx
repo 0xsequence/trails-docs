@@ -46,7 +46,7 @@ export const BaseDeposit = () => {
 
 ### Depositing into a lending protocol
 
-For protocols like Aave, Compound, and Fluid that are natively supported, use the `lend` composable action:
+For protocols like Aave that are natively supported, use the `lend` composable action. This handles approval, the supply call, and dynamic amount resolution without encoding any calldata by hand:
 
 ```tsx
 import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
@@ -68,7 +68,7 @@ export function AaveLendButton({ recipient }: { recipient: `0x${string}` }) {
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDC.addressOn('base'),
-          tokenAmount: '100000000',
+          tokenAmount: '100', // human-readable USDC amount
         })
       }
     >
@@ -104,7 +104,7 @@ export function YearnDepositButton({ recipient }: { recipient: `0x${string}` }) 
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDC.addressOn('katana'),
-          tokenAmount: '100000000',
+          tokenAmount: '100',
         })
       }
     >
