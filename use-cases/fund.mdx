@@ -6,65 +6,47 @@ icon: 'money-bill'
 
 ## Fund with Trails
 
+Traditional funding flows require users to find an external bridge, swap to the required deposit token, pay multiple gas fees across networks, and navigate complex UIs.
 
-Traditional funding flows require users to:
-- Find an external bridge or fiat onramp provider supported by the chain / app 
-- Swap to the required deposit token
-- Pay multiple gas fees across different networks
-- Wait for bridge confirmations
-- Navigate complex interfaces
+Trails handles all of that in a single transaction. Users can deposit from any token they hold on any supported chain — or use a fiat onramp, exchange transfer, or QR code — all in one embedded experience.
 
-Trails seamlessly enables users to deposit funds into your chain, app, or protocol with optimized UX flows and native integrations with multiple liquidity sources to optimize routes for low-slippage. Onramps, transfers from other dapps, wallet balances, and chain abstraction are all built in by default, so you do not need to implement or expose any separate funding path. Users can fund from any token they hold across any supported chain, eliminating the need for manual bridging and swapping - embedded seamlessly in the experience as a single transaction.
+## Use cases
 
-## Use Cases
+Funding flows are exact-input by default. The user selects how much to send; the destination receives the resulting amount after routing.
 
-Funding flows in Trails are modeled as exact input by default. For example, "I have exactly 10 USDC tokens I want to send out from the origin chain, and I'll receive 9.99 USDC on the destination." Funding can done through a variety of methods such as the user's connected wallet, an existing app they already have funds, or onramping from various fiat options.
-
-This is ideal for a variety of use cases and apps such as the following:
-
-- Transfer funds into a perpetual exchange deposit address.
-- Bootstrap liquidity for lending protocols by transferring funds and executing a vault deposit.
-- Add funds to your balance on an application with crypto support.
-- Swap and deposit funds into staking contracts.
-- Onboard users to new chains seamlessly from any origin chain.
-- Top up a user's account on a prediction market.
-
-
+- Transfer funds into a perpetual exchange
+- Bootstrap liquidity in a lending protocol vault
+- Onboard users to a new chain
+- Top up a prediction market or gaming app account
+- Deposit into staking contracts
 
 ## Examples
 
-### Depositing USDC into Polygon
+### Deposit USDC to Polygon
 
-This example shows how to use the Trails widget to enable a user to deposit into a chain with any token, in this case USDC on Polygon with a fixed amount:
-
-<CodeGroup>
-
-```tsx SimpleDeposit.tsx
-import { TrailsWidget } from '0xtrails/widget'
+```tsx
+import { Fund } from '0xtrails/widget'
 
 export const BaseDeposit = () => {
   return (
-    <TrailsWidget
+    <Fund
       apiKey="YOUR_API_KEY"
-      mode="fund"
-      toAddress="0x..." // Recipient Address
-      toChainId={137} // Polygon
-      toToken="USDC"
-      toAmount="100" // 100 USDC
-      onCheckoutComplete={({ sessionId }) => {
+      to={{
+        recipient: "0x...",
+        currency: "USDC",
+        chain: "polygon",
+      }}
+      onFundingSuccess={({ sessionId }) => {
         console.log('Deposit completed:', sessionId)
       }}
     />
   )
 }
 ```
-</CodeGroup>
-
-
 
 ### Depositing into a lending protocol
 
-For protocols like Aave, Compound, and Fluid that are natively supported, use the `lend` composable action. This handles approval, the supply call, and dynamic amount resolution without encoding any calldata by hand:
+For protocols like Aave, Compound, and Fluid that are natively supported, use the `lend` composable action:
 
 ```tsx
 import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
@@ -86,7 +68,7 @@ export function AaveLendButton({ recipient }: { recipient: `0x${string}` }) {
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDC.addressOn('base'),
-          tokenAmount: '100000000', // 100 USDC (6 decimals)
+          tokenAmount: '100000000',
         })
       }
     >
@@ -96,11 +78,11 @@ export function AaveLendButton({ recipient }: { recipient: `0x${string}` }) {
 }
 ```
 
-Use `useEarnMarkets` to discover available market IDs rather than hard-coding them. See [Markets and Providers](/sdk/composable-actions/markets-and-providers).
+Use `useEarnMarkets` to discover available market IDs. See [Markets and Providers](/sdk/composable-actions/markets-and-providers).
 
 ### Depositing into a vault
 
-For ERC-4626 and vault-style protocols (Morpho, Yearn, SummerFi), use the `deposit` composable action. The amount resolves at execution time so slippage and bridge output are handled automatically:
+For ERC-4626 and vault-style protocols (Morpho, Yearn, SummerFi), use the `deposit` composable action:
 
 ```tsx
 import { useTrailsSendTransaction, deposit, erc20Utils } from '0xtrails'
@@ -134,37 +116,37 @@ export function YearnDepositButton({ recipient }: { recipient: `0x${string}` }) 
 
 ### Depositing into a custom contract
 
-If your target protocol is not covered by the `lend` or `deposit` builders, use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` in the widget's `toCalldata`. The widget replaces this constant with the actual bridged/swapped output at execution time:
+For protocols not covered by composable actions, use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` in `to.calldata`:
 
 <CodeGroup>
 ```tsx CustomVaultDeposit.tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Fund } from '0xtrails/widget'
 import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
 import { customVaultABI } from './abi.ts'
 
 export const CustomVaultDeposit = () => {
-  const VAULT_CONTRACT = "0x..." // your contract address
+  const VAULT_CONTRACT = "0x..."
 
   const depositCalldata = encodeFunctionData({
     abi: customVaultABI,
     functionName: 'deposit',
     args: [
       TRAILS_ROUTER_PLACEHOLDER_AMOUNT, // replaced with actual output at execution
-      "0x...", // receiver address
+      "0x...",                          // receiver address
     ],
   })
 
   return (
-    <TrailsWidget
+    <Fund
       apiKey="YOUR_API_KEY"
-      mode="fund"
-      toAddress={VAULT_CONTRACT}
-      toChainId={747474}
-      toToken="USDC"
-      toCalldata={depositCalldata}
-      theme="auto"
-      onCheckoutComplete={({ sessionId }) => {
+      to={{
+        recipient: VAULT_CONTRACT,
+        currency: "USDC",
+        chain: "katana",
+        calldata: depositCalldata,
+      }}
+      onFundingSuccess={({ sessionId }) => {
         console.log('Vault deposit completed:', sessionId)
       }}
     />
@@ -188,11 +170,9 @@ export const customVaultABI = [
 ```
 </CodeGroup>
 
-### Creating a trustless deposit address via API (quote → commit → execute)
+### Trustless deposit address via API (quote → commit → execute)
 
-Deposit addresses are common flows where users can simply deposit funds into based on their requested quote and Trails will automatically orchestrate. The funding mode of the widget handles this for you, but in some cases you may wish to use the API to create your own deposit flows.
-
-To create a Trails deposit address, use the backend endpoints to create a quote, commit it, and then execute after the user deposits to the intent address returned in the quote. This gives you a trustless, deterministic deposit address and an intent lifecycle you can track server-side.
+Create a deposit address flow server-side using the Trails API directly:
 
 <CodeGroup>
 ```ts DepositAddressFlow.ts
@@ -200,18 +180,18 @@ const quoteResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/Qu
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_ACCESS_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
   },
   body: JSON.stringify({
     ownerAddress: userWallet,
-    originChainId: 137, // User funds on Polygon
-    originTokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
-    destinationChainId: 8453, // Settle on Base
-    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-    destinationToAddress: appCreditAddress, // Address your app credits on destination
+    originChainId: 137,
+    originTokenAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+    destinationChainId: 8453,
+    destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    destinationToAddress: appCreditAddress,
     destinationTokenAmount: '50000000', // 50 USDC (6 decimals)
     tradeType: 'EXACT_OUTPUT',
-  })
+  }),
 })
 
 const { intent } = await quoteResponse.json()
@@ -221,28 +201,25 @@ const commitResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/C
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_ACCESS_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
   },
-  body: JSON.stringify({ intent })
+  body: JSON.stringify({ intent }),
 })
 
 const { intentId } = await commitResponse.json()
 
-// 1) Ask the user to deposit to the intent address returned in the quote
-// 2) When the deposit is confirmed, execute with the deposit transaction hash
+// Ask the user to deposit to the intent address, then execute
 const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/ExecuteIntent', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Access-Key': 'YOUR_ACCESS_KEY'
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
   },
   body: JSON.stringify({
     intentId,
-    depositTransactionHash: userDepositTxHash
-  })
+    depositTransactionHash: userDepositTxHash,
+  }),
 })
-
-const { intentStatus } = await executeResponse.json()
 ```
 </CodeGroup>
 
@@ -250,17 +227,10 @@ const { intentStatus } = await executeResponse.json()
 Quotes expire after **10 minutes**.
 </Note>
 
-## Next Steps
+## Next steps
 
-Explore more about configuring and customizing funding flows:
-
-- [**Composable Actions**](/use-cases/composable-actions) - Programmatic DeFi deposits using `lend`, `deposit`, and `swap` builders without the widget
-
-- [**Fund Mode Configuration**](/sdk/modes/fund) - Complete configuration options and parameters for fund mode
-- [**SDK Configuration**](/sdk/configuration) - Widget setup, callbacks, and event handling  
-- [**Widget Theming**](/sdk/theming) - Customize the appearance to match your brand
-- [**Hooks Reference**](/sdk/hooks) - Available hooks for programmatic control
-- [**Tokens & Chains**](/sdk/tokens-and-chains) - Configure supported tokens and destination chains
-- [**Customization Guide**](/sdk/customization) - Advanced customization options for funding flows
-
-
+- [**Composable actions**](/use-cases/composable-actions) — programmatic DeFi deposits using `lend`, `deposit`, and `swap`
+- [**Fund mode configuration**](/sdk/modes/fund) — complete configuration options
+- [**SDK configuration**](/sdk/configuration) — widget setup and event handling
+- [**Theming**](/sdk/theming) — customize appearance
+- [**Hooks reference**](/sdk/hooks) — programmatic control

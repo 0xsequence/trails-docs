@@ -51,9 +51,9 @@ console.log(`Intent ${intentId} is now ${status}`);
 ### With the Trails SDK
 
 ```typescript
-import { SequenceTrails } from '0xtrails'
+import { TrailsClient } from '0xtrails'
 
-const trails = new SequenceTrails({ accessKey: 'YOUR_ACCESS_KEY' })
+const trails = new TrailsClient({ accessKey: 'YOUR_ACCESS_KEY' })
 
 const result = await trails.abortIntent({
   intentId: 'intent_abc123',

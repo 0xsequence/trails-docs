@@ -1,6 +1,6 @@
 ---
 title: "Getting Started"
-description: "Installing and importing the SDK"
+description: "Installing and using the Trails SDK"
 sidebarTitle: "Getting Started"
 ---
 
@@ -13,7 +13,7 @@ sidebarTitle: "Getting Started"
     Minimal template for Trails with Earn, Swap, Pay, and Fund modes integrated.
   </Card>
 
-    <Card title="NextJS Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-nextjs-starter">
+  <Card title="NextJS Starter Kit" icon="code" href="https://github.com/0xsequence-demos/trails-nextjs-starter">
     Minimal NextJS template for Trails with Earn, Swap, Pay, and Fund modes integrated.
   </Card>
 </div>
@@ -24,162 +24,169 @@ sidebarTitle: "Getting Started"
 
 ## Prerequisites
 
-- React 18+ (18.0 or newer)
+- React 18+ (React 19.1+ recommended for best compatibility)
 
-To install in your own application:
-<Steps>
-  <Step title="Install the SDK and dependencies">
-    <CodeGroup>
-    ```shell pnpm
-    pnpm i 0xtrails
-    ```
-    ```shell npm
-    npm install --save 0xtrails
-    ```
-    ```shell yarn
-    yarn add 0xtrails
-    ```
-    ```shell bun
-    bun add 0xtrails
-    ```
-    </CodeGroup>
-  </Step>
+## Install
 
-  <Step title="Import and Use the Widget">
-    Add the widget to your React application. Here are examples for different modes:
+<CodeGroup>
+```shell pnpm
+pnpm i 0xtrails
+```
+```shell npm
+npm install --save 0xtrails
+```
+```shell yarn
+yarn add 0xtrails
+```
+```shell bun
+bun add 0xtrails
+```
+</CodeGroup>
 
-    ### Pay Mode (Exact Output)
-    Send exactly 1 USDC to a recipient on Base:
+## Focused components (recommended)
 
-    ```tsx
-    import { TrailsWidget } from '0xtrails/widget'
+The SDK exports `Pay`, `Fund`, `Swap`, `Withdraw`, and `Earn` as purpose-built alternatives to `TrailsWidget`. Pick the component that matches what you're building.
 
-    export const PaymentExample = () => {
-      return (
-        <TrailsWidget
-          apiKey="YOUR_API_KEY"
-          mode="pay"
-          toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1" // recipient address
-          toAmount="1"
-          toChainId={8453}
-          toToken="USDC"
-          onCheckoutComplete={(result) => {
-              console.log('Payment completed:', result)
-          }}
-        >
-          <button className="pay-button">
-            Pay 1 USDC
-          </button>
-        </TrailsWidget>
-      )
-    }
-    ```
+### Pay
 
-    ### Swap Mode
-    Enable cross-chain token swapping:
+User pays a specific amount to a specific recipient:
 
-    ```tsx
-    import { TrailsWidget } from '0xtrails/widget'
+```tsx
+import { Pay } from '0xtrails/widget'
 
-    export const SwapExample = () => {
-      return (
-        <TrailsWidget
-          apiKey="YOUR_API_KEY"
-          mode="swap"
-          onCheckoutComplete={(result) => {
-            console.log('Swap completed:', result)
-          }}
-        >
-          <button className="swap-button">
-            Swap Tokens
-          </button>
-        </TrailsWidget>
-      )
-    }
-    ```
+export const PaymentExample = () => {
+  return (
+    <Pay
+      apiKey="YOUR_API_KEY"
+      to={{
+        recipient: "0x97c4A952b46bEcaD0663f76357d3776ba11566E1",
+        currency: "USDC",
+        chain: "base",
+        amount: "10",
+      }}
+      onPaymentSuccess={({ sessionId }) => {
+        console.log('Payment completed:', sessionId)
+      }}
+    >
+      <button>Pay 10 USDC</button>
+    </Pay>
+  )
+}
+```
 
-    ### Fund Mode
-    Let users choose how much to deposit:
+### Swap
 
-    ```tsx
-    import { TrailsWidget } from '0xtrails/widget'
+User swaps from one token to another:
 
-    export const FundExample = () => {
-      return (
-        <TrailsWidget
-          apiKey="YOUR_API_KEY"
-          mode="fund"
-          toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
-          toChainId={8453}
-          toToken="USDC"
-          onCheckoutComplete={(result) => {
-            console.log('Funding completed:', result)
-          }}
-        >
-          <button className="fund-button">
-            Add Funds
-          </button>
-        </TrailsWidget>
-      )
-    }
-    ```
-  </Step>
+```tsx
+import { Swap } from '0xtrails/widget'
 
-  <Step title="Handle Events (Optional)">
-    Listen to various events during the transaction flow:
+export const SwapExample = () => {
+  return (
+    <Swap
+      apiKey="YOUR_API_KEY"
+      from={{ currency: "ETH", chain: "ethereum" }}
+      to={{ currency: "USDC", chain: "base" }}
+      onSwapSuccess={({ sessionId }) => {
+        console.log('Swap completed:', sessionId)
+      }}
+    >
+      <button>Swap ETH to USDC</button>
+    </Swap>
+  )
+}
+```
 
-    ```tsx
-    import { TrailsWidget } from '0xtrails/widget'
+### Fund
 
-    export const AdvancedExample = () => {
-      return (
-        <TrailsWidget
-          apiKey="YOUR_API_KEY"
-          mode="pay"
-          toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
-          toAmount="1"
-          toChainId={8453}
-          toToken="USDC"
-          onCheckoutStatusUpdate={({ sessionId, transactionStates }) => {
-            console.log('Transaction states updated:', sessionId, transactionStates)
-          }}
-          onCheckoutError={({ sessionId, error }) => {
-            console.error('Transaction error:', sessionId, error)
-          }}
-          onCheckoutComplete={({ sessionId }) => {
-            console.log('Transaction completed:', sessionId)
-          }}
-        >
-          <button className="advanced-button">
-            Send Payment
-          </button>
-        </TrailsWidget>
-      )
-    }
-    ```
-      Trails has a wallet connection flow integrated into the widget so users can connect via the widget or utilize another connector such as RainbowKit, Privy, etc.
+User deposits funds into a wallet or protocol:
 
-    <Note>
-    **Using Hooks?** If you plan to use Trails hooks (like `useQuote`, `useTokenBalances`, etc.), wrap your app with `TrailsProvider`. See the [Hooks documentation](/sdk/hooks#trailsprovider) for setup details.
-    </Note>
-  </Step>
-</Steps>
+```tsx
+import { Fund } from '0xtrails/widget'
 
-## Available Modes
+export const FundExample = () => {
+  return (
+    <Fund
+      apiKey="YOUR_API_KEY"
+      to={{
+        recipient: "0x97c4A952b46bEcaD0663f76357d3776ba11566E1",
+        currency: "USDC",
+        chain: "base",
+      }}
+      onFundingSuccess={({ sessionId }) => {
+        console.log('Funding completed:', sessionId)
+      }}
+    >
+      <button>Add Funds</button>
+    </Fund>
+  )
+}
+```
 
-The widget supports several modes for different use cases:
+### Withdraw
 
-- **[Pay](/sdk/modes/pay)** - Exact output amount (user pays exactly what's specified)
-- **[Fund](/sdk/modes/fund)** - Deposit/top-up (user chooses amount to send)
-- **[Swap](/sdk/modes/swap)** - Cross-chain token swapping
-- **[Earn](/sdk/modes/earn)** - Integrated yield farming with various protocols
-- **[Withdraw](/sdk/modes/withdraw)** - Withdraw assets with a guided, fee-aware flow
+User withdraws or off-ramps tokens:
 
-## Script Import
+```tsx
+import { Withdraw } from '0xtrails/widget'
 
-While we recommend using the React component, you can also embed via a script tag in a non-React site.
+export const WithdrawExample = () => {
+  return (
+    <Withdraw
+      apiKey="YOUR_API_KEY"
+      from={{ currency: "USDC", chain: "base" }}
+      onWithdrawSuccess={({ sessionId }) => {
+        console.log('Withdrawal completed:', sessionId)
+      }}
+    >
+      <button>Withdraw</button>
+    </Withdraw>
+  )
+}
+```
 
-You can load the Trails widget from various CDNs:
+### Earn
+
+User deposits into DeFi protocols for yield:
+
+```tsx
+import { Earn } from '0xtrails/widget'
+
+export const EarnExample = () => {
+  return (
+    <Earn
+      apiKey="YOUR_API_KEY"
+      onEarnSuccess={({ sessionId }) => {
+        console.log('Deposit completed:', sessionId)
+      }}
+    />
+  )
+}
+```
+
+## Lifecycle events
+
+All focused components expose consistent lifecycle callbacks. Replace `Xxx` with `Payment`, `Funding`, `Swap`, `Withdraw`, or `Earn`:
+
+```tsx
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{ recipient: "0x...", currency: "USDC", chain: "base", amount: "10" }}
+  onPaymentStart={({ sessionId }) => {
+    console.log('Started:', sessionId)
+  }}
+  onPaymentSuccess={({ sessionId }) => {
+    console.log('Completed:', sessionId)
+  }}
+  onPaymentError={({ sessionId, error }) => {
+    console.error('Failed:', sessionId, error)
+  }}
+/>
+```
+
+## Script import
+
+For non-React sites, embed the widget via CDN:
 
 ```html
 <div id="trails"></div>
@@ -196,12 +203,24 @@ You can load the Trails widget from various CDNs:
 </script>
 ```
 
-### CDN Recommendations
-
-- **unpkg**: `https://unpkg.com/0xtrails@latest/dist/umd/trails.min.js`
-- **jsDelivr**: `https://cdn.jsdelivr.net/npm/0xtrails@latest/dist/umd/trails.min.js`
-- **Specific Version**: Replace `@latest` with `@1.0.0` (or your desired version) for production use
+**CDN options:**
+- unpkg: `https://unpkg.com/0xtrails@latest/dist/umd/trails.min.js`
+- jsDelivr: `https://cdn.jsdelivr.net/npm/0xtrails@latest/dist/umd/trails.min.js`
 
 <Note>
-For production applications, we recommend pinning to a specific version rather than using `@latest` to ensure consistent behavior.
+Pin to a specific version (e.g. `@1.5.0`) in production instead of `@latest`.
 </Note>
+
+## Available modes
+
+| Component | Trade type | Use when |
+|-----------|-----------|---------|
+| `<Pay />` | EXACT_OUTPUT | Accepting payments for a fixed amount |
+| `<Fund />` | EXACT_INPUT | Depositing into a wallet, chain, or protocol |
+| `<Swap />` | Both | Cross-chain token exchange |
+| `<Withdraw />` | Both | Off-ramping or moving funds out |
+| `<Earn />` | EXACT_INPUT | DeFi yield deposits |
+
+Detailed configuration: [Pay](/sdk/modes/pay) · [Fund](/sdk/modes/fund) · [Swap](/sdk/modes/swap) · [Withdraw](/sdk/modes/withdraw) · [Earn](/sdk/modes/earn)
+
+If you need hooks: wrap your app with `TrailsProvider`. See the [Hooks documentation](/sdk/hooks#trailsprovider).

@@ -41,8 +41,11 @@ The Trails protocol consists of several core smart contracts:
 - **TrailsRouter** - Main routing contract for intent execution and token operations
 - **TrailsIntentEntrypoint** - Entry point for intent deposits with permit support
 - **TrailsRouterShim** - Execution wrapper with sentinel tracking for success/failure states
+- **HydrateProxy** - Runtime value injection for v1.5 intents. Resolves dynamic amounts and addresses (ERC-20 balances, intent wallet address) at execution time, enabling composable actions with `dynamic()` without committing exact amounts at quote time
 
 All contracts leverage Sequence v3 account abstraction for flexible, secure cross-chain operations.
+
+See [Protocol v1.5](/architecture/v1-5) for more detail on how HydrateProxy enables malleable calldata.
 
 ## Security Audits
 

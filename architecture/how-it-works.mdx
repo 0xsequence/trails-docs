@@ -14,68 +14,21 @@ Trails is built on the [Sequence](https://docs.sequence.xyz) wallet stack combin
 
 The protocol is designed to be extensible, with plans to support non-EVM chains in the future.
 
-## Step-by-Step Flow
+## Transaction flow
 
-<Steps>
-  <Step title="User Initiates Payment">
-    **Trigger any action requiring payment**
-    
-    The user clicks "Buy", "Mint", "Deposit", or initiates any action requiring payment on a dapp, triggering the Trails flow. The action can be priced in any token on any chain, and users can select any desired token from any chain from their balance to execute the payment.
+A Trails transaction moves through two phases: origin chain and destination chain. The user is only involved in the first.
 
-  </Step>
+**Intent address generation.** When a transaction is initiated, a unique intent contract address is computed from the full transaction orchestration across chains. This address encodes the details of both origin and destination transactions, making execution onchain-verifiable. The user's wallet is the only party with control over this address.
 
-  <Step title="Intent Address Generation">
-    **Compute a unique intent contract address**
-    
-    A unique intent contract address is computed based on the full transaction orchestration across multiple chains. The intent address encodes the details of transactions on both the origin and destination chains enabling onchain cryptographic execution.
+**Origin transfer.** The user deposits tokens into the intent address on the origin chain. This is the only transaction the user signs. Everything from here — swaps, bridging, destination execution — is handled automatically.
 
-    <Note>
-      The user's wallet is the only party with control over this intent address.
-    </Note>
-  </Step>
+**Origin chain execution.** The Relayer executes the encoded origin transaction by submitting a Merkle proof to the intent address. The Relayer cannot modify transaction contents; any party can safely trigger execution. Swaps or bridge operations required on the origin chain are handled at this stage.
 
-  <Step title="Origin Transfer">
-    **Single user confirmation to deposit tokens**
-    
-    The user sends a single transaction to deposit their tokens (from any chain they hold funds on) into the intent address on the origin chain. This is the **only transaction the user needs to sign**.
+**Bridging.** Funds move to the corresponding intent address on the destination chain via whatever bridge or liquidity route was selected at quote time.
 
-    <Tip>
-      Any bridges, swaps, and execution logic necessary to complete the payment are handled automatically from this point forward.
-    </Tip>
-  </Step>
+**Final settlement.** The Relayer executes the destination transaction the same way — Merkle proof, no ability to deviate. Funds are sent to the recipient, contract calls are executed, and any specified actions (mint, deposit, etc.) complete atomically.
 
-  <Step title="Origin Chain Execution">
-    **Relayer executes the encoded origin transaction**
-    
-    The Relayer automatically executes an operation on the origin intent address by submitting a merkle proof to execute the encoded origin transaction:
-
-    - **Trustless Execution**: The Relayer is unable to modify the transaction contents
-    - **Permissionless**: Any party can safely trigger the intent transaction to move it forward
-    - **Automated**: Handles any required swaps or bridge operations on the origin chain
-
-  </Step>
-
-  <Step title="Destination Chain Arrival">
-    **Bridged funds arrive at the destination intent address**
-    
-    The bridged funds arrive at the corresponding intent address on the destination chain, ready for the final execution.
-
-  </Step>
-
-  <Step title="Final Settlement">
-    **Complete the payment on the destination chain**
-    
-    The Relayer executes the final wallet operation on the destination intent address by submitting a merkle proof to execute the encoded destination transaction:
-
-    - **Send funds to the recipient**
-    - **Execute any required contract calls**
-    - **Perform other specified actions (mint, deposit, etc.)**
-
-    <Info>
-      This intent-based approach ensures users only sign **one transaction** while the system handles all the complex routing, bridging, execution, and settlement logic automatically across multiple chains.
-    </Info>
-  </Step>
-</Steps>
+The reason users sign only once is that the intent address locks in the entire transaction graph upfront. The relayer executes what was cryptographically committed; it has no discretion to change it.
 
 
 ## Key Benefits

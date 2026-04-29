@@ -18,11 +18,7 @@ Common problems this solves:
 
 ## How It Works
 
-1. User initiates a transaction in the Trails widget
-2. By default, native gas token is shown as the fee option
-3. User can select alternative fee tokens (USDC, USDT, etc.)
-4. First time: User signs an EIP-2612 permit (gasless signature)
-5. Subsequent transactions: Single confirmation only
+When a user initiates a transaction, the widget presents available fee tokens alongside the default native gas option. For permit-compatible tokens (EIP-2612), the user signs an off-chain permit rather than an on-chain approval — no separate gas-spending transaction is required. The Trails relayer uses that permit signature to cover the fee, deducting it from the user's selected token balance.
 
 ## Supported Fee Tokens
 

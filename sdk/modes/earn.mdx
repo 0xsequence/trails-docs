@@ -1,6 +1,6 @@
 ---
-title: Earn Mode
-description: "Technical reference for implementing DeFi yield and staking integrations"
+title: Earn
+description: "DeFi yield and staking deposits with the focused Earn component"
 sidebarTitle: "Earn"
 ---
 
@@ -9,142 +9,144 @@ sidebarTitle: "Earn"
 Earn mode enables users to deposit into DeFi protocols for yield generation and staking. It supports both pre-integrated protocols (Aave, Morpho) and custom contract integrations with arbitrary calldata.
 
 <Note>
-Earn mode includes both deposit and withdrawal tabs. If you want to deep-link users directly into withdrawals, use [Withdraw mode](/sdk/modes/withdraw).
+Earn mode includes both deposit and withdrawal tabs. To deep-link users directly into withdrawals, use [Withdraw mode](/sdk/modes/withdraw).
 </Note>
 
-## Configuration
-
-### Required Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `mode` | `"earn"` | Sets the widget to earn mode |
-
-### Required Props (Custom Protocol Integration)
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `toAddress` | `string` | Protocol contract address |
-| `toChainId` | `number` | Protocol's chain ID |
-| `toToken` | `string` | Token to deposit |
-| `toCalldata` | `string` | Encoded function call |
-
-### Optional Props (Custom Integration)
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `toAmount` | `string` | Fixed deposit amount |
-| `slippageTolerance` | `string \| number` | Slippage tolerance |
-
-## Implementation
-
-### Protocol Selection Widget
-
-Use pre-integrated protocols (Aave, Morpho, etc.):
+## Quick start
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Earn } from '0xtrails/widget'
 
-<TrailsWidget
+// Open protocol selection — user picks everything
+<Earn apiKey="YOUR_API_KEY" />
+```
+
+Pre-configure the destination protocol:
+
+```tsx
+<Earn
   apiKey="YOUR_API_KEY"
-  mode="earn"
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Deposit completed:', sessionId)
+  to={{
+    recipient: "0xYearnVault",
+    currency: "USDC",
+    chain: "katana",
+    calldata: encodedDepositCalldata,
   }}
+  onEarnSuccess={({ sessionId }) => console.log("deposited", sessionId)}
 />
 ```
 
-### Fixed Amount Protocol Deposit
+## Props
 
-Deposit a specific amount into a protocol:
+### Required
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `apiKey` | `string` | Trails API key |
+
+### Destination (optional)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `to.recipient` | `string` | Protocol contract address |
+| `to.currency` | `string` | Token to deposit (symbol or address) |
+| `to.chain` | `ChainIdentifier` | Protocol chain — name, ID, or viem Chain |
+| `to.defaultCurrency` | `string` | Default token — user can change |
+| `to.defaultChain` | `ChainIdentifier` | Default chain — user can change |
+| `to.amount` | `string \| number` | Fixed deposit amount |
+| `to.calldata` | `string` | ABI-encoded function call to execute after deposit |
+
+### Source (optional)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `from.currency` | `string` | Source token symbol or address |
+| `from.chain` | `ChainIdentifier` | Source chain |
+| `from.amount` | `string \| number` | Source amount |
+| `from.walletAddress` | `string` | Source wallet (defaults to connected wallet) |
+
+### Payment method (optional)
+
+`paymentMethod` controls how the user sources funds:
+
+| Value | Method |
+|-------|--------|
+| `"CONNECTED_WALLET"` | Connected wallet (default) |
+| `"CRYPTO_TRANSFER"` | QR code / address deposit |
+| `"CREDIT_DEBIT_CARD"` | Fiat on-ramp |
+| `"EXCHANGE"` | CEX transfer |
+
+### Lifecycle callbacks
+
+| Callback | Signature | When it fires |
+|----------|-----------|---------------|
+| `onEarnStart` | `({ sessionId }) => void` | User begins the deposit flow |
+| `onEarnSuccess` | `({ sessionId }) => void` | Deposit completes successfully |
+| `onEarnError` | `({ sessionId, error }) => void` | Deposit encounters an error |
+
+## Examples
+
+### Protocol selection — user picks everything
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Earn } from '0xtrails/widget'
+
+<Earn
+  apiKey="YOUR_API_KEY"
+  onEarnSuccess={({ sessionId }) => console.log("deposited", sessionId)}
+/>
+```
+
+### Fixed amount protocol deposit
+
+Deposit 1 USDC into Aave V3 on Arbitrum:
+
+```tsx
+import { Earn } from '0xtrails/widget'
 import { encodeFunctionData } from 'viem'
 
-const AAVE_POOL = '0x794a61358D6845594F94dc1DB02A252b5b4814aD' // Arbitrum
+const AAVE_POOL = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 const USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
 
 const supplyCalldata = encodeFunctionData({
   abi: [{
-      name: 'supply',
-      type: 'function',
-      stateMutability: 'nonpayable',
-      inputs: [
-          { name: 'asset', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'onBehalfOf', type: 'address' },
-          { name: 'referralCode', type: 'uint16' },
-      ],
-      outputs: [],
-  }],
-  functionName: 'supply',
-  args: [
-      USDC_ADDRESS,
-      1000000n, // 1 USDC (6 decimals)
-      '0x97c4A952b46bEcaD0663f76357d3776ba11566E1', // User address
-      0, // No referral code
-  ],
-})
-
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="earn"
-  toAddress={AAVE_POOL}
-  toAmount="1"
-  toChainId={42161} // Arbitrum
-  toToken="USDC"
-  toCalldata={supplyCalldata}
->
-  <button>Deposit 1 USDC to Aave</button>
-</TrailsWidget>
-```
-
-### Dynamic Amount Deposits
-
-Use placeholder amount for user-selected deposit amounts:
-
-```tsx
-import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
-import { encodeFunctionData } from 'viem'
-
-const STAKING_CONTRACT = '0x...'
-
-// Encode stake function with placeholder amount
-const stakeCalldata = encodeFunctionData({
-  abi: [{
-    name: 'stake',
+    name: 'supply',
     type: 'function',
     stateMutability: 'nonpayable',
-    inputs: [{ name: 'amount', type: 'uint256' }],
+    inputs: [
+      { name: 'asset', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'onBehalfOf', type: 'address' },
+      { name: 'referralCode', type: 'uint16' },
+    ],
     outputs: [],
   }],
-  functionName: 'stake',
-  args: [TRAILS_ROUTER_PLACEHOLDER_AMOUNT], // Replaced at execution
+  functionName: 'supply',
+  args: [USDC_ADDRESS, 1000000n, '0xUserAddress', 0],
 })
 
-<TrailsWidget
+<Earn
   apiKey="YOUR_API_KEY"
-  mode="earn"
-  toAddress={STAKING_CONTRACT}
-  toChainId={1}
-  toToken="ETH"
-  toCalldata={stakeCalldata}
+  to={{
+    recipient: AAVE_POOL,
+    currency: "USDC",
+    chain: "arbitrum",
+    amount: "1",
+    calldata: supplyCalldata,
+  }}
 >
-  <button>Stake ETH (Choose Amount)</button>
-</TrailsWidget>
+  <button>Deposit 1 USDC to Aave</button>
+</Earn>
 ```
 
-### ERC-4626 Vault Deposit
+### ERC-4626 vault with dynamic amount
 
-Standard vault deposit pattern:
+Use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` when the deposit amount is a parameter and the user selects it:
 
 ```tsx
-import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { Earn } from '0xtrails/widget'
+import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
-
-const VAULT_ADDRESS = '0x...'
-const USER_ADDRESS = '0x...'
 
 const depositCalldata = encodeFunctionData({
   abi: [{
@@ -158,202 +160,90 @@ const depositCalldata = encodeFunctionData({
     outputs: [{ name: 'shares', type: 'uint256' }],
   }],
   functionName: 'deposit',
-  args: [
-    TRAILS_ROUTER_PLACEHOLDER_AMOUNT,
-    USER_ADDRESS,
-  ],
+  args: [TRAILS_ROUTER_PLACEHOLDER_AMOUNT, '0xUserAddress'],
 })
 
-<TrailsWidget 
+<Earn
   apiKey="YOUR_API_KEY"
-  mode="earn"
-  toAddress={VAULT_ADDRESS}
-  toChainId={1}
-  toToken="USDC"
-  toCalldata={depositCalldata}
+  to={{
+    recipient: "0xVaultContract",
+    currency: "USDC",
+    chain: "base",
+    calldata: depositCalldata,
+  }}
 >
   <button>Deposit to Vault</button>
-</TrailsWidget>
+</Earn>
 ```
 
-## Calldata Patterns
-
-### When to Use TRAILS_ROUTER_PLACEHOLDER_AMOUNT
-
-Use the placeholder when:
+<Note>
+Use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` when:
 - Deposit amount is a function parameter
 - User selects the deposit amount
-- Amount needs to reflect post-swap/bridge value
+- Amount needs to reflect post-swap/bridge output
+
+Do not use it for functions that read balance internally (e.g. `depositAll()`).
+</Note>
+
+### Composable actions (pre-integrated protocols)
+
+For Aave, Compound, Morpho, Yearn, and other natively supported protocols, use composable actions instead of manual calldata encoding:
 
 ```tsx
-// ✅ Correct - dynamic amount in calldata
+import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
+
+export function AaveLendButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending } = useTrailsSendTransaction({
+    actions: [
+      lend({
+        marketId: 'base-usdc-aave-v3-lending',
+        amount: '100',
+      }),
+    ],
+  })
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDC.addressOn('base'),
+          tokenAmount: '100000000',
+        })
+      }
+    >
+      {isPending ? 'Sending...' : 'Supply 100 USDC to Aave'}
+    </button>
+  )
+}
+```
+
+Use `useEarnMarkets` to discover available market IDs. See [Markets and Providers](/sdk/composable-actions/markets-and-providers).
+
+## Calldata reference
+
+### When to use `TRAILS_ROUTER_PLACEHOLDER_AMOUNT`
+
+```tsx
+// Correct — dynamic amount in calldata
 encodeFunctionData({
   functionName: 'deposit',
   args: [TRAILS_ROUTER_PLACEHOLDER_AMOUNT, userAddress],
 })
-```
 
-### When Static Values Work
-
-Use static values when:
-- Function doesn't take amount as parameter
-- Amount is fixed and known in advance
-- Contract reads balance internally
-
-```tsx
-// ✅ Correct - depositAll() reads balance
+// Correct — function reads balance directly, no placeholder needed
 encodeFunctionData({
   functionName: 'depositAll',
   args: [userAddress],
 })
 ```
 
-## Protocol-Specific Examples
+`TRAILS_ROUTER_PLACEHOLDER_AMOUNT` is `uint256.max` internally. Trails replaces it with the actual output amount at execution time.
 
-### Aave V3 Deposit
+## See also
 
-```tsx
-const aaveSupply = encodeFunctionData({
-  abi: aavePoolABI,
-  functionName: 'supply',
-  args: [
-    tokenAddress,        // Asset to supply
-    amount,              // Amount to supply
-    onBehalfOf,          // Who receives aTokens
-    referralCode,        // Referral code (usually 0)
-  ],
-})
-```
-
-### Morpho Vault Deposit
-
-```tsx
-const morphoDeposit = encodeFunctionData({
-  abi: morphoVaultABI,
-  functionName: 'deposit',
-  args: [
-    assets,              // Amount of assets
-    receiver,            // Who receives shares
-  ],
-})
-```
-
-### Yearn Vault Deposit
-
-```tsx
-const yearnDeposit = encodeFunctionData({
-  abi: yearnVaultABI,
-  functionName: 'deposit',
-  args: [
-    amount,              // Amount to deposit (use placeholder)
-    receiver,            // Share recipient
-  ],
-})
-```
-
-### Liquid Staking (Lido)
-
-```tsx
-const lidoSubmit = encodeFunctionData({
-  abi: lidoABI,
-  functionName: 'submit',
-  args: [
-    referralAddress,     // Referral (use zero address if none)
-  ],
-})
-// Note: Amount sent via msg.value, not parameter
-```
-
-## Event Handling
-
-```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="earn"
-  toAddress="0x..."
-  toChainId={1}
-  toToken="USDC"
-  toCalldata={calldata}
-  onCheckoutStart={({ sessionId }) => {
-    console.log('Deposit started:', sessionId)
-  }}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Deposit completed:', sessionId)
-    // Refresh user's vault balance
-    // Update TVL display
-    // Show success notification
-  }}
-  onCheckoutError={({ sessionId, error }) => {
-    console.error('Deposit failed:', error)
-    // Handle error state
-  }}
-/>
-```
-
-## Supported Protocols
-
-### Pre-integrated
-
-Trails has built-in support for:
-- **Aave V3**: Lending and borrowing across multiple chains
-- **Morpho**: Optimized lending pools
-
-### Custom Integration
-
-Any protocol with a deposit/stake function can be integrated:
-- Yearn Finance vaults
-- Compound V3
-- Convex Finance
-- Curve pools
-- Custom staking contracts
-- Any ERC-4626 vault
-
-## Use Cases
-
-- **Lending Protocol Deposits**: Supply assets to earn interest (Aave, Compound, Morpho)
-- **Yield Vault Deposits**: Deposit into automated yield strategies (Yearn)
-- **Liquid Staking**: Stake ETH while maintaining liquidity (Lido, Rocket Pool)
-- **LP Token Staking**: Stake LP tokens in farming contracts
-- **Governance Staking**: Lock tokens for governance rights
-- **Auto-compounding Vaults**: Deposit into vaults that auto-compound rewards
-
-## Technical Notes
-
-- Earn mode handles token approvals automatically
-- Supports both ERC-20 tokens and native tokens (ETH, MATIC, etc.)
-- All cross-chain swapping and bridging is handled
-- Calldata execution is atomic with the deposit
-- `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` = `uint256.max` internally
-- Works with any contract that has `onBehalfOf` or `receiver` parameter
-
-## Error Handling
-
-```tsx
-import { getIsUserRejectionError, InsufficientBalanceError } from '0xtrails'
-
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="earn"
-  toAddress="0x..."
-  toCalldata={calldata}
-  onCheckoutError={({ sessionId, error }) => {
-    if (getIsUserRejectionError(error)) {
-      // User cancelled the transaction
-      showNotification('Transaction cancelled')
-    } else if (error.includes('insufficient balance')) {
-      showNotification('Insufficient balance for deposit')
-    } else if (error.includes('slippage')) {
-      showNotification('Price impact too high, try smaller amount')
-    } else {
-      showNotification('Deposit failed, please try again')
-    }
-  }}
-/>
-```
-
-## See Also
-
-- [Use Case Examples](/use-cases/earn) - DeFi protocol integration examples
-- [Hooks Reference](/sdk/hooks) - `TRAILS_ROUTER_PLACEHOLDER_AMOUNT` constant
-- [Fund Mode](/sdk/modes/fund) - Similar input-driven flow patterns
-- [Configuration](/sdk/configuration) - Full configuration options
+- [Earn use cases](/use-cases/earn) — DeFi integration patterns
+- [Composable actions](/sdk/composable-actions/overview) — programmatic protocol deposits
+- [Fund mode](/sdk/modes/fund) — similar input-driven flow
+- [Configuration reference](/sdk/configuration) — full prop list

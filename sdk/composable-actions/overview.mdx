@@ -1,10 +1,10 @@
 ---
 title: Overview
-description: "A small, typed DSL for describing what should happen on the destination chain of a Trails intent"
+description: "Composable Actions allow developers to easily specify multiple actions to take on a destination chain that can compose with multiple protocols."
 sidebarTitle: "Overview"
 ---
 
-Composable Actions are a small, typed DSL for describing **what should happen on the destination chain** of a Trails intent. Instead of hand-encoding calldata, you build a list of high-level steps — `swap`, `lend`, `deposit`, `assertCondition`, `custom` — and pass them to `useQuote` or `useTrailsSendTransaction`. Trails takes care of quoting, bridging, and executing.
+Composable Actions allow developers to easily specify multiple actions to take on a destination chain that can compose with multiple protocols. For example, staking in a liquid staking token and then depositing that token into a vault. This means a user can sign a single transaction and multiple onchain interactions can take place from virtually any chain as the starting point.
 
 Two browser integration styles are supported:
 

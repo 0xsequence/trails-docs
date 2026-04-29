@@ -10,7 +10,7 @@ Trails doesn't just move tokens cross-chain—it can execute arbitrary smart con
 
 ## How It Works
 
-When you include `toCalldata` in your Trails transaction, the protocol:
+When you include `to.calldata` in your Trails transaction, the protocol:
 
 1. **Routes funds** from the user's selected source chain/token
 2. **Bridges and swaps** as needed to the destination chain/token
@@ -23,7 +23,7 @@ All of this happens atomically from the user's perspective—one confirmation, o
 A user on Arbitrum wants to mint an NFT on Base that costs 0.01 ETH. They only have USDC:
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Pay } from '0xtrails/widget'
 import { encodeFunctionData } from 'viem'
 
 const mintCalldata = encodeFunctionData({
@@ -38,17 +38,18 @@ const mintCalldata = encodeFunctionData({
   args: ['0xUserAddress'],
 })
 
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xNFTContract"
-  toAmount="0.01"
-  toChainId={8453} // Base
-  toToken="ETH"
-  toCalldata={mintCalldata}
+  to={{
+    recipient: "0xNFTContract",
+    currency: "ETH",
+    chain: "base",
+    amount: "0.01",
+    calldata: mintCalldata,
+  }}
 >
   <button>Mint NFT</button>
-</TrailsWidget>
+</Pay>
 ```
 
 **What happens:**
@@ -62,7 +63,8 @@ const mintCalldata = encodeFunctionData({
 Deposit into an Aave lending pool on Arbitrum using tokens from any chain:
 
 ```tsx
-import { TrailsWidget, TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
+import { Fund } from '0xtrails/widget'
+import { TRAILS_ROUTER_PLACEHOLDER_AMOUNT } from '0xtrails'
 import { encodeFunctionData } from 'viem'
 
 const supplyCalldata = encodeFunctionData({
@@ -87,16 +89,17 @@ const supplyCalldata = encodeFunctionData({
   ],
 })
 
-<TrailsWidget
+<Fund
   apiKey="YOUR_API_KEY"
-  mode="fund"
-  toAddress="0xAavePool"
-  toChainId={42161} // Arbitrum
-  toToken="USDC"
-  toCalldata={supplyCalldata}
+  to={{
+    recipient: "0xAavePool",
+    currency: "USDC",
+    chain: "arbitrum",
+    calldata: supplyCalldata,
+  }}
 >
   <button>Deposit to Aave</button>
-</TrailsWidget>
+</Fund>
 ```
 
 ## Supported Calldata Patterns

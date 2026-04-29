@@ -4,24 +4,22 @@ description: 'Chain multiple DeFi steps into a single cross-chain intent using t
 icon: 'layer-group'
 ---
 
-## How composable actions work
+## Composable Actions with Trails
 
-Composable Actions let you chain any number of sequential DeFi steps into a single cross-chain transaction. A user can stake a token, receive the staked derivative, and deposit it into a lending protocol on a different chain, all in one intent, with no manual bridging or intermediate steps.
+Composable Actions allow developers to easily specify multiple actions to take on a destination chain that can compose with multiple protocols. For example, staking in a liquid staking token and then depositing that token into a vault. This means a user can sign a single transaction and multiple onchain interactions can take place from virtually any chain as the starting point.
 
-This gives developers a straightforward way to build powerful primitives on top of onchain infrastructure. Complex multi-protocol flows that would otherwise require multiple transactions, manual coordination, and careful UX handling are reduced to a list of steps. Users get a single confirmation with a predictable outcome.
+Instead of encoding calldata by hand, you build a list of high-level steps — `swap`, `lend`, `deposit`, `assertCondition`, `custom` — and pass them to `useQuote` or `useTrailsSendTransaction`. Trails handles quoting, bridging, and executing.
 
-Composable Actions describe what happens on the destination chain after Trails bridges and swaps funds. Instead of encoding calldata by hand, you build a list of high-level steps and pass them to `useQuote` or `useTrailsSendTransaction`. Trails handles quoting, bridging, and executing.
+## Use Cases
 
-```ts
-import { swap, lend, deposit, assertCondition, custom, dynamic } from '0xtrails'
-```
+Ideal for a variety of multi-step DeFi scenarios:
 
-Each builder returns an action descriptor. An array of them is what you pass to the hook. Actions run top-down in the same destination batch. If any step reverts, the entire batch reverts atomically.
+- Stake a token and deposit the staked derivative into a lending protocol in one transaction
+- Swap to a vault asset and deposit, starting from any token on any chain
+- Split funds across multiple protocols atomically — if any step fails, the whole batch reverts
+- Chain yield strategies across chains without requiring the user to touch intermediate steps
 
-Two integration styles are available:
-
-- **`useTrailsSendTransaction`**: trigger the Trails modal, let the user choose their origin token and chain
-- **`useQuote`**: preview the quote in your own UI before sending
+For a deeper look at the protocol model, see [Composable Actions Overview](/sdk/composable-actions/overview). For the full builder API, see [Building Actions](/sdk/composable-actions/building-actions).
 
 ## Supply into a lending protocol
 

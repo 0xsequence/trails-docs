@@ -28,7 +28,7 @@ Trails is architected as a trustless system based on intents that works on top o
 
 ## Key Components
 
-### 🏗️ Architecture Layers
+### Architecture Layers
 
 1. **User Interaction Layer**: Handles user requests and wallet interactions
 2. **SDK Layer**: Manages balance queries, token selection, and orchestration
@@ -37,7 +37,7 @@ Trails is architected as a trustless system based on intents that works on top o
 5. **Execution Layer**: Executes intent contracts and completes transactions
 
 
-### 🔄 Protocol Flow
+### Protocol Flow
 
 The protocol follows a systematic approach:
 
@@ -49,7 +49,7 @@ The protocol follows a systematic approach:
 6. **Completion**: Intent contracts fulfill the transaction requirements
 
 
-### 🎯 Intent-Based Architecture
+### Intent-Based Architecture
 
 The protocol leverages intent contracts that:
 - Define transaction requirements without specifying execution paths
@@ -58,7 +58,7 @@ The protocol leverages intent contracts that:
 - Support complex multi-hop operations seamlessly
 
 
-### 🌉 Cross-Chain Coordination
+### Cross-Chain Coordination
 
 Relayers on each chain work in concert to:
 - Monitor intent contract states
@@ -66,7 +66,7 @@ Relayers on each chain work in concert to:
 - Ensure atomic completion or rollback
 - Maintain consistency across chain boundaries
 
-### 📨 Role of the Relayer (How is this trustless?)
+### Role of the Relayer (How is this trustless?)
 
 - Relayers cannot alter the transaction calldata or intent contents in any way; they can only submit the pre-committed, verifiable calls that match the intent's merkle commitments.
 - Their responsibility is limited to subsidizing gas and successfully landing the transaction on the underlying chain on the user's behalf.
