@@ -16,6 +16,7 @@ Trails automatically detects and uses any wagmi connectors configured in your ap
 import { createConfig, http, WagmiProvider } from 'wagmi'
 import { mainnet, base, arbitrum } from 'wagmi/chains'
 import { injected, walletConnect } from 'wagmi/connectors'
+import { Pay } from '0xtrails/widget'
 
 const config = createConfig({
   chains: [mainnet, base, arbitrum],
@@ -33,14 +34,14 @@ const config = createConfig({
 export function App() {
   return (
     <WagmiProvider config={config}>
-      {/* Your app with TrailsWidget */}
-      <TrailsWidget
+      <Pay
         apiKey="YOUR_API_KEY"
-        mode="pay"
-        toAddress="0x..." 
-        toAmount="1000"
-        toChainId={42161}
-        toToken="USDC"
+        to={{
+          recipient: "0x...",
+          currency: "USDC",
+          chain: "arbitrum",
+          amount: "1000",
+        }}
       />
     </WagmiProvider>
   )
@@ -55,6 +56,7 @@ Integrate Sequence smart contract wallets for enhanced security and user experie
 import { createConfig, http, WagmiProvider } from 'wagmi'
 import { mainnet, base, arbitrum } from 'wagmi/chains'
 import { sequenceWallet } from '@0xsequence/wagmi-connector'
+import { Pay } from '0xtrails/widget'
 
 // Create Sequence connector
 const sequenceConnector = sequenceWallet({
@@ -79,13 +81,14 @@ const config = createConfig({
 export function AppWithSequence() {
   return (
     <WagmiProvider config={config}>
-      <TrailsWidget
+      <Pay
         apiKey="YOUR_API_KEY"
-        mode="pay"
-        toAddress="0x..."
-        toAmount="1000"
-        toChainId={42161}
-        toToken="USDC"
+        to={{
+          recipient: "0x...",
+          currency: "USDC",
+          chain: "arbitrum",
+          amount: "1000",
+        }}
       />
     </WagmiProvider>
   )
@@ -106,6 +109,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { mainnet } from 'wagmi/chains';
 import { createConfig, WagmiProvider } from '@privy-io/wagmi';
 import { http } from 'wagmi';
+import { Pay } from '0xtrails/widget';
 
 const config = createConfig({
   chains: [mainnet],
@@ -130,13 +134,14 @@ export function AppWithPrivy() {
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
-          <TrailsWidget
+          <Pay
             apiKey="YOUR_API_KEY"
-            mode="pay"
-            toAddress="0x..."
-            toAmount="1000"
-            toChainId={42161}
-            toToken="USDC"
+            to={{
+              recipient: "0x...",
+              currency: "USDC",
+              chain: "arbitrum",
+              amount: "1000",
+            }}
           />
         </WagmiProvider>
       </QueryClientProvider>
@@ -156,6 +161,7 @@ import { injected, walletConnect } from 'wagmi/connectors'
 import { sequenceWallet } from '@0xsequence/wagmi-connector'
 import { createPrivyWalletConnector } from '@privy-io/wagmi-connector'
 import { PrivyProvider } from '@privy-io/react-auth'
+import { Pay } from '0xtrails/widget'
 
 // Create all connectors
 const sequenceConnector = sequenceWallet({
@@ -196,14 +202,14 @@ export function MultiWalletApp() {
       }}
     >
       <WagmiProvider config={config}>
-        {/* Users can connect with any of the configured wallets */}
-        <TrailsWidget
+        <Pay
           apiKey="YOUR_API_KEY"
-          mode="pay"
-          toAddress="0x..."
-          toAmount="1000"
-          toChainId={42161}
-          toToken="USDC"
+          to={{
+            recipient: "0x...",
+            currency: "USDC",
+            chain: "arbitrum",
+            amount: "1000",
+          }}
         />
       </WagmiProvider>
     </PrivyProvider>

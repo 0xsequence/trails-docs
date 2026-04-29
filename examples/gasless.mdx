@@ -15,36 +15,29 @@ Gasless transactions let users pay network fees using ERC-20 tokens (USDC, USDT)
 | Permit signatures | EIP-2612 permits enable gasless token approvals |
 | Flexible fee options | SDK shows available fee token options automatically |
 
-## How Gasless Works
-
-Trails supports two approaches for gasless transactions:
-
-1. **ERC-20 Fee Tokens** (Default) — Users sign a permit, and Trails' relayer submits the transaction. The fee is deducted from the user's ERC-20 balance.
-
-2. **4337 Paymasters** — For apps with their own paymaster infrastructure, Trails can route through ERC-4337 bundlers.
-
 ## Basic Gasless Payment
 
 When using the SDK, gasless fee options are automatically displayed if the user's origin token supports permits:
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Pay } from '0xtrails/widget'
 
 export function GaslessPayment() {
   return (
-    <TrailsWidget
+    <Pay
       apiKey="YOUR_API_KEY"
-      mode="pay"
-      toAddress="0xMERCHANT_ADDRESS"
-      toAmount="50"
-      toChainId={137} // Polygon
-      toToken="USDC"
-      onCheckoutComplete={({ sessionId }) => {
+      to={{
+        recipient: "0xMERCHANT_ADDRESS",
+        currency: "USDC",
+        chain: "polygon",
+        amount: "50",
+      }}
+      onPaymentSuccess={({ sessionId }) => {
         console.log('Payment complete:', sessionId)
       }}
     >
       <button>Pay $50</button>
-    </TrailsWidget>
+    </Pay>
   )
 }
 ```
@@ -59,19 +52,20 @@ When the user has USDC (a permit-compatible token), the SDK:
 ### Pay with USDC on Polygon
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xMERCHANT_ADDRESS"
-  toAmount="100"
-  toChainId={137} // Polygon
-  toToken="USDC"
-  onCheckoutComplete={({ sessionId }) => {
+  to={{
+    recipient: "0xMERCHANT_ADDRESS",
+    currency: "USDC",
+    chain: "polygon",
+    amount: "100",
+  }}
+  onPaymentSuccess={({ sessionId }) => {
     verifyPayment(sessionId)
   }}
 >
   <button>Pay $100 (Gas in USDC)</button>
-</TrailsWidget>
+</Pay>
 ```
 
 The user only needs USDC—no ETH required for gas.
@@ -79,19 +73,20 @@ The user only needs USDC—no ETH required for gas.
 ### Pay with USDT on Polygon
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xMERCHANT_ADDRESS"
-  toAmount="75"
-  toChainId={137} // Polygon
-  toToken="USDT"
-  onCheckoutComplete={({ sessionId }) => {
+  to={{
+    recipient: "0xMERCHANT_ADDRESS",
+    currency: "USDT",
+    chain: "polygon",
+    amount: "75",
+  }}
+  onPaymentSuccess={({ sessionId }) => {
     verifyPayment(sessionId)
   }}
 >
   <button>Pay $75 (Gas in USDT)</button>
-</TrailsWidget>
+</Pay>
 ```
 
 ### Cross-Chain Gasless
@@ -99,19 +94,20 @@ The user only needs USDC—no ETH required for gas.
 Even cross-chain payments can be gasless if the origin token supports permits:
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xMERCHANT_ADDRESS"
-  toAmount="200"
-  toChainId={137} // Settle on Polygon
-  toToken="USDC"
-  onCheckoutComplete={({ sessionId }) => {
+  to={{
+    recipient: "0xMERCHANT_ADDRESS",
+    currency: "USDC",
+    chain: "polygon",
+    amount: "200",
+  }}
+  onPaymentSuccess={({ sessionId }) => {
     verifyPayment(sessionId)
   }}
 >
   <button>Pay $200</button>
-</TrailsWidget>
+</Pay>
 ```
 
 User pays with USDC on Base → Trails bridges gaslessly → Merchant receives USDC on Polygon.
@@ -151,28 +147,29 @@ Selecting an ERC-20 option triggers the gasless flow.
 You can listen to fee option events:
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xMERCHANT_ADDRESS"
-  toAmount="50"
-  toChainId={137}
-  toToken="USDC"
-  onCheckoutStart={({ sessionId }) => {
-    console.log('Checkout started:', sessionId)
+  to={{
+    recipient: "0xMERCHANT_ADDRESS",
+    currency: "USDC",
+    chain: "polygon",
+    amount: "50",
   }}
-  onCheckoutSignatureRequest={() => {
+  onPaymentStart={({ sessionId }) => {
+    console.log('Payment started:', sessionId)
+  }}
+  onSignRequest={() => {
     console.log('Permit signature requested')
   }}
-  onCheckoutSignatureConfirmed={() => {
+  onSign={() => {
     console.log('Permit signed—submitting to relayer')
   }}
-  onCheckoutComplete={({ sessionId }) => {
+  onPaymentSuccess={({ sessionId }) => {
     console.log('Gasless payment complete:', sessionId)
   }}
 >
   <button>Pay</button>
-</TrailsWidget>
+</Pay>
 ```
 
 ## 4337 Paymaster Integration
@@ -180,20 +177,21 @@ You can listen to fee option events:
 For apps with existing paymaster infrastructure (Alchemy, Pimlico, ZeroDev, Thirdweb), configure per-chain paymaster URLs:
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
+  to={{
+    recipient: "0xMERCHANT_ADDRESS",
+    currency: "USDC",
+    chain: "polygon",
+    amount: "100",
+  }}
   paymasterUrls={[
     { chainId: 137, url: 'https://your-paymaster.example.com/polygon' },
     { chainId: 8453, url: 'https://your-paymaster.example.com/base' },
   ]}
-  toAddress="0xMERCHANT_ADDRESS"
-  toAmount="100"
-  toChainId={137}
-  toToken="USDC"
 >
   <button>Pay (Sponsored Gas)</button>
-</TrailsWidget>
+</Pay>
 ```
 
 ### Supported Paymaster Providers
@@ -233,11 +231,11 @@ When using `paymasterUrls`, the paymaster sponsors the gas entirely. Users don't
 **Smart Contract Wallets**: Gasless deposits via permit signatures require EOA (externally owned account) wallets. Smart contract wallets produce non-standard signatures that the current relayer doesn't support.
 
 ```tsx
-// This will fail for smart contract wallets
-<TrailsWidget
-  mode="pay"
-  // ... gasless will automatically fall back to native gas for SC wallets
->
+// Gasless automatically falls back to native gas for smart contract wallets
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{ recipient: "0x...", currency: "USDC", chain: "polygon", amount: "50" }}
+/>
 ```
 
 The SDK automatically detects smart contract wallets and falls back to native gas flow.
@@ -254,7 +252,7 @@ The SDK automatically detects smart contract wallets and falls back to native ga
   <Accordion title="Handle Signature Rejections">
     Users might reject the permit signature. Handle this gracefully:
     ```tsx
-    onCheckoutSignatureRejected={(error) => {
+    onSignReject={(error) => {
       console.log('User rejected signature:', error)
       // Show retry option or native gas alternative
     }}
@@ -287,7 +285,7 @@ The SDK automatically detects smart contract wallets and falls back to native ga
 
 <CardGroup cols={2}>
   <Card title="Pay Mode Reference" icon="code" href="/sdk/modes/pay">
-    All TrailsWidget payment options
+    All Pay component options and examples
   </Card>
   <Card title="SDK Configuration" icon="gear" href="/sdk/configuration">
     Full configuration reference

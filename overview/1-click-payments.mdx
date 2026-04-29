@@ -49,22 +49,24 @@ Lastly, Trails is extremely simple to integrate in a few lines of code in your a
 
 ## Example: Pay a recipient on Base in USDC with any token from any chain.
 
-```ts
-import { TrailsWidget } from '0xtrails/widget'
+```tsx
+import { Pay } from '0xtrails/widget'
 
 export const CrossChainPayment = () => {
   return (
-    <TrailsWidget
+    <Pay
       apiKey="YOUR_API_KEY"
-      toAddress="0x..." // recipient address
-      toAmount="0.1"
-      toChainId={8453} // Base
-      toToken="USDC"
+      to={{
+        recipient: "0x...",
+        currency: "USDC",
+        chain: "base",
+        amount: "0.1",
+      }}
     >
       <button className="custom-button-styles">
         Pay with Crypto
       </button>
-    </TrailsWidget>
+    </Pay>
   )
 }
 ```

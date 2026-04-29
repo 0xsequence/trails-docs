@@ -1,121 +1,92 @@
 ---
 title: 'Swap'
-description: 'Leverage trails to swap & bridge tokens cross-chain seamlessly for your app.'
+description: 'Leverage Trails to swap and bridge tokens cross-chain seamlessly for your app.'
 icon: 'arrows-rotate'
 ---
 
 ## Swap with Trails
 
-Trails enables seamless token swapping across multiple blockchain networks in 1-click, allowing users to exchange tokens without manually bridging assets or dealing with multiple DEXs available via an integrated widget or API.
+Trails enables cross-chain token swapping in one click, from any wallet. Users exchange tokens without manually bridging assets or interacting with multiple DEXs — available via the widget or API.
 
-## Enhanced Swapping Experience
+Traditional cross-chain swapping requires token approvals, manual bridging, finding DEXs on each chain, and paying gas on each network. Trails optimizes the UX across all liquidity sources and chains in a single user confirmation.
 
-Traditional cross-chain swapping requires users to:
-- Approve any ERC20 tokens 
-- Bridge tokens to the target chain
-- Find and interact with DEXs on multiple networks
-- Pay gas fees on each chain
-- Wait for bridge confirmations
+## Use cases
 
-We optimize the UX flow from any wallet to enable swaps across multiple liquidity sources & chains. All interactions are executed in a single confirmation for the user. Notably, this works across any wallet or application, ERC-7702 or 4337 is not required for batching transactions.
-
-## Use Cases
-
-Ideal for a variety of token exchange scenarios:
-
-- Cross-chain token swaps (e.g., ETH on Mainnet → USDC on Base)
+- Cross-chain token swaps (ETH on Mainnet → USDC on Base)
 - Same-chain token exchanges with optimal routing
 - Portfolio rebalancing across chains
 - Converting between stablecoins with minimal slippage
 
 ## Examples
 
-### Simple Cross-Chain Token Swap
-
-Basic cross-chain swap implementation using the Trails widget with callbacks:
+### Simple swap — user picks everything
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Swap } from '0xtrails/widget'
 
 export const BasicSwap = () => {
   return (
-    <TrailsWidget
+    <Swap
       apiKey="YOUR_API_KEY"
-      mode="swap"
-      onCheckoutComplete={({ sessionId }) => {
+      onSwapSuccess={({ sessionId }) => {
         console.log('Swap completed:', sessionId)
       }}
-      onCheckoutError={({ sessionId, error }) => {
+      onSwapError={({ sessionId, error }) => {
         console.error('Swap failed:', sessionId, error)
       }}
     >
-      <button className="swap-button">
-        Swap Tokens
-      </button>
-    </TrailsWidget>
+      <button>Swap Tokens</button>
+    </Swap>
   )
 }
 ```
 
-### Swap with Custom Theme
-
-Customize the appearance to match your brand:
+### Pre-configured cross-chain swap
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Swap } from '0xtrails/widget'
 
-export const ThemedSwap = () => {
+export const ETHtoUSDC = () => {
   return (
-    <TrailsWidget
+    <Swap
       apiKey="YOUR_API_KEY"
-      mode="swap"
-      theme="dark"
-      onCheckoutComplete={({ sessionId }) => {
-        console.log('Themed swap completed:', sessionId)
+      from={{ currency: "ETH", chain: "ethereum" }}
+      to={{ currency: "USDC", chain: "base" }}
+      onSwapSuccess={({ sessionId }) => {
+        console.log('Swap completed:', sessionId)
       }}
     >
-      <div className="custom-swap-trigger">
-        <span>🔄</span>
-        <span>Swap Tokens</span>
-      </div>
-    </TrailsWidget>
+      <button>Swap ETH → USDC</button>
+    </Swap>
   )
 }
 ```
 
-### Advanced Swap with Custom Quote Provider
-
-While Trails automatically optimizes the selected route by the user, you may opt to specify a quote or bridge provider to optimize for your use case. For example, using Circle's CCTP V2 for bridging:
+### Custom bridge provider
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Swap } from '0xtrails/widget'
 
-export const AdvancedSwap = () => {
+export const CCTPSwap = () => {
   return (
-    <TrailsWidget
+    <Swap
       apiKey="YOUR_API_KEY"
-      mode="swap"
       bridgeProvider="CCTP"
-      onCheckoutComplete={({ sessionId }) => {
-        console.log('Advanced swap completed:', sessionId)
-        // Handle post-swap logic
-      }}
-      onCheckoutError={({ sessionId, error }) => {
-        console.error('Swap error:', sessionId, error)
-        // Handle error state
+      from={{ currency: "USDC", chain: "ethereum" }}
+      to={{ currency: "USDC", chain: "base" }}
+      onSwapSuccess={({ sessionId }) => {
+        console.log('Swap completed:', sessionId)
       }}
     >
-      <button className="advanced-swap-button">
-        Swap with a Custom Provider
-      </button>
-    </TrailsWidget>
+      <button>Bridge USDC via CCTP</button>
+    </Swap>
   )
 }
 ```
 
-## Using the useQuote Hook
+### Headless swap with useQuote
 
-For more control over the swap process for headless implementations, use the `useQuote` hook directly:
+For custom UI implementations, use the `useQuote` hook directly:
 
 ```tsx
 import { useQuote } from '0xtrails'
@@ -169,43 +140,21 @@ export const CustomSwapComponent = () => {
   }
 
   return (
-    <div className="swap-component">
-      <div className="quote-info">
-        <h3>Swap Quote</h3>
-        <p>From: {quote.originAmountFormatted} {quote.originToken.symbol} on {quote.originChain.name}</p>
-        <p>To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol} on {quote.destinationChain.name}</p>
-        <p>Fee: {quote.totalFeeAmountUsdDisplay}</p>
-        <p>Estimated time: {quote.completionEstimateSeconds}s</p>
-      </div>
-      
-      <button onClick={handleSwap} className="execute-swap-button">
-        Execute Swap
-      </button>
+    <div>
+      <p>From: {quote.originAmountFormatted} {quote.originToken.symbol} on {quote.originChain.name}</p>
+      <p>To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol} on {quote.destinationChain.name}</p>
+      <p>Fee: {quote.totalFeeAmountUsdDisplay}</p>
+      <p>Estimated time: {quote.completionEstimateSeconds}s</p>
+      <button onClick={() => swap?.()}>Execute Swap</button>
     </div>
   )
 }
 ```
 
-## Why Swap with Trails?
+## Next steps
 
-- **Unified Liquidity**: Access tokens from the user's wallet across all supported chains in one transaction
-- **High Performance Balance Retrieval**: A high-performant indexer is natively integrated to query the entirety of a user's balance for smooth UX and price retrieval
-- **Reduced Complexity**: Eliminate manual bridging and multi-step swaps (Approval and Transfer)
-- **Customized Branding**: Brand or theme the widget however you'd like to be native to your protocol or application
-- **Seamless UX**: Automatic routing finds optimal swap paths for low slippage for improved UX
-- **Gasless & Alt-fee token options**: Support for gasless or alternative gas tokens like USDC for transactions to reduce friction
-- **Real-time Quotes**: Live pricing and route optimization
-- **Chain Abstraction**: Built from the ground up to support multichain environments and abstract underlying chains.
-
-## Next Steps
-
-Learn more about customizing and configuring swap functionality:
-
-- [**Swap Mode Configuration**](/sdk/modes/swap) - Complete configuration options and parameters for swap mode
-- [**useQuote Hook**](/sdk/hooks#usequote) - Programmatic control over swap quotes and execution
-- [**Quote Providers**](/sdk/quote-providers) - Customize liquidity sources and bridge providers (CCTP, Relay, etc.)
-- [**Widget Theming**](/sdk/theming) - Customize the appearance to match your brand
-- [**Tokens & Chains**](/sdk/tokens-and-chains) - Configure supported tokens and chains for swaps
-- [**SDK Configuration**](/sdk/configuration) - General widget configuration and callbacks
-
-
+- [**Swap mode configuration**](/sdk/modes/swap) — complete configuration options
+- [**useQuote hook**](/sdk/hooks#usequote) — programmatic control
+- [**Quote providers**](/sdk/quote-providers) — CCTP, Relay, SushiSwap, and more
+- [**Theming**](/sdk/theming) — customize appearance
+- [**SDK configuration**](/sdk/configuration) — full widget configuration

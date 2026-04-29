@@ -1,69 +1,188 @@
 ---
-title: Pay Mode
-description: "Technical reference for implementing exact-output payment flows"
+title: Pay
+description: "Accept exact-output payments with the focused Pay component"
 sidebarTitle: "Pay"
 ---
 
 ## Overview
 
-Pay mode implements exact-output trade flows where you specify the precise amount the recipient receives. The widget calculates the required input amount from the user's available tokens across all chains.
+Pay mode implements exact-output payment flows where you specify the precise amount the recipient receives. The user pays whatever is required from their available tokens across all chains.
 
-**Trade Type**: `EXACT_OUTPUT` - Fixed destination amount, variable input amount.
+**Trade type**: `EXACT_OUTPUT` — fixed destination amount, variable input amount.
 
-## Configuration
-
-### Required Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `mode` | `"pay"` | Sets the widget to pay mode |
-| `toAddress` | `string` | Recipient address |
-| `toAmount` | `string` | Exact amount recipient receives |
-| `toChainId` | `number` | Destination chain ID |
-| `toToken` | `string` | Destination token symbol or address |
-
-### Optional Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `toCalldata` | `string` | Calldata to execute on destination |
-| `slippageTolerance` | `string \| number` | Slippage tolerance (e.g., `"0.005"` for 0.5%) |
-| `swapProvider` | `RouteProvider` | Swap provider: `"AUTO"`, `"RELAY"`, `"SUSHI"`, `"ZEROX"`, `"CCTP"` |
-| `bridgeProvider` | `RouteProvider` | Bridge provider: `"AUTO"`, `"RELAY"`, `"CCTP"` |
-
-## Implementation
-
-### Basic Payment
-
-Simple payment to a recipient address:
+## Quick start
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+import { Pay } from '0xtrails/widget'
 
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x97c4A952b46bEcaD0663f76357d3776ba11566E1"
-  toAmount="10"
-  toChainId={8453} // Base
-  toToken="USDC"
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Payment completed:', sessionId)
+  to={{
+    recipient: "0xYourAddress",
+    currency: "USDC",
+    chain: "base",
+    amount: "50",
   }}
->
-  <button>Pay 10 USDC</button>
-</TrailsWidget>
+  onPaymentSuccess={({ sessionId }) => markOrderPaid(sessionId)}
+/>
 ```
 
-### Payment with Contract Call
+That is the minimum. Every other prop is optional.
 
-Execute a function call on the destination chain with the payment:
+## Props
+
+### Required
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `apiKey` | `string` | Trails API key |
+| `to.recipient` | `string` | Wallet or contract address that receives the payment |
+| `to.currency` | `string` | Token symbol or address (e.g. `"USDC"`, `"ETH"`) |
+| `to.chain` | `ChainIdentifier` | Destination chain — name (`"base"`), chain ID, or viem Chain |
+| `to.amount` | `string \| number` | Exact amount recipient receives in human-readable units |
+
+### Source selection (optional)
+
+Pre-select where the user pays from by adding a `from` object. Omit to let the user choose.
 
 ```tsx
-import { TrailsWidget } from '0xtrails/widget'
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{ recipient: "0x...", currency: "USDC", chain: "base", amount: "50" }}
+  from={{ currency: "ETH", chain: "ethereum" }}
+/>
+```
+
+To control the payment method, set `paymentMethod`:
+
+| Value | Method |
+|-------|--------|
+| `"CONNECTED_WALLET"` | Connected wallet (default) |
+| `"CRYPTO_TRANSFER"` | QR code / address deposit |
+| `"CREDIT_DEBIT_CARD"` | Fiat on-ramp |
+| `"EXCHANGE"` | CEX transfer (Coinbase, Binance, etc.) |
+
+### Destination options
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `to.calldata` | `string` | ABI-encoded calldata to execute on the destination chain after payment |
+| `to.defaultChain` | `ChainIdentifier` | Default chain — user can change |
+| `to.defaultCurrency` | `string` | Default token — user can change |
+
+### Shared options
+
+All focused components share these optional props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `payMessage` | `string` | Custom message shown during the payment flow |
+| `appMetadata` | `AppMetadata` | App name, URL, and logo for wallet connection dialogs |
+| `dev` | `DevConfig` | Debug flags and internal URL overrides |
+| `theme` | `"light" \| "dark" \| "auto"` | Widget color theme |
+| `renderInline` | `boolean` | Render inline instead of as a modal |
+| `buttonText` | `string` | Custom CTA text |
+| `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
+| `swapProvider` | `RouteProvider` | Preferred same-chain swap provider |
+| `bridgeProvider` | `RouteProvider` | Preferred bridge provider |
+
+### Lifecycle callbacks
+
+| Callback | Signature | When it fires |
+|----------|-----------|---------------|
+| `onPaymentStart` | `({ sessionId }) => void` | User initiates the payment flow |
+| `onPaymentSuccess` | `({ sessionId }) => void` | Payment completes successfully |
+| `onPaymentError` | `({ sessionId, error }) => void` | Payment encounters an error |
+
+## Examples
+
+### Stablecoin payment
+
+Accept 25 USDC on Polygon from any token on any chain:
+
+```tsx
+import { Pay } from '0xtrails/widget'
+
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{
+    recipient: "0xYourMerchantAddress",
+    currency: "USDC",
+    chain: "polygon",
+    amount: "25",
+  }}
+  onPaymentSuccess={({ sessionId }) => {
+    updateOrderStatus(orderId, "paid", sessionId)
+  }}
+>
+  <button>Pay $25</button>
+</Pay>
+```
+
+### Pre-select payment source
+
+Lock the user to pay from ETH on Ethereum:
+
+```tsx
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{
+    recipient: "0x...",
+    currency: "USDC",
+    chain: "base",
+    amount: "50",
+  }}
+  from={{
+    currency: "ETH",
+    chain: "ethereum",
+  }}
+  onPaymentSuccess={({ sessionId }) => console.log("paid", sessionId)}
+/>
+```
+
+### QR code / crypto transfer
+
+Let the user pay by sending to an address directly:
+
+```tsx
+<Pay
+  apiKey="YOUR_API_KEY"
+  paymentMethod="CRYPTO_TRANSFER"
+  to={{
+    recipient: "0x...",
+    currency: "USDC",
+    chain: "base",
+    amount: "50",
+  }}
+/>
+```
+
+### Fiat on-ramp
+
+Let the user pay with a credit card:
+
+```tsx
+<Pay
+  apiKey="YOUR_API_KEY"
+  paymentMethod="CREDIT_DEBIT_CARD"
+  to={{
+    recipient: "0x...",
+    currency: "USDC",
+    chain: "base",
+    amount: "50",
+  }}
+/>
+```
+
+### Payment with contract execution
+
+Execute a function on the destination chain with the payment:
+
+```tsx
+import { Pay } from '0xtrails/widget'
 import { encodeFunctionData } from 'viem'
 
-const nftMintCalldata = encodeFunctionData({
+const mintCalldata = encodeFunctionData({
   abi: [{
     name: 'mint',
     type: 'function',
@@ -72,78 +191,49 @@ const nftMintCalldata = encodeFunctionData({
     outputs: [],
   }],
   functionName: 'mint',
-  args: ['0x97c4A952b46bEcaD0663f76357d3776ba11566E1'],
+  args: ['0xRecipientAddress'],
 })
 
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0xNFT_CONTRACT_ADDRESS"
-  toAmount="0.00002"
-  toChainId={42161} // Arbitrum
-  toToken="ETH"
-  toCalldata={nftMintCalldata}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('NFT minted:', sessionId)
+  to={{
+    recipient: "0xNFT_CONTRACT",
+    currency: "ETH",
+    chain: "arbitrum",
+    amount: "0.00002",
+    calldata: mintCalldata,
   }}
+  onPaymentSuccess={({ sessionId }) => console.log("minted", sessionId)}
 >
-  <button>Mint NFT (0.00002 ETH)</button>
-</TrailsWidget>
+  <button>Mint NFT</button>
+</Pay>
 ```
 
-### Payment with Custom Route Provider
-
-Specify particular providers for routing:
+### App branding and event handling
 
 ```tsx
-<TrailsWidget
+<Pay
   apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x..."
-  toAmount="100"
-  toChainId={8453}
-  toToken="USDC"
-  bridgeProvider="CCTP" // Use Circle's CCTP for cross-chain
-  slippageTolerance="0.01" // 1% slippage
+  to={{
+    recipient: "0x...",
+    currency: "USDC",
+    chain: "base",
+    amount: "50",
+  }}
+  payMessage="Payment for Order #4821"
+  appMetadata={{
+    name: "My Store",
+    url: "https://mystore.com",
+    imageUrl: "https://mystore.com/logo.png",
+  }}
+  onPaymentStart={({ sessionId }) => console.log("started", sessionId)}
+  onPaymentSuccess={({ sessionId }) => markOrderPaid(sessionId)}
+  onPaymentError={({ error }) => console.error("failed", error)}
 />
 ```
 
-## Event Handlers
+## See also
 
-Handle payment lifecycle events:
-
-```tsx
-<TrailsWidget
-  apiKey="YOUR_API_KEY"
-  mode="pay"
-  toAddress="0x..."
-  toAmount="10"
-  toChainId={8453}
-  toToken="USDC"
-  onCheckoutStart={({ sessionId }) => {
-    console.log('Payment started:', sessionId)
-  }}
-  onCheckoutComplete={({ sessionId }) => {
-    console.log('Payment completed:', sessionId)
-    // Update order status, trigger UI update, etc.
-  }}
-  onCheckoutError={({ sessionId, error }) => {
-    console.error('Payment failed:', error)
-    // Handle error state
-  }}
-/>
-```
-
-## Use Cases
-
-- **NFT Purchases**: Mint or purchase NFTs with payment in one transaction
-- **eCommerce Payments**: Accept crypto payments for products/services
-- **Fixed-price Swaps**: Cross-chain token purchases with exact output amounts
-- **Contract Execution**: Call smart contract functions with attached payment
-- **x402 Payments**: HTTP 402 payment flows with any token from any chain
-
-## See Also
-
-- [Use Case Examples](/use-cases/pay) - Detailed implementation patterns
-- [Configuration Reference](/sdk/configuration) - Full configuration options
-- [Quote Providers](/sdk/quote-providers) - Quote provider details
+- [Pay use cases](/use-cases/pay) — merchant integration, NFT purchases, x402
+- [Configuration reference](/sdk/configuration) — full prop list
+- [Quote providers](/sdk/quote-providers) — CCTP, Relay, and more
