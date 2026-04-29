@@ -23,9 +23,11 @@ Two integration styles are available:
 - **`useTrailsSendTransaction`**: trigger the Trails modal, let the user choose their origin token and chain
 - **`useQuote`**: preview the quote in your own UI before sending
 
+Both hooks accept human-readable decimal strings for token amounts. For example, pass `"100"` for 100 USDC, not `"100000000"`.
+
 ## Supply into a lending protocol
 
-Use `lend` to supply into any Aave, Compound, or Fluid-style money market. Pass a `marketId` from [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers):
+Use `lend` to supply into supported lending markets such as Aave. Pass a `marketId` from [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers):
 
 ```tsx
 import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
@@ -47,7 +49,7 @@ export function LendButton({ recipient }: { recipient: `0x${string}` }) {
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDC.addressOn('base'),
-          tokenAmount: '100000000', // 100 USDC (6 decimals)
+          tokenAmount: '100', // human-readable USDC amount
         })
       }
     >
@@ -70,7 +72,7 @@ export function MorphoDepositButton({ recipient }: { recipient: `0x${string}` })
   const { sendTransaction, isPending } = useTrailsSendTransaction({
     actions: [
       deposit({
-        marketId: 'base-usdc-morpho-v1-vault',
+        marketId: 'base-usdc-pusdc-0x1401d1271c47648ac70cbcdfa3776d4a87ce006b-4626-vault',
         amount: '100',
       }),
     ],
@@ -83,7 +85,7 @@ export function MorphoDepositButton({ recipient }: { recipient: `0x${string}` })
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDC.addressOn('base'),
-          tokenAmount: '100000000',
+          tokenAmount: '100',
         })
       }
     >
@@ -111,7 +113,7 @@ import {
 } from '0xtrails'
 
 const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
-const fluidMarketId  = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
+const aaveMarketId   = 'polygon-usdc-aave-v3-lending'
 
 export function ComposedEarnButton({ recipient }: { recipient: `0x${string}` }) {
   const { sendTransaction, isPending, error } = useTrailsSendTransaction({
@@ -135,9 +137,9 @@ export function ComposedEarnButton({ recipient }: { recipient: `0x${string}` }) 
         erc20Balance: { token: 'USDC', gte: '0.08' },
       }),
 
-      // 4. Lend all resulting USDC into a Fluid market
+      // 4. Lend all resulting USDC into an Aave market
       lend({
-        marketId: fluidMarketId,
+        marketId: aaveMarketId,
         amount: dynamic(),
       }),
     ],
@@ -153,7 +155,7 @@ export function ComposedEarnButton({ recipient }: { recipient: `0x${string}` }) 
         sendTransaction({
           to: recipient,
           tokenAddress: erc20Utils.USDT.addressOn('polygon'),
-          tokenAmount: '200000', // 0.2 USDT
+          tokenAmount: '0.2', // human-readable USDT amount
         })
       }
     >
@@ -180,7 +182,7 @@ import {
 } from '0xtrails'
 
 const morphoMarketId = 'polygon-usdt-bbqusdt0-0xb7c9988d3922f25a336a469f3bb26ca61fe79e24-4626-vault'
-const fluidMarketId  = 'polygon-usdc-fusdc-0x571d456b578fdc34e26e6d636736ed7c0cdb9d89-4626-vault'
+const aaveMarketId   = 'polygon-usdc-aave-v3-lending'
 
 export function ComposedEarnQuoteUI() {
   const { send, isLoadingQuote, quoteError } = useQuote({
@@ -190,7 +192,7 @@ export function ComposedEarnQuoteUI() {
       deposit({ marketId: morphoMarketId, amount: '0.1' }),
       swap({ tokenIn: 'USDT', tokenOut: 'USDC', amountIn: dynamic(), fee: '0.3' }),
       assertCondition({ erc20Balance: { token: 'USDC', gte: '0.08' } }),
-      lend({ marketId: fluidMarketId, amount: dynamic() }),
+      lend({ marketId: aaveMarketId, amount: dynamic() }),
     ],
     onStatusUpdate: (states) => {
       for (const state of states) console.log('Transaction:', state)
@@ -246,10 +248,10 @@ function LendWithMarketPicker() {
 
 ## Use a protocol not covered by the builders
 
-Use `custom` as an escape hatch for any protocol. Pair it with `erc20Utils` and `buildCall` to keep calldata ergonomic:
+Use `custom` as an escape hatch for any protocol. 
 
 ```tsx
-import { custom, erc20Utils, buildCall } from '0xtrails'
+import { custom, erc20Utils } from '0xtrails'
 import { parseUnits } from 'viem'
 import { stakingAbi } from './abi'
 
@@ -265,15 +267,9 @@ const actions = [
     }),
   }),
   custom({
-    ...buildCall({
       to: STAKING_CONTRACT,
-      data: {
-        abi: stakingAbi,
-        functionName: 'stake',
-        args: [parseUnits('100', 6)],
-      },
+      data: '0x...'
     }),
-  }),
 ]
 ```
 

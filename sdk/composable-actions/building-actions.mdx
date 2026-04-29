@@ -63,7 +63,7 @@ swap({
 
 ## Swap utilities
 
-For anything that isn't "build calldata for `useQuote`" — on-chain quoting, pool discovery, raw `Call[]` composition, address lookups — `0xtrails` exports the underlying chain-scoped helpers behind `swap`. The same adapter is exported for both Uniswap V3 and SushiSwap V3, with identical method names, parameters, and fee tiers.
+For anything that isn't "build calldata for `useQuote`" — on-chain quoting, pool discovery, raw `Call[]` composition, address lookups — `0xtrails` exports the underlying chain-scoped helpers behind `swap`. The same adapter shape is exported for both Uniswap V3 and SushiSwap V3: `quoteSwap`, `getPool`, `swapExactInputSingle`, and `swapExactOutputSingle`.
 
 ```ts
 import { uniswapV3, sushiswapV3 } from '0xtrails'
@@ -75,7 +75,7 @@ Low-level helpers take raw `bigint` wei — use viem's `parseUnits` to convert f
 
 Typical use cases:
 
-- **Pre-flight quoting** — render expected output / price impact in the UI before the user commits, using `simulateSwap`.
+- **Pre-flight quoting** — render expected output / price impact in the UI before the user commits, using `quoteSwap`.
 - **Pool liquidity check** — skip a pair or switch `fee` tier when `getPool` returns `null`.
 - **Custom compositions** — build `Call[]` directly and pass them through `to.calls` (`useQuote`) or `calls` (`useTrailsSendTransaction`) when you need something the typed `swap` doesn't cover (e.g. multi-hop paths, permit2, …).
 
@@ -90,14 +90,14 @@ const uni = uniswapV3.onChain('base')
 // or: uniswapV3.onChain(8453)
 ```
 
-### `simulateSwap`
+### `quoteSwap`
 
-Dry-run a swap against the provider's QuoterV2 — no signing, no broadcast. Use this to render expected output and price impact before the user commits.
+Query the provider's V3 quoter — no signing, no broadcast. Use this to render expected output, gas estimate, and price movement before the user commits.
 
 ```ts
 import { parseUnits } from 'viem'
 
-const quote = await uni.simulateSwap({
+const quote = await uni.quoteSwap({
   type: 'exactInputSingle',
   tokenIn: 'USDC',
   tokenOut: 'WETH',
@@ -111,7 +111,18 @@ const quote = await uni.simulateSwap({
 // quote.sqrtPriceX96After
 ```
 
-`type` can be `"exactInputSingle"` or `"exactOutputSingle"`, pass `amountIn` with the former and `amountOut` with the latter.
+`type` can be `"exactInputSingle"` or `"exactOutputSingle"`. Pass `amountIn` for exact input quotes. For exact output quotes, pass the desired output amount as `amountOutMinimum`:
+
+```ts
+const exactOutputQuote = await uni.quoteSwap({
+  type: 'exactOutputSingle',
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  fee: '0.05',
+  amountIn: 0n, // ignored for exactOutputSingle
+  amountOutMinimum: parseUnits('0.03', 18), // desired WETH output
+})
+```
 
 ### `getPool`
 
@@ -146,6 +157,26 @@ const calls = uni.swapExactInputSingle({
 })
 ```
 
+SushiSwap V3 uses the same fields plus a required `deadline`:
+
+```ts
+import { sushiswapV3 } from '0xtrails'
+import { parseUnits } from 'viem'
+
+const sushi = sushiswapV3.onChain('base')
+const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60)
+
+const calls = sushi.swapExactInputSingle({
+  tokenIn: 'USDC',
+  tokenOut: 'WETH',
+  fee: '0.05',
+  recipient: userEoa,
+  deadline,
+  amountIn: parseUnits('100', 6),
+  amountOutMinimum: parseUnits('0.03', 18),
+})
+```
+
 ### `swapExactOutputSingle`
 
 Build an approval + swap `Call[]` for an exact-output swap.
@@ -162,6 +193,8 @@ const calls = uni.swapExactOutputSingle({
   amountInMaximum: parseUnits('100', 6), // 100 USDC ceiling
 })
 ```
+
+For SushiSwap V3 exact-output calls, include `deadline` as well.
 
 ### Address lookups
 
@@ -195,7 +228,7 @@ if (!adapter) {
 
 ## `lend` — supply into a money-market
 
-Use for Aave / Compound / Fluid-style lending. **Use [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers) to fetch the `marketId`.**
+Use for supported lending markets such as Aave. **Use [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers) to fetch the `marketId`.**
 
 ```ts
 lend({
@@ -212,7 +245,7 @@ Use for vault-shaped markets (ERC-4626, Morpho, Yearn, SummerFi, Sky, …).
 
 ```ts
 deposit({
-  marketId: 'base-usdc-morpho-v1-vault',
+  marketId: 'base-usdc-pusdc-0x1401d1271c47648ac70cbcdfa3776d4a87ce006b-4626-vault',
   amount: '100',
 })
 ```

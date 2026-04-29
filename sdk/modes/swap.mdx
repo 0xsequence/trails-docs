@@ -98,7 +98,7 @@ For custom UI implementations, use the `useQuote` hook directly:
 ### Basic useQuote Implementation
 
 ```tsx
-import { useQuote, TradeType } from '0xtrails'
+import { useQuote } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
 import { useState, useEffect } from 'react'
 
@@ -106,15 +106,18 @@ export const CustomSwap = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
   
-  const { quote, swap, isLoadingQuote, quoteError, refetchQuote } = useQuote({
+  const { quote, send, isLoadingQuote, quoteError, refetchQuote } = useQuote({
     walletClient,
-    fromTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC on Ethereum
-    fromChainId: 1,
-    toTokenAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // USDC on Base
-    toChainId: 8453,
-    swapAmount: '1000000', // 1 USDC (6 decimals)
-    tradeType: TradeType.EXACT_INPUT,
-    toRecipient: address,
+    from: {
+      token: 'USDC',
+      chain: 'ethereum',
+      amount: '1', // human-readable USDC amount
+    },
+    to: {
+      token: 'USDC',
+      chain: 'base',
+      recipient: address,
+    },
     slippageTolerance: '0.005', // 0.5%
     onStatusUpdate: (states) => {
       console.log('Transaction status:', states)
@@ -130,10 +133,10 @@ export const CustomSwap = () => {
   }, [refetchQuote])
   
   const handleSwap = async () => {
-    if (!swap) return
+    if (!send) return
     
     try {
-      const result = await swap()
+      const result = await send()
       console.log('Swap result:', result)
     } catch (error) {
       console.error('Swap failed:', error)
@@ -167,8 +170,7 @@ User specifies exact input amount; output amount varies:
 ```tsx
 const { quote } = useQuote({
   // ... other props
-  swapAmount: '100000000', // 100 USDC exactly
-  tradeType: TradeType.EXACT_INPUT,
+  from: { token: 'USDC', chain: 'base', amount: '100' },
 })
 // User sends exactly 100 USDC, receives ~0.039 ETH (varies with price)
 ```
@@ -180,8 +182,7 @@ User specifies exact output amount; input amount varies:
 ```tsx
 const { quote } = useQuote({
   // ... other props
-  swapAmount: '100000000000000000', // 0.1 ETH exactly
-  tradeType: TradeType.EXACT_OUTPUT,
+  to: { token: 'ETH', chain: 'arbitrum', amount: '0.1' },
 })
 // User receives exactly 0.1 ETH, sends ~256 USDC (varies with price)
 ```
@@ -191,13 +192,20 @@ const { quote } = useQuote({
 ```ts
 type UseQuoteProps = {
   walletClient?: WalletClient
-  fromTokenAddress?: string | null
-  fromChainId?: number | null
-  toTokenAddress?: string | null
-  toChainId?: number | null
-  swapAmount?: string | bigint
-  toRecipient?: string | null
-  tradeType?: TradeType | null
+  walletAddress?: string | null
+  from: {
+    token: string
+    chain: ChainIdentifier
+    amount?: string // human-readable; EXACT_INPUT when set
+    decimals?: number
+  }
+  to: {
+    token: string
+    chain: ChainIdentifier
+    recipient?: string | null
+    amount?: string // human-readable; EXACT_OUTPUT when set
+    decimals?: number
+  }
   slippageTolerance?: string | number | null
   onStatusUpdate?: (txs: TransactionState[]) => void | null
 }
@@ -255,7 +263,7 @@ useEffect(() => {
 ### useQuote Transaction Status
 
 ```tsx
-const { quote, swap } = useQuote({
+const { quote, send } = useQuote({
   // ... other props
   onStatusUpdate: (states) => {
     states.forEach(state => {
@@ -273,7 +281,7 @@ import { getIsUserRejectionError, InsufficientBalanceError } from '0xtrails'
 
 const handleSwap = async () => {
   try {
-    await swap()
+    await send?.()
   } catch (error) {
     if (getIsUserRejectionError(error)) {
       console.log('User rejected transaction')

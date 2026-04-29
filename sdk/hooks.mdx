@@ -337,6 +337,10 @@ import {
 
 The `useQuote` hook provides real-time quotes for token swaps, cross-chain transfers and ability to pass in calldata for executions - enabling you to use Trails headlessly.
 
+`from.amount` and `to.amount` are human-readable decimal strings such as `"1"` or `"0.25"`. Do not pass raw wei strings; the SDK scales amounts using the token decimals.
+
+Pass `walletAddress` to preview quotes before a wallet is connected. If a connected `walletClient.account.address` is available, it becomes the quote owner and takes precedence over `walletAddress`. Executing with `send` still requires a real wallet client.
+
 #### Usage Example
 
 ```tsx
@@ -417,14 +421,16 @@ type UseQuoteProps = {
   from: {
     token: string
     chain: ChainIdentifier
-    amount?: string | bigint // EXACT_INPUT when set
+    amount?: string // human-readable; EXACT_INPUT when set
+    decimals?: number // optional source token decimals override
   }
   to: {
     token: string
     chain: ChainIdentifier
     recipient?: string | null
     approve?: string | null
-    amount?: string | bigint // EXACT_OUTPUT when set
+    amount?: string // human-readable; EXACT_OUTPUT when set
+    decimals?: number // optional destination token decimals override
     calls?: (Call | Call[])[] | null
     calldata?: string | null // deprecated; prefer calls or actions
   }
@@ -471,6 +477,8 @@ type ActionItem =
 
 `useTrailsSendTransaction` creates a button-driven transaction flow with the Trails modal. It accepts most `useQuote` options except `from`, `to`, `walletClient`, and `selectedFeeOption`; pass destination requirements when calling `sendTransaction`.
 
+`tokenAmount` and `fromAmount` are human-readable decimal strings. Native `value` remains a raw wei `bigint`, matching wagmi.
+
 ```tsx
 import { useTrailsSendTransaction } from '0xtrails'
 
@@ -490,10 +498,12 @@ type TrailsSendTransactionVariables = {
   value?: bigint
   data?: `0x${string}`
   tokenAddress?: `0x${string}`
-  tokenAmount?: string
+  tokenAmount?: string // human-readable destination amount
+  tokenDecimals?: number
   fromTokenAddress?: `0x${string}`
   fromChainId?: number
-  fromAmount?: string
+  fromAmount?: string // human-readable origin amount
+  fromDecimals?: number
 }
 
 type UseTrailsSendTransactionParameters =
@@ -532,10 +542,13 @@ type UseTrailsSendTransactionReturnType = {
 import {
   useEarnMarkets,
   useEarnProviders,
+  useEarnBalances,
   type UseEarnMarketsParams,
   type UseEarnMarketsReturn,
   type UseEarnProvidersParams,
   type UseEarnProvidersReturn,
+  type UseEarnBalancesParams,
+  type UseEarnBalancesReturn,
 } from '0xtrails'
 ```
 
@@ -600,6 +613,64 @@ type UseEarnProvidersParams = {
 type UseEarnProvidersReturn = {
   data: Provider[] | undefined
   total: number
+  isLoading: boolean
+  error: Error | null
+  refetch: () => void
+}
+```
+
+### useEarnBalances Hook
+
+Fetch earn positions for a wallet. Use `chain` for one network or `chains` to batch multiple networks in one backend request.
+
+```tsx
+import { useEarnBalances } from '0xtrails'
+
+const { data, errors, isLoading, error, refetch } = useEarnBalances({
+  walletAddress: '0x9ec762D784B653E168d93eA3078B023d8958dBc6',
+  chain: 'polygon',
+})
+
+const { data: multiChainBalances } = useEarnBalances({
+  walletAddress: '0x9ec762D784B653E168d93eA3078B023d8958dBc6',
+  chains: ['polygon', 'ethereum', 'base'],
+})
+```
+
+Restrict the lookup to one market:
+
+```tsx
+const { data } = useEarnBalances({
+  walletAddress,
+  chain: 'polygon',
+  marketId: 'polygon-usdc-aave-v3-lending',
+})
+```
+
+#### Types
+
+```ts
+type UseEarnBalancesParams =
+  | {
+      walletAddress: string
+      chain: ChainIdentifier
+      chains?: never
+      marketId?: string
+      arguments?: EarnBalanceQuery['arguments']
+      enabled?: boolean
+    }
+  | {
+      walletAddress: string
+      chains: ChainIdentifier[]
+      chain?: never
+      marketId?: string
+      arguments?: EarnBalanceQuery['arguments']
+      enabled?: boolean
+    }
+
+type UseEarnBalancesReturn = {
+  data: EarnBalances[] | undefined
+  errors: EarnBalanceError[]
   isLoading: boolean
   error: Error | null
   refetch: () => void
@@ -888,7 +959,7 @@ Error thrown when a user has insufficient balance to complete a transaction.
 
 ```ts
 try {
-  await swap()
+  await send?.()
 } catch (error) {
   if (error instanceof InsufficientBalanceError) {
     console.error('Insufficient balance for this transaction')
@@ -902,7 +973,7 @@ Error thrown when a user rejects a transaction in their wallet.
 
 ```ts
 try {
-  await swap()
+  await send?.()
 } catch (error) {
   if (error instanceof UserRejectionError) {
     console.log('User rejected the transaction')
@@ -936,7 +1007,7 @@ Converts any error into a user-friendly message string.
 
 ```ts
 try {
-  await swap()
+  await send?.()
 } catch (error) {
   const userMessage = getPrettifiedErrorMessage(error)
   showNotification(userMessage)
@@ -957,7 +1028,7 @@ import {
 
 async function handleSwap() {
   try {
-    await swap()
+    await send?.()
   } catch (error) {
     if (getIsUserRejectionError(error)) {
       // User cancelled - don't show error notification

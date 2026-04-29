@@ -118,26 +118,27 @@ export const AdvancedSwap = () => {
 For more control over the swap process for headless implementations, use the `useQuote` hook directly:
 
 ```tsx
-import { useQuote, TradeType } from '0xtrails'
+import { useQuote } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'
 import { useState } from 'react'
 
 export const CustomSwapComponent = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
-  const [fromToken, setFromToken] = useState('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48') // USDC on Ethereum
-  const [toToken, setToToken] = useState('0x833589fcd6edb6e08f4c7c32d4f71b54bda02913') // USDC on Base
-  const [amount, setAmount] = useState('1000000') // 1 USDC
+  const [amount, setAmount] = useState('1') // human-readable USDC amount
 
-  const { quote, swap, isLoadingQuote, quoteError } = useQuote({
+  const { quote, send, isLoadingQuote, quoteError } = useQuote({
     walletClient,
-    fromTokenAddress: fromToken,
-    fromChainId: 1, // Ethereum
-    toTokenAddress: toToken,
-    toChainId: 8453, // Base
-    swapAmount: amount,
-    tradeType: TradeType.EXACT_INPUT,
-    toAddress: address,
+    from: {
+      token: 'USDC',
+      chain: 'ethereum',
+      amount,
+    },
+    to: {
+      token: 'USDC',
+      chain: 'base',
+      recipient: address,
+    },
     slippageTolerance: '0.005', // 0.5%
     onStatusUpdate: (states) => {
       console.log('Swap progress:', states)
@@ -145,10 +146,10 @@ export const CustomSwapComponent = () => {
   })
 
   const handleSwap = async () => {
-    if (!swap) return
+    if (!send) return
     
     try {
-      const result = await swap()
+      const result = await send()
       console.log('Swap result:', result)
     } catch (error) {
       console.error('Swap failed:', error)
