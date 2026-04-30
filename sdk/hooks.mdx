@@ -28,6 +28,48 @@ import { TrailsProvider } from '0xtrails'
 </TrailsProvider>
 ```
 
+### Apps without wagmi and react-query
+
+The Trails SDK uses wagmi and `@tanstack/react-query` internally. If your app already sets up those providers, `TrailsProvider` will use them automatically.
+
+If your app does not already include these providers, you need to add them above `TrailsProvider`:
+
+```tsx
+'use client'
+
+import { TrailsProvider } from '0xtrails'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createConfig, http, WagmiProvider } from 'wagmi'
+import { arbitrum, base, polygon } from 'wagmi/chains'
+
+const wagmiConfig = createConfig({
+  chains: [base, polygon, arbitrum],
+  transports: {
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [arbitrum.id]: http(),
+  },
+})
+
+const queryClient = new QueryClient()
+
+export const Providers = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+          {children}
+        </TrailsProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+```
+
+<Note>
+This requirement is temporary. A future SDK release will bundle these dependencies so only `TrailsProvider` is needed.
+</Note>
+
 ### Configuration Options
 
 | Option | Type | Required | Description |

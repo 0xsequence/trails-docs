@@ -12,26 +12,48 @@ Fund mode implements input-driven deposit flows where users select the amount th
 
 ## Quick start
 
+Fund supports four payment methods: connected wallet, crypto transfer (QR/address), fiat on-ramp, and exchange (CEX). Set `paymentMethod` to open a specific flow, or omit it to let the user choose.
+
 ```tsx
 import { Fund } from '0xtrails/widget'
 
-// Fully open — user picks everything
-<Fund apiKey="YOUR_API_KEY" />
-```
-
-Pre-set a destination:
-
-```tsx
+// Fiat on-ramp — user buys crypto with a card
 <Fund
   apiKey="YOUR_API_KEY"
-  to={{
-    recipient: "0xYourAddress",
-    currency: "USDC",
-    chain: "base",
-  }}
+  paymentMethod="CREDIT_DEBIT_CARD"
+  from={{ currency: "USD", amount: 100 }}
+  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
   onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
 />
 ```
+
+```tsx
+// CEX transfer — user sends from their exchange account
+<Fund
+  apiKey="YOUR_API_KEY"
+  paymentMethod="EXCHANGE"
+  from={{ exchange: "coinbase" }}
+  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+/>
+```
+
+<Note>
+The exchange (CEX) flow requires your app to be added to the allowlist. Contact us to get access.
+</Note>
+
+```tsx
+// Connected wallet — user pays from their wallet (default)
+<Fund
+  apiKey="YOUR_API_KEY"
+  paymentMethod="CONNECTED_WALLET"
+  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+/>
+
+// Fully open — let the user pick their preferred method
+<Fund apiKey="YOUR_API_KEY" />
+```
+
+See [Source selection](#source-selection-optional) for all `paymentMethod` values and the `from` options each accepts.
 
 ## Props
 
@@ -62,6 +84,8 @@ Set `paymentMethod` to control how the user funds:
 | `"CRYPTO_TRANSFER"` | QR code / address deposit |
 | `"CREDIT_DEBIT_CARD"` | Fiat on-ramp |
 | `"EXCHANGE"` | CEX transfer (Coinbase, Binance, etc.) |
+
+The `from` prop is fully typed based on the selected `paymentMethod`. TypeScript will narrow the allowed fields automatically, so only valid options for that method are accepted.
 
 When `paymentMethod` is set, the `from` object applies to that method:
 
