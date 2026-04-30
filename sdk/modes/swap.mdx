@@ -195,7 +195,7 @@ export const CustomSwap = () => {
     <div>
       <p>From: {quote.originAmountFormatted} {quote.originToken.symbol}</p>
       <p>To: {quote.destinationAmountFormatted} {quote.destinationToken.symbol}</p>
-      <button onClick={() => swap?.()}>Execute Swap</button>
+      <button onClick={() => send?.()}>Execute Swap</button>
     </div>
   )
 }
@@ -252,7 +252,7 @@ type UseQuoteProps = {
 
 type UseQuoteReturn = {
   quote: Quote | null
-  swap: (() => Promise<SwapReturn | null>) | null
+  send: (() => Promise<SwapReturn | null>) | null
   isLoadingQuote: boolean
   quoteError: unknown
   refetchQuote: (() => Promise<void>) | null
@@ -285,16 +285,15 @@ useEffect(() => {
 ### Widget Events
 
 ```tsx
-<TrailsWidget
+<Swap
   apiKey="YOUR_API_KEY"
-  mode="swap"
-  onCheckoutStart={({ sessionId }) => {
+  onSwapStart={({ sessionId }) => {
     console.log('Swap started:', sessionId)
   }}
-  onCheckoutComplete={({ sessionId }) => {
+  onSwapSuccess={({ sessionId }) => {
     console.log('Swap completed:', sessionId)
   }}
-  onCheckoutError={({ sessionId, error }) => {
+  onSwapError={({ sessionId, error }) => {
     console.error('Swap failed:', error)
   }}
 />

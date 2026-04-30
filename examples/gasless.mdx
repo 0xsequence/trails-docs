@@ -172,44 +172,7 @@ You can listen to fee option events:
 </Pay>
 ```
 
-## 4337 Paymaster Integration
-
-For apps with existing paymaster infrastructure (Alchemy, Pimlico, ZeroDev, Thirdweb), configure per-chain paymaster URLs:
-
-```tsx
-<Pay
-  apiKey="YOUR_API_KEY"
-  to={{
-    recipient: "0xMERCHANT_ADDRESS",
-    currency: "USDC",
-    chain: "polygon",
-    amount: "100",
-  }}
-  paymasterUrls={[
-    { chainId: 137, url: 'https://your-paymaster.example.com/polygon' },
-    { chainId: 8453, url: 'https://your-paymaster.example.com/base' },
-  ]}
->
-  <button>Pay (Sponsored Gas)</button>
-</Pay>
-```
-
-### Supported Paymaster Providers
-
-| Provider | Notes |
-|----------|-------|
-| Alchemy | Uses bundler-only mode (no separate paymaster client) |
-| Pimlico | Full paymaster + bundler support |
-| ZeroDev | Full paymaster + bundler support |
-| Thirdweb | Full paymaster + bundler support |
-
-<Note>
-When using `paymasterUrls`, the paymaster sponsors the gas entirely. Users don't pay any fee—the app/merchant absorbs it.
-</Note>
-
 ## Gasless Flow Details
-
-### Without Paymaster (ERC-20 Fees)
 
 1. **Quote Intent** — SDK fetches quote including `gasFeeOptions` with available fee tokens
 2. **User Selects Fee** — User picks USDC, USDT, or native gas from dropdown
@@ -217,14 +180,6 @@ When using `paymasterUrls`, the paymaster sponsors the gas entirely. Users don't
 4. **Intent Signature** — User signs the intent data
 5. **Relayer Submits** — Trails relayer executes the transaction, deducting fee from user's balance
 6. **Completion** — User receives confirmation once destination transaction confirms
-
-### With Paymaster (4337)
-
-1. **Prepare UserOp** — SDK prepares ERC-4337 user operation
-2. **Paymaster Sponsorship** — Paymaster adds `paymasterAndData` to sponsor gas
-3. **User Signs** — User signs the user operation
-4. **Bundler Submits** — Bundler submits to entry point
-5. **Completion** — User receives confirmation
 
 ## Limitations
 
@@ -263,13 +218,6 @@ The SDK automatically detects smart contract wallets and falls back to native ga
     Not all ERC-20 tokens support permits. The SDK automatically filters to show only valid fee options, but for API integrations, check token contracts.
   </Accordion>
 
-  <Accordion title="Paymaster Security">
-    If using custom paymasters:
-    - Validate paymaster URLs are HTTPS
-    - Use separate paymaster URLs per environment (dev/prod)
-    - Monitor paymaster spending and set limits
-    - Consider allowlisting user operations by contract/method
-  </Accordion>
 </AccordionGroup>
 
 ## Troubleshooting
@@ -279,7 +227,6 @@ The SDK automatically detects smart contract wallets and falls back to native ga
 | No ERC-20 fee options shown | Token doesn't support permit | User must pay native gas |
 | "Smart contract wallets not supported" | SC wallet detected | Use native gas flow |
 | Permit signature fails | Token permit implementation varies | Try a different token or native gas |
-| Paymaster rejects UserOp | Paymaster policy/limits | Check paymaster configuration |
 
 ## Next Steps
 
