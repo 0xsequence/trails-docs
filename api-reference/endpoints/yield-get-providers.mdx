@@ -1,0 +1,67 @@
+---
+title: YieldGetProviders
+description: "List DeFi protocols available through the Trails earn system"
+---
+
+## Overview
+
+`YieldGetProviders` returns the DeFi protocols (providers) available through Trails' earn system — Aave, Morpho, Yearn, and others. Use the returned provider IDs as filter values for `YieldGetMarkets`.
+
+The SDK's `useEarnProviders` hook wraps this endpoint — prefer it in React apps.
+
+## Request Parameters
+
+All fields are optional.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `limit` | number | Number of providers to return |
+| `offset` | number | Pagination offset |
+
+## Response
+
+Returns `payload` containing an array of provider objects. Each provider includes:
+
+| Field | Description |
+|-------|-------------|
+| `id` | Provider identifier — use as the `provider` filter in `YieldGetMarkets` |
+| `name` | Human-readable protocol name |
+| `url` | Protocol website |
+| `logoUrl` | Protocol logo image URL |
+
+## Examples
+
+### List all providers
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetProviders', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({}),
+})
+
+const { payload } = await response.json()
+const providers = JSON.parse(payload)
+
+providers.forEach(provider => {
+  console.log(`${provider.id}: ${provider.name}`)
+})
+```
+
+## SDK alternative
+
+In React, use the `useEarnProviders` hook:
+
+```tsx
+import { useEarnProviders } from '0xtrails'
+
+const { data: providers } = useEarnProviders()
+```
+
+## See also
+
+- [YieldGetMarkets](/api-reference/endpoints/yield-get-markets) — Filter markets by provider ID
+- [Markets & Providers](/sdk/composable-actions/markets-and-providers) — SDK hooks reference

@@ -1,0 +1,97 @@
+---
+title: YieldCreateEnterAction
+description: "Generate unsigned deposit transaction calldata for a DeFi yield market"
+---
+
+## Overview
+
+`YieldCreateEnterAction` returns the unsigned transaction payload needed to deposit into a DeFi yield market. This is the low-level endpoint that backs the `lend` and `deposit` composable actions in the SDK.
+
+Use this endpoint when building custom DeFi UIs outside React, or when you need to construct the calldata manually before passing it to Trails via the `to.calldata` param on `QuoteIntent`.
+
+For React apps, use the `lend()` or `deposit()` action builders with `useTrailsSendTransaction` — they call this endpoint internally.
+
+## Request Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `earnMarketId` | string | Yes | Market ID from `YieldGetMarkets` |
+| `userWalletAddress` | string | Yes | Address of the depositing wallet |
+| `args` | object | No | Market-specific arguments (varies by protocol) |
+
+## Response
+
+Returns `payload` containing unsigned transaction data:
+
+| Field | Description |
+|-------|-------------|
+| `transactions` | Array of transaction objects to execute |
+| `transactions[].to` | Contract address |
+| `transactions[].data` | ABI-encoded calldata |
+| `transactions[].value` | ETH value (for native token deposits) |
+
+## Examples
+
+### Build a deposit calldata for Aave
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldCreateEnterAction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    earnMarketId: 'base-usdc-aave-v3-lending',
+    userWalletAddress: '0xYourWalletAddress',
+  }),
+})
+
+const { payload } = await response.json()
+const action = JSON.parse(payload)
+
+// Pass action.transactions[0].data to QuoteIntent as to.calldata
+```
+
+### With protocol-specific arguments
+
+Some markets accept additional arguments (e.g. slippage, referral codes):
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldCreateEnterAction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    earnMarketId: 'ethereum-usdc-morpho-0x...',
+    userWalletAddress: '0xYourWalletAddress',
+    args: {
+      referralCode: 0,
+    },
+  }),
+})
+```
+
+## SDK alternative
+
+For React, use the `lend` or `deposit` builders with `useTrailsSendTransaction`:
+
+```tsx
+import { useTrailsSendTransaction, lend, deposit } from '0xtrails'
+
+const { sendTransaction } = useTrailsSendTransaction({
+  actions: [
+    lend({ marketId: 'base-usdc-aave-v3-lending', amount: '100' }),
+  ],
+})
+```
+
+See [Composable Actions](/use-cases/composable-actions) for the full SDK approach.
+
+## See also
+
+- [YieldCreateExitAction](/api-reference/endpoints/yield-create-exit-action) — Withdraw from a position
+- [YieldGetMarkets](/api-reference/endpoints/yield-get-markets) — Discover market IDs
+- [Composable Actions](/use-cases/composable-actions) — SDK builders for DeFi deposits

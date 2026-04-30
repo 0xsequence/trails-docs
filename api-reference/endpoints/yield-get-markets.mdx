@@ -1,0 +1,125 @@
+---
+title: YieldGetMarkets
+description: "List and filter DeFi markets available through the Trails earn system"
+---
+
+## Overview
+
+`YieldGetMarkets` returns DeFi markets available for deposit through Trails, including lending markets (Aave, Morpho) and yield vaults (Yearn, ERC-4626). Use this to power market selection UIs or discover `marketId` values for composable actions.
+
+The SDK's `useEarnMarkets` hook wraps this endpoint with typed filters and caching — prefer it in React apps.
+
+## Request Parameters
+
+All fields are optional.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | string | Filter by protocol (e.g. `"aave"`, `"morpho"`, `"yearn"`) |
+| `chainId` | string | Filter by chain ID (e.g. `"8453"` for Base) |
+| `type` | string | Market category: `"lending"` or `"vault"` |
+| `search` | string | Free-text search over market names and tokens |
+| `sort` | string | Sort order (e.g. `"rewardRateDesc"`) |
+| `limit` | number | Number of results to return |
+| `offset` | number | Pagination offset |
+
+## Response
+
+Returns `payload` containing an array of market objects. Each market includes:
+
+| Field | Description |
+|-------|-------------|
+| `id` | Unique market ID — pass this to `lend()` or `deposit()` composable actions |
+| `providerId` | Protocol identifier (e.g. `"aave"`, `"morpho"`) |
+| `rewardRate` | Current APY as a decimal (e.g. `0.045` = 4.5%) |
+| `statistics.tvlUsd` | Total value locked in USD |
+| `metadata.name` | Human-readable market name |
+| `metadata.token` | Underlying token info (symbol, address, decimals) |
+
+## Examples
+
+### List all markets on Base
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetMarkets', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    chainId: '8453',
+    limit: 20,
+    offset: 0,
+  }),
+})
+
+const { payload } = await response.json()
+const markets = JSON.parse(payload)
+
+markets.forEach(market => {
+  console.log(`${market.id}: ${(market.rewardRate * 100).toFixed(2)}% APY`)
+})
+```
+
+### Filter lending markets by protocol
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetMarkets', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    provider: 'aave',
+    type: 'lending',
+    sort: 'rewardRateDesc',
+  }),
+})
+
+const { payload } = await response.json()
+const markets = JSON.parse(payload)
+```
+
+### Search for USDC markets
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetMarkets', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    search: 'usdc',
+    sort: 'rewardRateDesc',
+    limit: 10,
+  }),
+})
+```
+
+## SDK alternative
+
+In React, use the typed `useEarnMarkets` hook instead of calling this endpoint directly:
+
+```tsx
+import { useEarnMarkets } from '0xtrails'
+
+const { data: markets, isLoading } = useEarnMarkets({
+  chain: 'base',
+  type: 'lending',
+  provider: 'aave',
+  search: 'usdc',
+  sortBy: 'rewardRateDesc',
+  limit: 20,
+})
+
+// markets[i].id → pass to lend() or deposit() actions
+```
+
+## See also
+
+- [YieldGetMarketById](/api-reference/endpoints/yield-get-market-by-id) — Fetch a single market by ID
+- [YieldGetProviders](/api-reference/endpoints/yield-get-providers) — List available protocols
+- [Markets & Providers](/sdk/composable-actions/markets-and-providers) — SDK hooks reference
