@@ -64,7 +64,7 @@ export const RefundComponent = ({ intentId }: { intentId: string }) => {
   } = useIntentRecover({
     intentId,
     walletClient,
-    recoverToAddress: address, // Optional: defaults to connected wallet
+    refundToAddress: address, // Optional: defaults to connected wallet
   })
 
   const handleRefund = async () => {

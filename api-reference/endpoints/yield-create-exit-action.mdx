@@ -1,0 +1,106 @@
+---
+title: YieldCreateExitAction
+description: "Generate unsigned withdrawal transaction calldata for a DeFi yield position"
+openapi: ../trails-api.gen.json post /rpc/Trails/YieldCreateExitAction
+---
+
+## Overview
+
+`YieldCreateExitAction` returns the unsigned transaction payload needed to withdraw from a DeFi yield position. It is the counterpart to `YieldCreateEnterAction`.
+
+Use this endpoint to build withdrawal UIs or construct exit calldata for Trails routes. For React apps, the composable action builders handle this automatically.
+
+## Request Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `earnMarketId` | string | Yes | Market ID from `YieldGetMarkets` |
+| `userWalletAddress` | string | Yes | Address of the withdrawing wallet |
+| `args` | object | No | Market-specific arguments (e.g. amount, shares) |
+
+## Response
+
+Returns `payload` containing unsigned transaction data:
+
+| Field | Description |
+|-------|-------------|
+| `transactions` | Array of transaction objects to execute |
+| `transactions[].to` | Contract address |
+| `transactions[].data` | ABI-encoded calldata |
+| `transactions[].value` | ETH value (for native token withdrawals) |
+
+## Examples
+
+### Withdraw from an Aave lending position
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldCreateExitAction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    earnMarketId: 'base-usdc-aave-v3-lending',
+    userWalletAddress: '0xYourWalletAddress',
+  }),
+})
+
+const { payload } = await response.json()
+const action = JSON.parse(payload)
+```
+
+### Withdraw a specific amount
+
+Use `args` to pass withdrawal parameters for markets that require them (e.g. partial withdrawals):
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldCreateExitAction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    earnMarketId: 'ethereum-usdc-morpho-0x...',
+    userWalletAddress: '0xYourWalletAddress',
+    args: {
+      amount: '1000000', // 1 USDC in wei
+    },
+  }),
+})
+```
+
+## Common pattern: check balance then exit
+
+```typescript
+// 1. Check what positions the wallet holds
+const balancesRes = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetAggregateBalances', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'YOUR_ACCESS_KEY' },
+  body: JSON.stringify({ queries: [{ address: '0xYourWallet', network: 'base' }] }),
+})
+const { payload: balPayload } = await balancesRes.json()
+const balances = JSON.parse(balPayload)
+
+// 2. Build exit calldata for each position
+for (const position of balances) {
+  const exitRes = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldCreateExitAction', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'YOUR_ACCESS_KEY' },
+    body: JSON.stringify({
+      earnMarketId: position.yieldId,
+      userWalletAddress: '0xYourWallet',
+    }),
+  })
+  const { payload: exitPayload } = await exitRes.json()
+  const exitAction = JSON.parse(exitPayload)
+  // Use exitAction.transactions to build and submit the withdrawal
+}
+```
+
+## See also
+
+- [YieldCreateEnterAction](/api-reference/endpoints/yield-create-enter-action) — Deposit into a position
+- [YieldGetAggregateBalances](/api-reference/endpoints/yield-get-balances) — Check existing positions before exiting
+- [YieldGetMarkets](/api-reference/endpoints/yield-get-markets) — Discover market IDs

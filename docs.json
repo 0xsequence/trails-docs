@@ -159,6 +159,11 @@
           {
             "group": "Earn",
             "pages": [
+              "api-reference/endpoints/yield-get-markets",
+              "api-reference/endpoints/yield-get-providers",
+              "api-reference/endpoints/yield-get-balances",
+              "api-reference/endpoints/yield-create-enter-action",
+              "api-reference/endpoints/yield-create-exit-action",
               "api-reference/endpoints/get-earn-pools"
             ]
           },

@@ -2820,6 +2820,119 @@ components:
           description: '[]FiatCurrency'
           items:
             $ref: '#/components/schemas/FiatCurrency'
+    GetYieldMarketsRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: 'Filter by protocol ID (e.g. "aave", "morpho", "yearn")'
+        chainId:
+          type: string
+          description: 'Filter by chain ID as a string (e.g. "8453" for Base)'
+        type:
+          type: string
+          description: 'Market category: "lending" or "vault"'
+        search:
+          type: string
+          description: 'Free-text search over market names and tokens'
+        sort:
+          type: string
+          description: 'Sort order (e.g. "rewardRateDesc")'
+        limit:
+          type: integer
+          format: int32
+          description: 'Number of results to return'
+        offset:
+          type: integer
+          format: int32
+          description: 'Pagination offset'
+    GetYieldMarketsResponse:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          type: object
+          description: 'JSON array of market objects from the yield provider'
+          additionalProperties: true
+    GetYieldProvidersRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+          format: int32
+          description: 'Number of providers to return'
+        offset:
+          type: integer
+          format: int32
+          description: 'Pagination offset'
+    GetYieldProvidersResponse:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          type: object
+          description: 'JSON array of provider objects'
+          additionalProperties: true
+    YieldBalanceQuery:
+      type: object
+      required:
+        - address
+        - network
+      properties:
+        address:
+          type: string
+          description: 'Wallet address to look up'
+        network:
+          type: string
+          description: 'Network name (e.g. "base", "ethereum", "polygon")'
+    GetYieldAggregateBalancesRequest:
+      type: object
+      required:
+        - queries
+      properties:
+        queries:
+          type: array
+          description: 'Array of 1–25 balance queries'
+          minItems: 1
+          maxItems: 25
+          items:
+            $ref: '#/components/schemas/YieldBalanceQuery'
+    GetYieldAggregateBalancesResponse:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          type: object
+          description: 'JSON array of yield balance records'
+          additionalProperties: true
+    CreateYieldActionRequest:
+      type: object
+      required:
+        - earnMarketId
+        - userWalletAddress
+      properties:
+        earnMarketId:
+          type: string
+          description: 'Market ID from YieldGetMarkets'
+        userWalletAddress:
+          type: string
+          description: 'Wallet address of the user performing the action'
+        args:
+          type: object
+          description: 'Optional market-specific arguments (e.g. referral codes, slippage)'
+          additionalProperties: true
+    CreateYieldActionResponse:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          type: object
+          description: 'JSON object containing unsigned transaction payloads'
+          additionalProperties: true
 
 paths:
   /rpc/Trails/Ping:
@@ -4725,3 +4838,221 @@ paths:
                 - $ref: '#/components/schemas/ErrorWebrpcInternalError'
                 - $ref: '#/components/schemas/ErrorUnexpected'
                 - $ref: '#/components/schemas/ErrorChainNodeHealth'
+  /rpc/Trails/YieldGetMarkets:
+    post:
+      operationId: Trails-YieldGetMarkets
+      tags: ["Trails"]
+      summary: "YieldGetMarkets returns DeFi markets with optional filters."
+      description: |
+        Returns yield-bearing markets (lending pools, ERC-4626 vaults) with APY, TVL, and market IDs
+        for use with composable actions. Use marketId values with the lend() and deposit() SDK builders.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetYieldMarketsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetYieldMarketsResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcEndpoint'
+                - $ref: '#/components/schemas/ErrorWebrpcRequestFailed'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRoute'
+                - $ref: '#/components/schemas/ErrorWebrpcBadMethod'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+                - $ref: '#/components/schemas/ErrorInvalidArgument'
+                - $ref: '#/components/schemas/ErrorUnavailable'
+                - $ref: '#/components/schemas/ErrorNotFound'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcBadResponse'
+                - $ref: '#/components/schemas/ErrorWebrpcServerPanic'
+                - $ref: '#/components/schemas/ErrorWebrpcInternalError'
+                - $ref: '#/components/schemas/ErrorUnexpected'
+  /rpc/Trails/YieldGetProviders:
+    post:
+      operationId: Trails-YieldGetProviders
+      tags: ["Trails"]
+      summary: "YieldGetProviders returns available yield protocol providers."
+      description: |
+        Returns the DeFi protocols (Aave, Morpho, Yearn, etc.) available through Trails' earn system.
+        Use provider IDs as filter values for YieldGetMarkets.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetYieldProvidersRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetYieldProvidersResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcEndpoint'
+                - $ref: '#/components/schemas/ErrorWebrpcRequestFailed'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRoute'
+                - $ref: '#/components/schemas/ErrorWebrpcBadMethod'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+                - $ref: '#/components/schemas/ErrorInvalidArgument'
+                - $ref: '#/components/schemas/ErrorUnavailable'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcBadResponse'
+                - $ref: '#/components/schemas/ErrorWebrpcServerPanic'
+                - $ref: '#/components/schemas/ErrorWebrpcInternalError'
+                - $ref: '#/components/schemas/ErrorUnexpected'
+  /rpc/Trails/YieldGetAggregateBalances:
+    post:
+      operationId: Trails-YieldGetAggregateBalances
+      tags: ["Trails"]
+      summary: "YieldGetAggregateBalances returns a wallet's earn positions across chains."
+      description: |
+        Fetches active yield positions for one or more wallet/network pairs. Accepts up to 25
+        queries in a single request, enabling multi-chain balance lookups.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetYieldAggregateBalancesRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetYieldAggregateBalancesResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcEndpoint'
+                - $ref: '#/components/schemas/ErrorWebrpcRequestFailed'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRoute'
+                - $ref: '#/components/schemas/ErrorWebrpcBadMethod'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+                - $ref: '#/components/schemas/ErrorInvalidArgument'
+                - $ref: '#/components/schemas/ErrorUnavailable'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcBadResponse'
+                - $ref: '#/components/schemas/ErrorWebrpcServerPanic'
+                - $ref: '#/components/schemas/ErrorWebrpcInternalError'
+                - $ref: '#/components/schemas/ErrorUnexpected'
+  /rpc/Trails/YieldCreateEnterAction:
+    post:
+      operationId: Trails-YieldCreateEnterAction
+      tags: ["Trails"]
+      summary: "YieldCreateEnterAction generates unsigned deposit transaction calldata for a yield market."
+      description: |
+        Returns the unsigned transaction payload needed to deposit into a DeFi yield market.
+        This backs the lend() and deposit() composable action builders in the SDK.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateYieldActionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateYieldActionResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcEndpoint'
+                - $ref: '#/components/schemas/ErrorWebrpcRequestFailed'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRoute'
+                - $ref: '#/components/schemas/ErrorWebrpcBadMethod'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+                - $ref: '#/components/schemas/ErrorInvalidArgument'
+                - $ref: '#/components/schemas/ErrorUnavailable'
+                - $ref: '#/components/schemas/ErrorNotFound'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcBadResponse'
+                - $ref: '#/components/schemas/ErrorWebrpcServerPanic'
+                - $ref: '#/components/schemas/ErrorWebrpcInternalError'
+                - $ref: '#/components/schemas/ErrorUnexpected'
+  /rpc/Trails/YieldCreateExitAction:
+    post:
+      operationId: Trails-YieldCreateExitAction
+      tags: ["Trails"]
+      summary: "YieldCreateExitAction generates unsigned withdrawal transaction calldata for a yield position."
+      description: |
+        Returns the unsigned transaction payload needed to withdraw from a DeFi yield position.
+        Counterpart to YieldCreateEnterAction.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateYieldActionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateYieldActionResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcEndpoint'
+                - $ref: '#/components/schemas/ErrorWebrpcRequestFailed'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRoute'
+                - $ref: '#/components/schemas/ErrorWebrpcBadMethod'
+                - $ref: '#/components/schemas/ErrorWebrpcBadRequest'
+                - $ref: '#/components/schemas/ErrorInvalidArgument'
+                - $ref: '#/components/schemas/ErrorUnavailable'
+                - $ref: '#/components/schemas/ErrorNotFound'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorWebrpcBadResponse'
+                - $ref: '#/components/schemas/ErrorWebrpcServerPanic'
+                - $ref: '#/components/schemas/ErrorWebrpcInternalError'
+                - $ref: '#/components/schemas/ErrorUnexpected'

@@ -41,62 +41,39 @@ export const App = () => {
 
 ### Deposit into a specific DeFi pool
 
-Pass a `to.calldata` to target any contract and function. The user can pay from any token on any chain:
+For natively supported protocols like Aave and Morpho, use composable actions — no ABI encoding required. The `lend` and `deposit` builders handle the contract calls internally:
 
-<CodeGroup>
-```tsx AaveDeposit.tsx
-import { Earn } from '0xtrails/widget'
-import { encodeFunctionData } from 'viem'
-import { aaveABI } from './abi.ts'
+```tsx
+import { useTrailsSendTransaction, lend, erc20Utils } from '0xtrails'
 
-export const AaveDepositExample = () => {
-  const AAVE_POOL_CONTRACT = "0xa0d9C1E9E48Ca30c8d8C3B5D69FF5dc1f6DFfC24"
-
-  const depositCalldata = encodeFunctionData({
-    abi: aaveABI,
-    functionName: 'depositETH',
-    args: [
-      "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5", // pool address
-      "0x97c4a952b46becad0663f76357d3776ba11566e1", // user wallet
-      0, // referralCode
+export function AaveLendButton({ recipient }: { recipient: `0x${string}` }) {
+  const { sendTransaction, isPending } = useTrailsSendTransaction({
+    actions: [
+      lend({
+        marketId: 'base-usdc-aave-v3-lending',
+        amount: '100',
+      }),
     ],
   })
 
   return (
-    <Earn
-      apiKey="YOUR_API_KEY"
-      to={{
-        recipient: AAVE_POOL_CONTRACT,
-        currency: "USDC",
-        chain: "base",
-        amount: "100",
-        calldata: depositCalldata,
-      }}
-      theme="auto"
-      onEarnSuccess={({ sessionId }) => {
-        console.log('Aave deposit completed:', sessionId)
-      }}
-    />
+    <button
+      disabled={isPending}
+      onClick={() =>
+        sendTransaction({
+          to: recipient,
+          tokenAddress: erc20Utils.USDC.addressOn('base'),
+          tokenAmount: '100',
+        })
+      }
+    >
+      {isPending ? 'Sending...' : 'Supply 100 USDC to Aave'}
+    </button>
   )
 }
 ```
 
-```typescript abi.ts
-export const aaveABI = [
-  {
-    type: "function",
-    name: "depositETH",
-    stateMutability: "payable",
-    inputs: [
-      { name: "pool", type: "address" },
-      { name: "onBehalfOf", type: "address" },
-      { name: "referralCode", type: "uint16" },
-    ],
-    outputs: [],
-  },
-] as const
-```
-</CodeGroup>
+Use [`useEarnMarkets`](/sdk/composable-actions/markets-and-providers) to discover available `marketId` values at runtime. For protocols not covered by the action builders, see [Composable Actions — custom](/sdk/composable-actions/building-actions#custom-arbitrary-contract-call-escape-hatch).
 
 ## Next steps
 
