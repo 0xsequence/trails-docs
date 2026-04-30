@@ -3617,7 +3617,19 @@
         "type": "object",
         "properties": {
           "routeProvider": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional. Filter chains by route provider. Valid values: AUTO, CCTP, GASZIP, LIFI, LZ_OFT, RELAY, SUSHI, WETH, ZEROX",
+            "enum": [
+              "AUTO",
+              "CCTP",
+              "GASZIP",
+              "LIFI",
+              "LZ_OFT",
+              "RELAY",
+              "SUSHI",
+              "WETH",
+              "ZEROX"
+            ]
           }
         }
       },
