@@ -1354,6 +1354,7 @@
         "enum": [
           "AUTO",
           "CCTP",
+          "GASZIP",
           "LIFI",
           "LZ_OFT",
           "RELAY",
@@ -3617,7 +3618,7 @@
         "type": "object",
         "properties": {
           "routeProvider": {
-            "type": "string"
+            "$ref": "#/components/schemas/RouteProvider"
           }
         }
       },
