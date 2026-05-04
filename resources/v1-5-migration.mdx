@@ -1,0 +1,257 @@
+---
+title: 'v1.5 Migration Guide'
+description: 'How to migrate from earlier versions of Trails to SDK 0.15.0 and intent protocol v1.5.'
+icon: 'arrow-up-right-dots'
+---
+
+This guide covers the breaking changes in **SDK 0.15.0** and **intent protocol v1.5**, and how to update your integration.
+
+## Breaking changes
+
+### `paymasterUrls` removed from `TrailsWidget`
+
+The `paymasterUrls` prop has been removed from `TrailsWidget`. Remove it from your configuration — it has no replacement.
+
+```tsx
+// Before
+<TrailsWidget paymasterUrls={{ 137: 'https://...' }} />
+
+// After
+<TrailsWidget />
+```
+
+---
+
+### Widget lifecycle callback renames
+
+All `TrailsWidget` checkout lifecycle callbacks were renamed. The `onCheckout` prefix is gone.
+
+| Before (0.13.x) | After (0.15.0) |
+|-----------------|----------------|
+| `onCheckoutStart` | `onStart` |
+| `onCheckoutQuote` | `onQuote` |
+| `onCheckoutSignatureRequest` | `onSignRequest` |
+| `onCheckoutSignatureConfirmed` | `onSign` |
+| `onCheckoutSignatureRejected` | `onSignReject` |
+| `onCheckoutComplete` | `onSuccess` |
+| `onCheckoutError` | `onError` |
+| `onCheckoutStatusUpdate` | `onStatus` |
+| `onCheckoutApprovalRequest` | `onApproveRequest` |
+| `onCheckoutApprovalConfirmed` | `onApprove` |
+| `onCheckoutApprovalRejected` | `onApproveReject` |
+
+```tsx
+// Before
+<TrailsWidget
+  onCheckoutStart={...}
+  onCheckoutComplete={...}
+  onCheckoutError={...}
+/>
+
+// After
+<TrailsWidget
+  onStart={...}
+  onSuccess={...}
+  onError={...}
+/>
+```
+
+---
+
+### Deep imports from `src` removed
+
+The package now only publishes `dist`. Any import paths going into `src` (e.g. `0xtrails/src/...`) will break. Use root or subpath imports only.
+
+---
+
+### Removed exports from the `0xtrails` root
+
+- **`TrailsContracts`** — removed from `0xtrails`. Still available from `@0xtrails/api` if needed.
+- **`determineRefundCall`** — deleted entirely, no replacement.
+
+---
+
+### `useQuote` restructured inputs
+
+`useQuote` now takes structured `from` and `to` objects instead of flat props. The flat fields — `fromTokenAddress`, `fromChainId`, `toTokenAddress`, `toChainId`, `toAddress`, `toApprove`, `toCalldata`, `swapAmount`, `tradeType` — are all gone.
+
+**Trade type is now inferred:** set `from.amount` for exact-input, `to.amount` for exact-output.
+
+```tsx
+// Before
+const { quote, send } = useQuote({
+  fromTokenAddress: '0xA0b8...', // USDC
+  fromChainId: 42161,
+  toTokenAddress: '0x8335...',  // USDC on Base
+  toChainId: 8453,
+  toAddress: address,
+  swapAmount: '1000000',         // raw wei
+  tradeType: 'EXACT_INPUT',
+})
+
+// After
+const { quote, send } = useQuote({
+  from: { token: 'USDC', chain: 'arbitrum', amount: '1' }, // human-readable
+  to:   { token: 'USDC', chain: 'base',     recipient: address },
+})
+```
+
+---
+
+### `useQuote` amount units changed
+
+`from.amount` and `to.amount` are now **human-readable decimal strings** (e.g. `"1.5"`), not raw smallest-unit integers. They are scaled internally using `parseUnits` with the token's decimals.
+
+```tsx
+// Before — raw wei
+from: { token: 'USDC', chain: 'arbitrum', amount: '1000000' } // 1 USDC
+
+// After — human-readable
+from: { token: 'USDC', chain: 'arbitrum', amount: '1' }       // 1 USDC
+```
+
+The same applies to `useTrailsSendTransaction`: `tokenAmount` and `fromAmount` are now human-readable decimal strings. Native `value` remains raw wei bigint (wagmi-compatible).
+
+---
+
+### `useQuote to.calldata` deprecated
+
+Passing `to.calldata` on `useQuote` now logs a runtime deprecation warning and is mutually exclusive with `actions` and `to.calls`. Migrate to one of:
+
+- **`actions`** — composable DeFi primitives (`lend`, `deposit`, `swap`, etc.)
+- **`to.calls`** — raw ABI-encoded `Call[]` for custom contracts
+
+```tsx
+// Deprecated
+const { send } = useQuote({
+  from: { ... },
+  to: { ..., calldata: encodedCalldata },
+})
+
+// Preferred — composable actions
+const { send } = useQuote({
+  from: { ... },
+  to: { ... },
+  actions: [lend({ marketId: 'base-usdc-aave-v3-lending', amount: '100' })],
+})
+```
+
+---
+
+## New features
+
+### Composable actions
+
+`useQuote` gains an `actions` array for composing destination-side DeFi flows:
+
+```tsx
+import { useQuote, swap, lend, deposit, dynamic, assertCondition } from '0xtrails'
+
+const { send } = useQuote({
+  from: { chain: 'arbitrum', token: 'USDC' },
+  to:   { chain: 'polygon', token: 'USDT', amount: '0.2' },
+  actions: [
+    deposit({
+      marketId: 'polygon-usdt-bbqusdt0-0xb7c9988d...-4626-vault',
+      amount: '0.1',
+    }),
+    swap({
+      tokenIn: 'USDT',
+      tokenOut: 'USDC',
+      amountIn: dynamic(), // resolved at runtime from wallet balance
+      fee: '0.3',
+    }),
+    assertCondition({
+      erc20Balance: { token: 'USDC', gte: '0.08' },
+    }),
+    lend({
+      marketId: 'polygon-usdc-aave-v3-lending',
+      amount: dynamic(),
+    }),
+  ],
+})
+```
+
+**Action factories:** `swap`, `lend`, `deposit`, `custom`, `assertCondition`
+
+- Use `lend` for lending markets (Aave), `deposit` for ERC-4626 vaults (Morpho, Yearn).
+- Discover `marketId` values with `useEarnMarkets` filtered by `type: "lending"` or `type: "vault"`.
+
+**Runtime sentinels:**
+- `dynamic()` — resolves to the intent wallet's ERC-20 balance at execution time
+- `self()` — resolves to `address(this)` (the intent wallet under `DELEGATECALL`)
+
+**Low-level escape hatch:** `useQuote({ to: { calls } })` accepts raw `Call[]` (or `Call[][]`) for hand-rolled ABI-encoded transactions. Calls support `dynamicAmountToken`, `hydrateEntries`, and `sweepTokens` for runtime hydration and dust recovery.
+
+---
+
+### New hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useEarnMarkets` | Discover lending and vault markets usable with `lend` / `deposit` |
+| `useEarnBalances` | Read a user's balances across earn markets |
+| `useEarnProviders` | List supported earn protocols |
+| `useResolveActions` | Resolve `ActionItem[]` into encoded destination `Call[]` |
+
+---
+
+### Mode-specific widget components
+
+New typed wrappers exported from `0xtrails/widget`, each with a tighter prop shape than the generic `TrailsWidget`:
+
+```tsx
+import { Pay, Fund, Swap, Earn, Withdraw } from '0xtrails/widget'
+```
+
+| Component | Use case |
+|-----------|---------|
+| `Pay` | Payments to a recipient — structured `to`/`from`, `paymentMethod` discriminator |
+| `Fund` | Fund a wallet from any source |
+| `Swap` | Swap-only flows |
+| `Earn` | Deposit and withdraw from earn markets |
+| `Withdraw` | Withdrawal flows |
+
+`TrailsWidget` with `mode="pay" | "fund" | "swap" | "earn" | "withdraw"` continues to work. These wrappers are additive.
+
+---
+
+### Other additions
+
+- **`intentProtocolVersion` prop** on `TrailsWidget` — pin the intent protocol version per-instance.
+- **`fromAmount` prop** on `TrailsWidget` — pre-populate source amount in human-readable units (e.g. `"1.5"`).
+- **Wallet-less quote preview** — pass `walletAddress` to `useQuote` before a wallet is connected.
+- **Auto-refresh expired quotes** — `useQuote` now refetches automatically when `expiresAt` passes, so the "Intent quote has expired" pre-signing error no longer appears.
+- **New utilities:** `erc20Utils`, `buildCall`, `buildApproveAndCall`, `buildErc20Approve`, `getAmountWithSlippage`, `resolveChainId`, `resolveChainName`.
+- **API helpers:** `getEarnMarkets`, `getEarnBalances`, `getEarnProviders`.
+- **New error codes:** `CHAIN_MISMATCH`, `CALL_RESOLUTION_FAILED`.
+- **`quoteKeys` factory** exported for targeted React Query cache invalidation.
+- **`0xtrails/hydrate` subpath** — Hydrate builders, selectors, and calldata helpers for v1.5 execution flows.
+
+---
+
+## Summary checklist
+
+<Steps>
+  <Step title="Remove paymasterUrls">
+    Delete the `paymasterUrls` prop from any `TrailsWidget` usage.
+  </Step>
+  <Step title="Rename lifecycle callbacks">
+    Rename all `onCheckout*` callbacks to the new names (see table above).
+  </Step>
+  <Step title="Remove src deep imports">
+    Replace any `0xtrails/src/...` imports with root or official subpath imports.
+  </Step>
+  <Step title="Remove deleted exports">
+    Remove `TrailsContracts` from `0xtrails` imports (use `@0xtrails/api` if still needed). Remove `determineRefundCall` usage entirely.
+  </Step>
+  <Step title="Migrate useQuote to structured inputs">
+    Replace flat props (`fromTokenAddress`, `fromChainId`, etc.) with `from: { token, chain, amount }` and `to: { token, chain, recipient, ... }`.
+  </Step>
+  <Step title="Update amount units">
+    Change `from.amount` / `to.amount` in `useQuote` and `tokenAmount` / `fromAmount` in `useTrailsSendTransaction` from raw wei to human-readable decimal strings.
+  </Step>
+  <Step title="Migrate to.calldata (if used)">
+    Replace `to.calldata` on `useQuote` with `actions` (for supported protocols) or `to.calls` (for custom contracts).
+  </Step>
+</Steps>
