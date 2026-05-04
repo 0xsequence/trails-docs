@@ -72,7 +72,7 @@
           },
           {
             "group": "Resources",
-            "pages": ["resources/supported-chains", "resources/llm-integration"]
+            "pages": ["resources/supported-chains", "resources/llm-integration", "resources/v1-5-migration"]
           }
         ]
       },
