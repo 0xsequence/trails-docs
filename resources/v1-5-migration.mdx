@@ -56,21 +56,6 @@ All `TrailsWidget` checkout lifecycle callbacks were renamed. The `onCheckout` p
 />
 ```
 
----
-
-### Deep imports from `src` removed
-
-The package now only publishes `dist`. Any import paths going into `src` (e.g. `0xtrails/src/...`) will break. Use root or subpath imports only.
-
----
-
-### Removed exports from the `0xtrails` root
-
-- **`TrailsContracts`** — removed from `0xtrails`. Still available from `@0xtrails/api` if needed.
-- **`determineRefundCall`** — deleted entirely, no replacement.
-
----
-
 ### `useQuote` restructured inputs
 
 `useQuote` now takes structured `from` and `to` objects instead of flat props. The flat fields — `fromTokenAddress`, `fromChainId`, `toTokenAddress`, `toChainId`, `toAddress`, `toApprove`, `toCalldata`, `swapAmount`, `tradeType` — are all gone.
@@ -91,8 +76,8 @@ const { quote, send } = useQuote({
 
 // After
 const { quote, send } = useQuote({
-  from: { token: 'USDC', chain: 'arbitrum', amount: '1' }, // human-readable
-  to:   { token: 'USDC', chain: 'base',     recipient: address },
+  from: { token: 'USDC', chain: 'arbitrum', amountRaw: '1000000' }, // or use "from.amount" which accepts human readable amount string ("1" = 1 USDC)
+  to:   { token: 'USDC', chain: 'base', recipient: address },
 })
 ```
 
@@ -102,6 +87,8 @@ const { quote, send } = useQuote({
 
 `from.amount` and `to.amount` are now **human-readable decimal strings** (e.g. `"1.5"`), not raw smallest-unit integers. They are scaled internally using `parseUnits` with the token's decimals.
 
+Use `from.amountRaw` or `to.amountRaw` for passing raw values.
+
 ```tsx
 // Before — raw wei
 from: { token: 'USDC', chain: 'arbitrum', amount: '1000000' } // 1 USDC
@@ -110,7 +97,7 @@ from: { token: 'USDC', chain: 'arbitrum', amount: '1000000' } // 1 USDC
 from: { token: 'USDC', chain: 'arbitrum', amount: '1' }       // 1 USDC
 ```
 
-The same applies to `useTrailsSendTransaction`: `tokenAmount` and `fromAmount` are now human-readable decimal strings. Native `value` remains raw wei bigint (wagmi-compatible).
+The same applies to `useTrailsSendTransaction`: `tokenAmount` and `fromAmount` are now human-readable decimal strings (use tokenAmountRaw or fromAmountRaw for raw values). Native `value` remains raw wei bigint (wagmi-compatible).
 
 ---
 
@@ -143,6 +130,8 @@ const { send } = useQuote({
 ### Composable actions
 
 `useQuote` gains an `actions` array for composing destination-side DeFi flows:
+
+All amount props for actions are in human-readable form only.
 
 ```tsx
 import { useQuote, swap, lend, deposit, dynamic, assertCondition } from '0xtrails'
@@ -221,11 +210,10 @@ import { Pay, Fund, Swap, Earn, Withdraw } from '0xtrails/widget'
 - **`intentProtocolVersion` prop** on `TrailsWidget` — pin the intent protocol version per-instance.
 - **`fromAmount` prop** on `TrailsWidget` — pre-populate source amount in human-readable units (e.g. `"1.5"`).
 - **Wallet-less quote preview** — pass `walletAddress` to `useQuote` before a wallet is connected.
-- **Auto-refresh expired quotes** — `useQuote` now refetches automatically when `expiresAt` passes, so the "Intent quote has expired" pre-signing error no longer appears.
+- **Auto-refresh expired quotes (widget only)** — The Trails Widget now schedule a refetch when a quote's expiresAt passes (waking on the next user interaction), so the "Intent quote has expired" pre-signing error no longer appears in the built-in UI. 
 - **New utilities:** `erc20Utils`, `buildCall`, `buildApproveAndCall`, `buildErc20Approve`, `getAmountWithSlippage`, `resolveChainId`, `resolveChainName`.
 - **API helpers:** `getEarnMarkets`, `getEarnBalances`, `getEarnProviders`.
 - **New error codes:** `CHAIN_MISMATCH`, `CALL_RESOLUTION_FAILED`.
-- **`quoteKeys` factory** exported for targeted React Query cache invalidation.
 - **`0xtrails/hydrate` subpath** — Hydrate builders, selectors, and calldata helpers for v1.5 execution flows.
 
 ---
@@ -233,23 +221,17 @@ import { Pay, Fund, Swap, Earn, Withdraw } from '0xtrails/widget'
 ## Summary checklist
 
 <Steps>
-  <Step title="Remove paymasterUrls">
-    Delete the `paymasterUrls` prop from any `TrailsWidget` usage.
-  </Step>
-  <Step title="Rename lifecycle callbacks">
-    Rename all `onCheckout*` callbacks to the new names (see table above).
-  </Step>
-  <Step title="Remove src deep imports">
-    Replace any `0xtrails/src/...` imports with root or official subpath imports.
-  </Step>
-  <Step title="Remove deleted exports">
-    Remove `TrailsContracts` from `0xtrails` imports (use `@0xtrails/api` if still needed). Remove `determineRefundCall` usage entirely.
-  </Step>
   <Step title="Migrate useQuote to structured inputs">
     Replace flat props (`fromTokenAddress`, `fromChainId`, etc.) with `from: { token, chain, amount }` and `to: { token, chain, recipient, ... }`.
   </Step>
   <Step title="Update amount units">
-    Change `from.amount` / `to.amount` in `useQuote` and `tokenAmount` / `fromAmount` in `useTrailsSendTransaction` from raw wei to human-readable decimal strings.
+    Change `from.amount` / `to.amount` in `useQuote` and `tokenAmount` / `fromAmount` in `useTrailsSendTransaction` from raw wei to human-readable decimal strings or use the raw value amount props.
+  </Step>
+  <Step title="Remove paymasterUrls if used">
+    Delete the `paymasterUrls` prop from any `TrailsWidget` usage.
+  </Step>
+  <Step title="Rename lifecycle callbacks">
+    Rename all `onCheckout*` callbacks to the new names (see table above).
   </Step>
   <Step title="Migrate to.calldata (if used)">
     Replace `to.calldata` on `useQuote` with `actions` (for supported protocols) or `to.calls` (for custom contracts).
