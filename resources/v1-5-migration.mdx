@@ -6,6 +6,12 @@ icon: 'arrow-up-right-dots'
 
 This guide covers the breaking changes in **SDK 0.15.0** and **intent protocol v1.5**, and how to update your integration.
 
+<Warning>
+**`useQuote` amount units changed.** `from.amount` and `to.amount` are now human-readable decimal strings (e.g. `"1.5"`), not raw smallest-unit values. Internally they are scaled via `parseUnits` using the token's decimals. Passing a wei-style string like `"1500000000000000000"` will quote a vastly larger trade than intended — audit every `useQuote` call site before upgrading.
+
+To pass raw values, use `from.amountRaw` or `to.amountRaw` instead.
+</Warning>
+
 ## Breaking changes
 
 ### `paymasterUrls` removed from `TrailsWidget`
@@ -97,7 +103,9 @@ from: { token: 'USDC', chain: 'arbitrum', amount: '1000000' } // 1 USDC
 from: { token: 'USDC', chain: 'arbitrum', amount: '1' }       // 1 USDC
 ```
 
-The same applies to `useTrailsSendTransaction`: `tokenAmount` and `fromAmount` are now human-readable decimal strings (use tokenAmountRaw or fromAmountRaw for raw values). Native `value` remains raw wei bigint (wagmi-compatible).
+If you need to pass a raw value (bigint or string), use `from.amountRaw` or `to.amountRaw` instead of `from.amount` / `to.amount`.
+
+The same applies to `useTrailsSendTransaction`: `tokenAmount` and `fromAmount` are now human-readable decimal strings. Native `value` remains raw wei bigint (wagmi-compatible). Use `tokenAmountRaw` or `fromAmountRaw` to pass raw values. You can also pass `tokenDecimals` / `fromDecimals` overrides to skip the registry or on-chain decimal lookup.
 
 ---
 
@@ -209,6 +217,7 @@ import { Pay, Fund, Swap, Earn, Withdraw } from '0xtrails/widget'
 
 - **`intentProtocolVersion` prop** on `TrailsWidget` — pin the intent protocol version per-instance.
 - **`fromAmount` prop** on `TrailsWidget` — pre-populate source amount in human-readable units (e.g. `"1.5"`).
+- **`fundOptions` additions** on `TrailsWidget` — new `paymentMethodType` field (Meld payment method pre-selection, e.g. `"CREDIT_DEBIT_CARD"`) and `meshExchangeKey` field (Mesh exchange pre-selection, e.g. `"coinbase"`).
 - **Wallet-less quote preview** — pass `walletAddress` to `useQuote` before a wallet is connected.
 - **Auto-refresh expired quotes (widget only)** — The Trails Widget now schedule a refetch when a quote's expiresAt passes (waking on the next user interaction), so the "Intent quote has expired" pre-signing error no longer appears in the built-in UI. 
 - **New utilities:** `erc20Utils`, `buildCall`, `buildApproveAndCall`, `buildErc20Approve`, `getAmountWithSlippage`, `resolveChainId`, `resolveChainName`.
