@@ -170,7 +170,8 @@
           {
             "group": "Intents (Advanced)",
             "pages": [
-              "api-reference/endpoints/abort-intent"
+              "api-reference/endpoints/abort-intent",
+              "api-reference/endpoints/retry-intent"
             ]
           }
         ]

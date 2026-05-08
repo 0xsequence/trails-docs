@@ -4077,7 +4077,7 @@
         "properties": {
           "queries": {
             "type": "array",
-            "description": "Array of 1–25 balance queries",
+            "description": "Array of 1\u201325 balance queries",
             "minItems": 1,
             "maxItems": 25,
             "items": {
@@ -4131,6 +4131,36 @@
             "type": "object",
             "description": "JSON object containing unsigned transaction payloads",
             "additionalProperties": true
+          }
+        }
+      },
+      "RetryIntentRequest": {
+        "type": "object",
+        "required": [
+          "intentId",
+          "depositTransactionHash"
+        ],
+        "properties": {
+          "intentId": {
+            "type": "string"
+          },
+          "depositTransactionHash": {
+            "type": "string"
+          }
+        }
+      },
+      "RetryIntentResponse": {
+        "type": "object",
+        "required": [
+          "intentId",
+          "intentStatus"
+        ],
+        "properties": {
+          "intentId": {
+            "type": "string"
+          },
+          "intentStatus": {
+            "$ref": "#/components/schemas/IntentStatus"
           }
         }
       }
@@ -9279,6 +9309,187 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorUnexpected"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Trails/RetryIntent": {
+      "post": {
+        "operationId": "Trails-RetryIntent",
+        "tags": [
+          "Trails"
+        ],
+        "summary": "",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetryIntentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryIntentResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcEndpoint"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcRequestFailed"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcBadRoute"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcBadMethod"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcBadRequest"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcClientAborted"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcStreamLost"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorUnauthorized"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorPermissionDenied"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorSessionExpired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorMethodNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRequestConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorAborted"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorGeoblocked"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRateLimited"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorProjectNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorAccessKeyNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorAccessKeyMismatch"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorInvalidOrigin"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorInvalidService"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorUnauthorizedUser"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorQuotaExceeded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorQuotaRateLimit"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorNoDefaultKey"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorMaxAccessKeys"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorAtLeastOneKey"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorTimeout"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorInvalidArgument"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorUnavailable"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorQueryFailed"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorIntentStatus"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorUnsupportedNetwork"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorClientOutdated"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorIntentsSkipped"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorQuoteExpired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorHighPriceImpact"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorIntentsDisabled"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcBadResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcServerPanic"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorWebrpcInternalError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorUnexpected"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorChainNodeHealth"
                     }
                   ]
                 }
