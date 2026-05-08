@@ -1,0 +1,78 @@
+---
+title: RetryIntent
+openapi: ../trails-api.gen.json post /rpc/Trails/RetryIntent
+---
+
+## Overview
+
+The `RetryIntent` endpoint repairs a failed user-submitted deposit flow by validating a replacement deposit transaction hash, marking the deposit leg as confirmed, and requeueing downstream execution.
+
+## Use Cases
+
+- Recover from a failed or dropped deposit transaction
+- Resubmit a deposit with a corrected transaction hash
+- Resume execution of an intent that failed during the deposit phase
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique ID of the intent to retry
+- **depositTransactionHash** (string): The transaction hash of the new or corrected deposit transaction
+
+## Response
+
+- **intentId** (string): The ID of the retried intent
+- **intentStatus** (`IntentStatus`): Updated status of the intent after retry
+
+## Examples
+
+### Retry a Failed Deposit
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/RetryIntent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_abc123',
+    depositTransactionHash: '0xnewdeposithash...'
+  })
+});
+
+const { intentId, intentStatus } = await response.json();
+console.log(`Intent ${intentId} is now ${intentStatus}`);
+```
+
+### With the Trails SDK
+
+```typescript
+import { TrailsClient } from '0xtrails'
+
+const trails = new TrailsClient({ accessKey: 'YOUR_ACCESS_KEY' })
+
+const result = await trails.retryIntent({
+  intentId: 'intent_abc123',
+  depositTransactionHash: '0xnewdeposithash...'
+})
+
+console.log('Retry result:', result.intentStatus)
+```
+
+<Info>
+The replacement deposit transaction must be confirmed on-chain before calling this endpoint. The `depositTransactionHash` must correspond to a valid on-chain transaction that deposits the correct token and amount to the intent address.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetIntentReceipt" icon="receipt" href="/api-reference/endpoints/get-intent-receipt">
+    Check the receipt after retrying
+  </Card>
+
+  <Card title="WaitIntentReceipt" icon="clock" href="/api-reference/endpoints/wait-intent-receipt">
+    Stream updates until the intent completes
+  </Card>
+</CardGroup>
