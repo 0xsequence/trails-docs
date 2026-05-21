@@ -1,22 +1,23 @@
 {
+  "name": "trails-docs",
+  "description": "Documentation for Trails",
   "author": "James Lawton",
+  "version": "1.0.0",
+  "homepage": "https://github.com/0xsequence/docs-v3#readme",
+  "license": "ISC",
+  "main": "index.js",
+  "scripts": {
+    "dev": "mintlify dev --no-open",
+    "test": "mintlify broken-links",
+    "convert-openapi": "node .github/scripts/convert-yaml-to-json.js"
+  },
   "dependencies": {
     "@0xsequence/network": "latest",
     "js-yaml": "^4.1.0",
     "mintlify": "4.2.213"
   },
-  "description": "Documentation for Trails",
   "engines": {
     "node": ">=16.0.0"
   },
-  "homepage": "https://github.com/0xsequence/docs-v3#readme",
-  "license": "ISC",
-  "main": "index.js",
-  "name": "Trails",
-  "scripts": {
-    "convert-openapi": "node .github/scripts/convert-yaml-to-json.js",
-    "dev": "mintlify dev --no-open",
-    "test": "mintlify broken-links"
-  },
-  "version": "1.0.0"
+  "packageManager": "pnpm@11.1.0+sha512.0c44e842e5686b2c061a81adda8b2258bd8818e9704b2cf2c63d56b931a7b2e910092e085027003b96ca3911ab56a07f6df5abaed2be9925034cdd686a535b14"
 }
