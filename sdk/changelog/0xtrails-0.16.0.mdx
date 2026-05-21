@@ -1,0 +1,161 @@
+---
+title: "0xtrails@0.16.0"
+description: "Release notes and migration notes for the 0xtrails SDK v0.16.0"
+---
+
+_Released May 21, 2026_
+
+This release covers changes after `0xtrails@0.15.1` through `0xtrails@0.16.0`.
+
+## Migration Notes
+
+<Warning>
+In 0.16, Trails is independent of wagmi. You no longer need to configure wagmi just to render the Trails widget.
+</Warning>
+
+### If you only used wagmi for Trails
+
+Remove your wagmi dependency and provider setup. Trails will use its built-in EVM runtime by default.
+
+```diff
+-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+ import { TrailsWidget } from '0xtrails'
+-import { WagmiProvider, createConfig, http } from 'wagmi'
+-import { mainnet, polygon } from 'wagmi/chains'
+-
+-const wagmiConfig = createConfig({
+-  chains: [mainnet, polygon],
+-  transports: {
+-    [mainnet.id]: http(),
+-    [polygon.id]: http(),
+-  },
+-})
+-const queryClient = new QueryClient()
+ 
+ export function App() {
+   return (
+-    <WagmiProvider config={wagmiConfig}>
+-      <QueryClientProvider client={queryClient}>
+-        <TrailsWidget apiKey="YOUR_TRAILS_API_KEY" renderInline />
+-      </QueryClientProvider>
+-    </WagmiProvider>
++    <TrailsWidget apiKey="YOUR_TRAILS_API_KEY" renderInline />
+   )
+ }
+```
+
+If you use Trails hooks directly, keep `QueryClientProvider` and `TrailsProvider`, but you can still remove `WagmiProvider` unless the rest of your app uses wagmi.
+
+### If your app already uses wagmi
+
+Install the wagmi adapter and pass the same wagmi config to both wagmi and Trails.
+
+```bash
+pnpm i @0xtrails/adapter-wagmi
+```
+
+```tsx
+import { TrailsProvider, TrailsWidget } from '0xtrails'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { WagmiProvider } from 'wagmi'
+
+const apiKey = 'YOUR_TRAILS_API_KEY'
+const adapters = [wagmiAdapter({ wagmiConfig })]
+
+export function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <TrailsProvider config={{ trailsApiKey: apiKey, adapters }}>
+        <TrailsWidget renderInline />
+      </TrailsProvider>
+    </WagmiProvider>
+  )
+}
+```
+
+Using the same `wagmiConfig` instance lets Trails share the host app's wagmi session.
+
+### Advanced: custom adapters
+
+For more advanced wallet integrations, you can create your own adapter. 0.16 also exports a simple `evmAdapter` helper from `0xtrails` for EIP-1193-style wallets.
+
+```tsx
+import { TrailsWidget, evmAdapter } from '0xtrails'
+
+const adapters = [
+  evmAdapter({
+    wallets: {
+      id: 'custom-wallet',
+      name: 'Custom Wallet',
+      provider: customEip1193Provider,
+      iconUrl: '/custom-wallet.svg',
+    },
+  }),
+]
+
+export function App() {
+  return <TrailsWidget apiKey="YOUR_TRAILS_API_KEY" adapters={adapters} renderInline />
+}
+```
+
+## Highlights
+
+- Trails no longer requires wagmi for the default widget/runtime path; wagmi support is available through `@0xtrails/adapter-wagmi`.
+- Quote handling now supports passthrough quote, fee, and approval data from the Trails API.
+- Fund flows now support exact-output quoting and cleaner fiat defaults.
+- Widget filtering, wallet selection, and exchange-funding UX were improved.
+
+## New Package
+
+- Add `@0xtrails/adapter-wagmi` for apps that already use wagmi. Wagmi is now explicit and opt-in.
+
+## Features
+
+### Quotes, Intents, and Transactions
+
+- Add passthrough quote, fee, and approval support from the API.
+- Add exact-output fund flow support.
+- Pass widget `mode` through `QuoteIntent`.
+- Export composable action resolver APIs.
+- Add public client hooks/getters for supported chains and chain-scoped clients.
+
+### Widget and Checkout UX
+
+- Add `supportedChains` and `supportedTokensByChain` filtering for widget integrations.
+- Add recent chains to the chain selector.
+- Redirect WalletConnect funding flows to token selection and add a disconnect action.
+- Show WalletConnect wallets when direct-transfer is hidden from fund methods.
+- Start fiat fund amount empty instead of prefilled.
+- Improve quote input error state with a dedicated error block.
+- Remove origin payment estimation from UI.
+
+### Exchange / Onramp
+
+- Add Bluvo exchange integration.
+
+## Improvements
+
+- Restrict widget `from.currency` to fiat and `from.token` to ERC-20 tokens.
+- Improve token list resolution, origin/destination token selection, custom token search, and default token selection.
+- Update public exports from `0xtrails`, including query hooks, explorer helper, country hooks, indexer gateway hook, intent receipt monitor, action builders, dynamic/self sentinels, and prepare-send types.
+- Update SOMI token logo to the new Somnia branding.
+- Update the SDK logo.
+- Update selected-wallet styling for the OMS theme.
+
+## Fixes
+
+- Fix send transaction destination context.
+- Fix swap funding method selection.
+- Fix fiat fund flow so the amount starts empty.
+- Fix WalletConnect wallet visibility when direct-transfer is hidden from fund methods.
+- Avoid ConnectKit button rendering in Privy wallet modes.
+- Guard v1-only fields in `depositSignature`.
+- Deprecate v1 gasless helpers.
+- Fix token and balance query handling around supported chain/token filters.
+
+## Breaking Changes
+
+- Wagmi is no longer part of the default Trails runtime setup. Apps that need to share an existing wagmi session must install and configure `@0xtrails/adapter-wagmi`.
+- Default wagmi connector helpers were removed.
+- Xai and Blast were removed from SDK chain support.
+- Widget integration typing is stricter: `from.currency` is fiat-only and `from.token` is ERC-20-only.

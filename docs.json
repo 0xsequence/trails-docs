@@ -110,7 +110,8 @@
               "sdk/theming",
               "sdk/customization",
               "sdk/quote-providers",
-              "sdk/tokens-and-chains"
+              "sdk/tokens-and-chains",
+              "sdk/changelog"
             ]
           }
         ]
