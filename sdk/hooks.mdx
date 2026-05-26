@@ -28,18 +28,48 @@ import { TrailsProvider } from '0xtrails'
 </TrailsProvider>
 ```
 
-### Apps without wagmi and react-query
+### Apps without wagmi
 
-The Trails SDK uses wagmi and `@tanstack/react-query` internally. If your app already sets up those providers, `TrailsProvider` will use them automatically.
+<Note>
+Since `0xtrails@0.16.0`, Trails uses a built-in EVM runtime by default and no longer requires wagmi for the widget or the SDK hooks. See the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0) for migration details.
+</Note>
 
-If your app does not already include these providers, you need to add them above `TrailsProvider`:
+The SDK still uses `@tanstack/react-query` internally. If your app does not already include a `QueryClientProvider`, add one above `TrailsProvider`:
 
 ```tsx
 'use client'
 
 import { TrailsProvider } from '0xtrails'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createConfig, http, WagmiProvider } from 'wagmi'
+
+const queryClient = new QueryClient()
+
+export const Providers = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+        {children}
+      </TrailsProvider>
+    </QueryClientProvider>
+  )
+}
+```
+
+### Apps with wagmi
+
+If your app already uses wagmi and you want Trails to share the same wagmi session, install the wagmi adapter and pass your existing wagmi config through `adapters`:
+
+```bash
+pnpm i @0xtrails/adapter-wagmi
+```
+
+```tsx
+'use client'
+
+import { TrailsProvider } from '0xtrails'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider, createConfig, http } from 'wagmi'
 import { arbitrum, base, polygon } from 'wagmi/chains'
 
 const wagmiConfig = createConfig({
@@ -52,12 +82,13 @@ const wagmiConfig = createConfig({
 })
 
 const queryClient = new QueryClient()
+const adapters = [wagmiAdapter({ wagmiConfig })]
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
           {children}
         </TrailsProvider>
       </QueryClientProvider>
@@ -66,9 +97,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
 }
 ```
 
-<Note>
-This requirement is temporary. A future SDK release will bundle these dependencies so only `TrailsProvider` is needed.
-</Note>
+For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper exported from `0xtrails` (see the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0#advanced-custom-adapters)).
 
 ### Configuration Options
 
