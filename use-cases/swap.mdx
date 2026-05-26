@@ -50,8 +50,8 @@ export const ETHtoUSDC = () => {
   return (
     <Swap
       apiKey="YOUR_API_KEY"
-      from={{ currency: "ETH", chain: "ethereum" }}
-      to={{ currency: "USDC", chain: "base" }}
+      from={{ token: "ETH", chain: "ethereum" }}
+      to={{ token: "USDC", chain: "base" }}
       onSwapSuccess={({ sessionId }) => {
         console.log('Swap completed:', sessionId)
       }}
@@ -72,8 +72,8 @@ export const CCTPSwap = () => {
     <Swap
       apiKey="YOUR_API_KEY"
       bridgeProvider="CCTP"
-      from={{ currency: "USDC", chain: "ethereum" }}
-      to={{ currency: "USDC", chain: "base" }}
+      from={{ token: "USDC", chain: "ethereum" }}
+      to={{ token: "USDC", chain: "base" }}
       onSwapSuccess={({ sessionId }) => {
         console.log('Swap completed:', sessionId)
       }}

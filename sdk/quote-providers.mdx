@@ -31,8 +31,8 @@ import { Swap } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   swapProvider="SUSHI"    // Provider for on-chain swaps
   bridgeProvider="RELAY"  // Provider for cross-chain bridging
-  from={{ currency: "USDC", chain: "ethereum" }}
-  to={{ currency: "USDC", chain: "base" }}
+  from={{ token: "USDC", chain: "ethereum" }}
+  to={{ token: "USDC", chain: "base" }}
 />
 ```
 
@@ -97,7 +97,7 @@ Circle's Cross-Chain Transfer Protocol enables native USDC bridging without wrap
 <Swap
   apiKey="YOUR_API_KEY"
   bridgeProvider="CCTP"
-  to={{ currency: "USDC" }}
+  to={{ token: "USDC" }}
 />
 ```
 

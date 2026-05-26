@@ -19,7 +19,7 @@ import { Pay } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   to={{
     recipient: "0xYourAddress",
-    currency: "USDC",
+    token: "USDC",
     chain: "base",
     amount: "50",
   }}
@@ -48,8 +48,8 @@ Pre-select where the user pays from by adding a `from` object. Omit to let the u
 ```tsx
 <Pay
   apiKey="YOUR_API_KEY"
-  to={{ recipient: "0x...", currency: "USDC", chain: "base", amount: "50" }}
-  from={{ currency: "ETH", chain: "ethereum" }}
+  to={{ recipient: "0x...", token: "USDC", chain: "base", amount: "50" }}
+  from={{ token: "ETH", chain: "ethereum" }}
 />
 ```
 
@@ -68,7 +68,7 @@ To control the payment method, set `paymentMethod`:
 |------|------|-------------|
 | `to.calldata` | `string` | ABI-encoded calldata to execute on the destination chain after payment |
 | `to.defaultChain` | `ChainIdentifier` | Default chain — user can change |
-| `to.defaultCurrency` | `string` | Default token — user can change |
+| `to.defaultToken` | `string` | Default token — user can change |
 
 ### Shared options
 
@@ -107,7 +107,7 @@ import { Pay } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   to={{
     recipient: "0xYourMerchantAddress",
-    currency: "USDC",
+    token: "USDC",
     chain: "polygon",
     amount: "25",
   }}
@@ -128,12 +128,12 @@ Lock the user to pay from ETH on Ethereum:
   apiKey="YOUR_API_KEY"
   to={{
     recipient: "0x...",
-    currency: "USDC",
+    token: "USDC",
     chain: "base",
     amount: "50",
   }}
   from={{
-    currency: "ETH",
+    token: "ETH",
     chain: "ethereum",
   }}
   onPaymentSuccess={({ sessionId }) => console.log("paid", sessionId)}
@@ -150,7 +150,7 @@ Let the user pay by sending to an address directly:
   paymentMethod="CRYPTO_TRANSFER"
   to={{
     recipient: "0x...",
-    currency: "USDC",
+    token: "USDC",
     chain: "base",
     amount: "50",
   }}
@@ -167,7 +167,7 @@ Let the user pay with a credit card:
   paymentMethod="CREDIT_DEBIT_CARD"
   to={{
     recipient: "0x...",
-    currency: "USDC",
+    token: "USDC",
     chain: "base",
     amount: "50",
   }}
@@ -198,7 +198,7 @@ const mintCalldata = encodeFunctionData({
   apiKey="YOUR_API_KEY"
   to={{
     recipient: "0xNFT_CONTRACT",
-    currency: "ETH",
+    token: "ETH",
     chain: "arbitrum",
     amount: "0.00002",
     calldata: mintCalldata,
@@ -216,7 +216,7 @@ const mintCalldata = encodeFunctionData({
   apiKey="YOUR_API_KEY"
   to={{
     recipient: "0x...",
-    currency: "USDC",
+    token: "USDC",
     chain: "base",
     amount: "50",
   }}

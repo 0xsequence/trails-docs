@@ -49,21 +49,33 @@ Pre-configure the destination protocol:
 | Prop | Type | Description |
 |------|------|-------------|
 | `to.recipient` | `string` | Protocol contract address |
-| `to.currency` | `string` | Token to deposit (symbol or address) |
+| `to.token` | `string` | Token to deposit — symbol or contract address |
 | `to.chain` | `ChainIdentifier` | Protocol chain — name, ID, or viem Chain |
-| `to.defaultCurrency` | `string` | Default token — user can change |
+| `to.defaultToken` | `string` | Default token — user can change |
 | `to.defaultChain` | `ChainIdentifier` | Default chain — user can change |
 | `to.amount` | `string \| number` | Fixed deposit amount |
 | `to.calldata` | `string` | ABI-encoded function call to execute after deposit |
 
 ### Source (optional)
 
+The `from` shape is a discriminated union on `paymentMethod`.
+
+**Crypto source** (`paymentMethod` is `"CONNECTED_WALLET"`, `"EXCHANGE"`, `"CRYPTO_TRANSFER"`, or omitted):
+
 | Prop | Type | Description |
 |------|------|-------------|
-| `from.currency` | `string` | Source token symbol or address |
+| `from.token` | `string` | Source ERC-20 token — symbol or contract address |
 | `from.chain` | `ChainIdentifier` | Source chain |
 | `from.amount` | `string \| number` | Source amount |
 | `from.walletAddress` | `string` | Source wallet (defaults to connected wallet) |
+| `from.exchange` | `string` | Mesh exchange key (e.g. `"coinbase"`). `EXCHANGE` arm only. |
+
+**Fiat source** (`paymentMethod` is `"CREDIT_DEBIT_CARD"`):
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `from.currency` | `string` | ISO 4217 fiat code, e.g. `"USD"`, `"EUR"`, `"GBP"` |
+| `from.amount` | `string \| number` | Fiat amount to charge |
 
 ### Payment method (optional)
 
