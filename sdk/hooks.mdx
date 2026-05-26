@@ -28,18 +28,48 @@ import { TrailsProvider } from '0xtrails'
 </TrailsProvider>
 ```
 
-### Apps without wagmi and react-query
+### Apps without wagmi
 
-The Trails SDK uses wagmi and `@tanstack/react-query` internally. If your app already sets up those providers, `TrailsProvider` will use them automatically.
+<Note>
+Since `0xtrails@0.16.0`, Trails uses a built-in EVM runtime by default and no longer requires wagmi for the widget or the SDK hooks. See the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0) for migration details.
+</Note>
 
-If your app does not already include these providers, you need to add them above `TrailsProvider`:
+The SDK still uses `@tanstack/react-query` internally. If your app does not already include a `QueryClientProvider`, add one above `TrailsProvider`:
 
 ```tsx
 'use client'
 
 import { TrailsProvider } from '0xtrails'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createConfig, http, WagmiProvider } from 'wagmi'
+
+const queryClient = new QueryClient()
+
+export const Providers = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+        {children}
+      </TrailsProvider>
+    </QueryClientProvider>
+  )
+}
+```
+
+### Apps with wagmi
+
+If your app already uses wagmi and you want Trails to share the same wagmi session, install the wagmi adapter and pass your existing wagmi config through `adapters`:
+
+```bash
+pnpm i @0xtrails/adapter-wagmi
+```
+
+```tsx
+'use client'
+
+import { TrailsProvider } from '0xtrails'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider, createConfig, http } from 'wagmi'
 import { arbitrum, base, polygon } from 'wagmi/chains'
 
 const wagmiConfig = createConfig({
@@ -52,12 +82,13 @@ const wagmiConfig = createConfig({
 })
 
 const queryClient = new QueryClient()
+const adapters = [wagmiAdapter({ wagmiConfig })]
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
           {children}
         </TrailsProvider>
       </QueryClientProvider>
@@ -66,9 +97,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
 }
 ```
 
-<Note>
-This requirement is temporary. A future SDK release will bundle these dependencies so only `TrailsProvider` is needed.
-</Note>
+For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper exported from `0xtrails` (see the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0#advanced-custom-adapters)).
 
 ### Configuration Options
 
@@ -85,6 +114,49 @@ This requirement is temporary. A future SDK release will bundle these dependenci
 | `slippageTolerance` | `string \| number` | No | Default slippage tolerance for swaps (e.g., `0.005` for 0.5%). |
 | `debug` | `boolean` | No | Enable debug logging (default: `false`). |
 | `intentProtocol` | `"v1" \| "v1.5"` | No | Override intent protocol version (default: `"v1.5"`). See [Protocol v1.5](/architecture/v1-5). |
+
+## Wallet adapters
+
+<Note>
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). The `adapters` config controls Trails's wallet runtime. Omit it to use the built-in EVM runtime, or pass adapters to integrate with an existing wallet stack.
+</Note>
+
+### evmAdapter
+
+`evmAdapter` is exported from `0xtrails` for EIP-1193-style wallets (custom in-app wallets, embedded wallets, or any provider that conforms to the EIP-1193 interface).
+
+```tsx
+import { TrailsProvider, evmAdapter } from '0xtrails'
+
+const adapters = [
+  evmAdapter({
+    wallets: {
+      id: 'custom-wallet',
+      name: 'Custom Wallet',
+      provider: customEip1193Provider,
+      iconUrl: '/custom-wallet.svg',
+    },
+  }),
+]
+
+<TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+  <App />
+</TrailsProvider>
+```
+
+### wagmiAdapter
+
+`wagmiAdapter` lives in the separate `@0xtrails/adapter-wagmi` package and lets Trails share an existing wagmi session. See [Apps with wagmi](#apps-with-wagmi) above for the full setup.
+
+```bash
+pnpm i @0xtrails/adapter-wagmi
+```
+
+```tsx
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+
+const adapters = [wagmiAdapter({ wagmiConfig })]
+```
 
 ## Chains
 
@@ -122,6 +194,31 @@ type Chain = {
   }
   blockExplorerUrls?: string[]
   imageUrl?: string
+}
+```
+
+### Public Clients
+
+<Note>
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Use these to get a viem `PublicClient` for any supported chain without configuring transports yourself — Trails resolves the RPC via the Sequence node gateway using your API key.
+</Note>
+
+```ts
+import { usePublicClient, usePublicClientGetter } from '0xtrails'
+```
+
+- `usePublicClient(chainId?: number)`: returns a viem `PublicClient | null` for the given chain.
+- `usePublicClientGetter()`: returns a `(chainId: number, retryCount?: number) => PublicClient | null` you can call inside event handlers or effects.
+
+```tsx
+import { usePublicClient, usePublicClientGetter } from '0xtrails'
+
+const base = usePublicClient(8453)
+const getClient = usePublicClientGetter()
+
+async function readBalanceOn(chainId: number, address: `0x${string}`) {
+  const client = getClient(chainId)
+  return client?.getBalance({ address })
 }
 ```
 
@@ -719,6 +816,120 @@ type UseEarnBalancesReturn = {
   error: Error | null
   refetch: () => void
 }
+```
+
+### useResolveActions Hook
+
+<Note>
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Resolves an array of [composable actions](/sdk/composable-actions/overview) (`lend`, `deposit`, `swap`, `assertCondition`, `custom`) into the concrete `Call[]` you can pass to `useTrailsSendTransaction` or sign directly.
+</Note>
+
+```tsx
+import { useResolveActions, lend, useTrailsClient, usePublicClient } from '0xtrails'
+
+const trailsClient = useTrailsClient()
+const publicClient = usePublicClient(8453)
+
+const { calls, isLoading, error } = useResolveActions({
+  actions: [lend({ marketId: 'base-usdc-aave-v3-lending', amount: '100' })],
+  chainId: 8453,
+  destinationChain: 'base',
+  userWalletAddress: '0xUserAddress',
+  trailsClient,
+  publicClient,
+})
+```
+
+#### Types
+
+```ts
+type UseResolveActionsProps = {
+  actions: ActionItem[]
+  chainId: number | undefined
+  destinationChain: ChainIdentifier
+  userWalletAddress: `0x${string}` | undefined
+  trailsClient: TrailsClient | null
+  publicClient: PublicClient | null
+}
+
+type UseResolveActionsReturn = {
+  calls: Call[] | null
+  isLoading: boolean
+  error: QuoteError | null
+}
+```
+
+## Fiat & Exchange Rates
+
+<Note>
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Use these to drive fiat-aware UI (currency selectors, USD-to-local-currency displays) without rolling your own pricing source.
+</Note>
+
+```ts
+import { useFiatCurrencyList, useExchangeRate } from '0xtrails'
+```
+
+### useFiatCurrencyList
+
+Returns the list of fiat currencies the Trails API supports for the fiat on-ramp flow. Backed by `@tanstack/react-query`.
+
+```tsx
+const { data: currencies, isLoading } = useFiatCurrencyList()
+```
+
+### useExchangeRate
+
+Fetch the exchange rate between two currencies. Handles same-currency (returns `1`) and direction inversion (e.g. EUR → USD inverts the USD → EUR rate).
+
+```tsx
+const { exchangeRate, isLoading, error } = useExchangeRate({
+  fromCurrency: 'USD',
+  toCurrency: 'EUR',
+})
+```
+
+#### Options
+
+```ts
+type UseExchangeRateOptions = {
+  fromCurrency?: string // ISO 4217, default "USD"
+  toCurrency?: string   // ISO 4217, default "USD"
+  disabled?: boolean    // skip the query
+}
+
+type UseExchangeRateResult = {
+  exchangeRate: number | undefined
+  isLoading: boolean
+  error: Error | null
+}
+```
+
+## Onramp Providers
+
+<Note>
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Use these to drive your own fiat on-ramp UI (e.g. payment method picker, exchange selector) outside the Trails widget. Backed by Mesh.
+</Note>
+
+```ts
+import { useMeldPaymentMethods, useMeldServiceProviders } from '0xtrails'
+```
+
+### useMeldPaymentMethods
+
+List the payment methods available for a given fiat currency (e.g. `CREDIT_DEBIT_CARD`, `APPLE_PAY`, `GOOGLE_PAY`, `SEPA`, `PAYPAL`).
+
+```tsx
+const { data: methods, isLoading } = useMeldPaymentMethods('EUR')
+```
+
+### useMeldServiceProviders
+
+List the on-ramp service providers available, optionally filtered.
+
+```tsx
+const { data: providers } = useMeldServiceProviders({
+  // any fields of GetMeldServiceProvidersRequest
+})
 ```
 
 ## Constants

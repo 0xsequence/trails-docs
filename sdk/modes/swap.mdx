@@ -17,8 +17,8 @@ import { Swap } from '0xtrails/widget'
 
 <Swap
   apiKey="YOUR_API_KEY"
-  from={{ currency: "ETH", chain: "ethereum" }}
-  to={{ currency: "USDC", chain: "base" }}
+  from={{ token: "ETH", chain: "ethereum" }}
+  to={{ token: "USDC", chain: "base" }}
 />
 ```
 
@@ -34,23 +34,37 @@ User picks the amount in the UI.
 
 ### Source (optional)
 
+The `from` shape is a discriminated union on `paymentMethod`. For wallet, exchange, and crypto-transfer flows, source is crypto; for the fiat on-ramp arm, source is fiat.
+
+**When `paymentMethod` is `"CONNECTED_WALLET"`, `"EXCHANGE"`, `"CRYPTO_TRANSFER"`, or omitted (crypto source):**
+
 | Prop | Type | Description |
 |------|------|-------------|
-| `from.currency` | `string` | Pre-select source token symbol or address |
+| `from.token` | `string` | Pre-select source ERC-20 token — symbol (e.g. `"USDC"`) or contract address |
 | `from.chain` | `ChainIdentifier` | Pre-select source chain — name, ID, or viem Chain |
 | `from.amount` | `string \| number` | Pre-fill source amount |
 | `from.walletAddress` | `string` | Source wallet address (defaults to connected wallet) |
+| `from.exchange` | `string` | Mesh exchange key (e.g. `"coinbase"`). `EXCHANGE` arm only. |
+
+**When `paymentMethod` is `"CREDIT_DEBIT_CARD"` (fiat source):**
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `from.currency` | `string` | ISO 4217 fiat code, e.g. `"USD"`, `"EUR"`, `"GBP"` |
+| `from.amount` | `string \| number` | Pre-fill fiat amount |
 
 ### Destination (optional)
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `to.currency` | `string` | Pre-select or lock destination token |
+| `to.token` | `string` | Pre-select or lock destination token — symbol or contract address |
 | `to.chain` | `ChainIdentifier` | Pre-select or lock destination chain |
 | `to.amount` | `string \| number` | Pre-fill destination amount |
-| `to.defaultCurrency` | `string` | Default destination token — user can change |
+| `to.defaultToken` | `string` | Default destination token — user can change |
 | `to.defaultChain` | `ChainIdentifier` | Default destination chain — user can change |
 | `to.calldata` | `string` | ABI-encoded calldata to execute after the swap lands |
+| `to.supportedChains` | `ChainIdentifier[]` | Restrict destination chains the user can pick |
+| `to.supportedTokensByChain` | `SupportedTokensByChainConfig[]` | Per-chain destination token allowlist |
 
 ### Payment method (optional)
 
@@ -101,8 +115,8 @@ import { Swap } from '0xtrails/widget'
 ```tsx
 <Swap
   apiKey="YOUR_API_KEY"
-  from={{ currency: "ETH", chain: "ethereum" }}
-  to={{ currency: "USDC", chain: "base" }}
+  from={{ token: "ETH", chain: "ethereum" }}
+  to={{ token: "USDC", chain: "base" }}
   onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
 />
 ```
@@ -112,7 +126,7 @@ import { Swap } from '0xtrails/widget'
 ```tsx
 <Swap
   apiKey="YOUR_API_KEY"
-  to={{ currency: "USDC", chain: "base" }}
+  to={{ token: "USDC", chain: "base" }}
   onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
 />
 ```
@@ -122,8 +136,8 @@ import { Swap } from '0xtrails/widget'
 ```tsx
 <Swap
   apiKey="YOUR_API_KEY"
-  from={{ currency: "USDC", chain: "ethereum" }}
-  to={{ currency: "USDC", chain: "base", amount: "100" }}
+  from={{ token: "USDC", chain: "ethereum" }}
+  to={{ token: "USDC", chain: "base", amount: "100" }}
   onSwapSuccess={({ sessionId }) => console.log("bridged", sessionId)}
 />
 ```
@@ -134,14 +148,18 @@ import { Swap } from '0xtrails/widget'
 <Swap
   apiKey="YOUR_API_KEY"
   bridgeProvider="CCTP"
-  from={{ currency: "USDC", chain: "ethereum" }}
-  to={{ currency: "USDC", chain: "base" }}
+  from={{ token: "USDC", chain: "ethereum" }}
+  to={{ token: "USDC", chain: "base" }}
 />
 ```
 
 ## Headless implementation
 
 For custom UI, use the `useQuote` hook directly:
+
+<Note>
+This example reads `walletClient` and `address` from wagmi hooks. Since [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0), wagmi is opt-in — install `@0xtrails/adapter-wagmi` and configure `wagmiAdapter` to keep using wagmi alongside Trails. See [SDK Hooks](/sdk/hooks#apps-with-wagmi).
+</Note>
 
 ```tsx
 import { useQuote } from '0xtrails'

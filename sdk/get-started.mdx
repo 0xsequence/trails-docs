@@ -60,7 +60,7 @@ export const PaymentExample = () => {
       apiKey="YOUR_API_KEY"
       to={{
         recipient: "0x97c4A952b46bEcaD0663f76357d3776ba11566E1",
-        currency: "USDC",
+        token: "USDC",
         chain: "base",
         amount: "10",
       }}
@@ -85,8 +85,8 @@ export const SwapExample = () => {
   return (
     <Swap
       apiKey="YOUR_API_KEY"
-      from={{ currency: "ETH", chain: "ethereum" }}
-      to={{ currency: "USDC", chain: "base" }}
+      from={{ token: "ETH", chain: "ethereum" }}
+      to={{ token: "USDC", chain: "base" }}
       onSwapSuccess={({ sessionId }) => {
         console.log('Swap completed:', sessionId)
       }}
@@ -110,7 +110,7 @@ export const FundExample = () => {
       apiKey="YOUR_API_KEY"
       to={{
         recipient: "0x97c4A952b46bEcaD0663f76357d3776ba11566E1",
-        currency: "USDC",
+        token: "USDC",
         chain: "base",
       }}
       onFundingSuccess={({ sessionId }) => {
@@ -134,7 +134,7 @@ export const WithdrawExample = () => {
   return (
     <Withdraw
       apiKey="YOUR_API_KEY"
-      from={{ currency: "USDC", chain: "base" }}
+      from={{ token: "USDC", chain: "base" }}
       onWithdrawSuccess={({ sessionId }) => {
         console.log('Withdrawal completed:', sessionId)
       }}
@@ -171,7 +171,7 @@ All focused components expose consistent lifecycle callbacks. Replace `Xxx` with
 ```tsx
 <Pay
   apiKey="YOUR_API_KEY"
-  to={{ recipient: "0x...", currency: "USDC", chain: "base", amount: "10" }}
+  to={{ recipient: "0x...", token: "USDC", chain: "base", amount: "10" }}
   onPaymentStart={({ sessionId }) => {
     console.log('Started:', sessionId)
   }}

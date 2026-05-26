@@ -50,8 +50,8 @@ export const ETHtoUSDC = () => {
   return (
     <Swap
       apiKey="YOUR_API_KEY"
-      from={{ currency: "ETH", chain: "ethereum" }}
-      to={{ currency: "USDC", chain: "base" }}
+      from={{ token: "ETH", chain: "ethereum" }}
+      to={{ token: "USDC", chain: "base" }}
       onSwapSuccess={({ sessionId }) => {
         console.log('Swap completed:', sessionId)
       }}
@@ -72,8 +72,8 @@ export const CCTPSwap = () => {
     <Swap
       apiKey="YOUR_API_KEY"
       bridgeProvider="CCTP"
-      from={{ currency: "USDC", chain: "ethereum" }}
-      to={{ currency: "USDC", chain: "base" }}
+      from={{ token: "USDC", chain: "ethereum" }}
+      to={{ token: "USDC", chain: "base" }}
       onSwapSuccess={({ sessionId }) => {
         console.log('Swap completed:', sessionId)
       }}
@@ -87,6 +87,10 @@ export const CCTPSwap = () => {
 ### Headless swap with useQuote
 
 For custom UI implementations, use the `useQuote` hook directly:
+
+<Note>
+This example pulls `walletClient` and `address` from wagmi hooks. Since [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0), wagmi is opt-in — install `@0xtrails/adapter-wagmi` and configure `wagmiAdapter` to keep using wagmi alongside Trails. See [SDK Hooks](/sdk/hooks#apps-with-wagmi).
+</Note>
 
 ```tsx
 import { useQuote } from '0xtrails'

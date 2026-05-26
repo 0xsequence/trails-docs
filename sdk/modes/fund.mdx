@@ -22,7 +22,7 @@ import { Fund } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "USD", amount: 100 }}
-  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+  to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
   onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
 />
 ```
@@ -33,7 +33,7 @@ import { Fund } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   paymentMethod="EXCHANGE"
   from={{ exchange: "coinbase" }}
-  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+  to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
 />
 ```
 
@@ -46,7 +46,7 @@ The exchange (CEX) flow requires your app to be added to the allowlist. Contact 
 <Fund
   apiKey="YOUR_API_KEY"
   paymentMethod="CONNECTED_WALLET"
-  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+  to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
 />
 
 // Fully open — let the user pick their preferred method
@@ -68,11 +68,13 @@ See [Source selection](#source-selection-optional) for all `paymentMethod` value
 | Prop | Type | Description |
 |------|------|-------------|
 | `to.recipient` | `string` | Wallet or contract address that receives the funds |
-| `to.currency` | `string` | Token symbol or address |
+| `to.token` | `string` | Destination token — symbol or contract address |
 | `to.chain` | `ChainIdentifier` | Destination chain — name, ID, or viem Chain |
-| `to.defaultCurrency` | `string` | Default token — user can change |
+| `to.defaultToken` | `string` | Default token — user can change |
 | `to.defaultChain` | `ChainIdentifier` | Default chain — user can change |
 | `to.calldata` | `string` | ABI-encoded calldata to execute after funds arrive |
+| `to.supportedChains` | `ChainIdentifier[]` | Restrict destination chains the user can pick |
+| `to.supportedTokensByChain` | `SupportedTokensByChainConfig[]` | Per-chain destination token allowlist |
 
 ### Source selection (optional)
 
@@ -95,7 +97,7 @@ When `paymentMethod` is set, the `from` object applies to that method:
   apiKey="YOUR_API_KEY"
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "EUR", amount: 100 }}
-  to={{ currency: "USDC", chain: "base" }}
+  to={{ token: "USDC", chain: "base" }}
 />
 
 // Exchange onramp from Coinbase
@@ -103,7 +105,7 @@ When `paymentMethod` is set, the `from` object applies to that method:
   apiKey="YOUR_API_KEY"
   paymentMethod="EXCHANGE"
   from={{ exchange: "coinbase" }}
-  to={{ currency: "USDC", chain: "base" }}
+  to={{ token: "USDC", chain: "base" }}
 />
 ```
 
@@ -138,7 +140,7 @@ import { Fund } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "EUR", amount: 100 }}
-  to={{ currency: "USDC", chain: "base" }}
+  to={{ token: "USDC", chain: "base" }}
   onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
 />
 ```
@@ -149,8 +151,8 @@ import { Fund } from '0xtrails/widget'
 <Fund
   apiKey="YOUR_API_KEY"
   paymentMethod="EXCHANGE"
-  from={{ currency: "USDC", chain: "base", exchange: "coinbase" }}
-  to={{ currency: "KAT", chain: "katana" }}
+  from={{ token: "USDC", chain: "base", exchange: "coinbase" }}
+  to={{ token: "KAT", chain: "katana" }}
 />
 ```
 
@@ -162,7 +164,7 @@ import { Fund } from '0xtrails/widget'
   paymentMethod="CRYPTO_TRANSFER"
   to={{
     recipient: "0x...",
-    currency: "USDC",
+    token: "USDC",
     chain: "base",
   }}
 />
@@ -175,7 +177,7 @@ Show only fiat and exchange onramps, hide the rest:
 ```tsx
 <Fund
   apiKey="YOUR_API_KEY"
-  to={{ currency: "USDC", chain: "base" }}
+  to={{ token: "USDC", chain: "base" }}
   fundMethodsList={["cc-onramp", "exchange"]}
   hideUnlistedFundMethods={true}
 />
@@ -209,7 +211,7 @@ To open the exchange flow directly instead of showing the funding method selecto
       environment: 'production',
     },
   }}
-  to={{ recipient: "0xYourAddress", currency: "USDC", chain: "base" }}
+  to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
   onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
 />
 ```
@@ -276,7 +278,7 @@ const depositCalldata = encodeFunctionData({
   apiKey="YOUR_API_KEY"
   to={{
     recipient: "0xYearnVault",
-    currency: "USDC",
+    token: "USDC",
     chain: "katana",
     calldata: depositCalldata,
   }}

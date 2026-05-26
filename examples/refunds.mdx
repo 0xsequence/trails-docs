@@ -46,6 +46,10 @@ While Trails automatically refunds upon transaction failures, there may be edge 
 
 ### Basic Usage
 
+<Note>
+This example uses wagmi hooks (`useWalletClient`, `useAccount`). Since [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0), wagmi is opt-in — install `@0xtrails/adapter-wagmi` and pass `wagmiAdapter({ wagmiConfig })` in `adapters` for these hooks to resolve. See [SDK Hooks](/sdk/hooks#apps-with-wagmi).
+</Note>
+
 ```tsx
 import { useIntentRecover } from '0xtrails'
 import { useWalletClient, useAccount } from 'wagmi'

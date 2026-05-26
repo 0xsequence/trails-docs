@@ -87,6 +87,12 @@ Trails + x402 creates a powerful payment flow:
 pnpm add 0xtrails x402-axios axios
 ```
 
+This example pairs Trails with an existing wagmi + RainbowKit setup. Since [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0), wagmi is opt-in for Trails — also install `@0xtrails/adapter-wagmi` so Trails can share the wagmi session:
+
+```bash
+pnpm add @0xtrails/adapter-wagmi
+```
+
 #### 2. Configure Providers
 
 <CodeGroup>
@@ -95,6 +101,8 @@ import { WagmiProvider, createConfig, http } from "wagmi"
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit"
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { mainnet, base } from "wagmi/chains"
+import { TrailsProvider } from "0xtrails"
+import { wagmiAdapter } from "@0xtrails/adapter-wagmi"
 
 const config = createConfig({
   chains: [mainnet, base],
@@ -107,13 +115,17 @@ const config = createConfig({
 
 const queryClient = new QueryClient()
 
+const adapters = [wagmiAdapter({ wagmiConfig: config })]
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          {children}
-        </RainbowKitProvider>
+        <TrailsProvider config={{ trailsApiKey: "YOUR_TRAILS_API_KEY", adapters }}>
+          <RainbowKitProvider>
+            {children}
+          </RainbowKitProvider>
+        </TrailsProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )

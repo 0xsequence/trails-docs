@@ -152,7 +152,8 @@ import { createWalletClient, createPublicClient, http, encodeFunctionData, erc20
 import { privateKeyToAccount } from 'viem/accounts';
 import { base, arbitrum, mainnet } from 'viem/chains';
 
-// Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
+// Create clients (in React, you can also use the SDK's usePublicClient hook, or
+// useWalletClient from wagmi when paired with @0xtrails/adapter-wagmi)
 const walletClient = createWalletClient({
   account: privateKeyToAccount('0x...'),
   chain: arbitrum, // Set to the origin chain
@@ -215,7 +216,8 @@ import { createWalletClient, createPublicClient, http, encodeFunctionData, erc20
 import { privateKeyToAccount } from 'viem/accounts';
 import { base, arbitrum, mainnet } from 'viem/chains';
 
-// Create clients (or use wagmi hooks: useWalletClient, usePublicClient)
+// Create clients (in React, you can also use the SDK's usePublicClient hook, or
+// useWalletClient from wagmi when paired with @0xtrails/adapter-wagmi)
 const walletClient = createWalletClient({
   account: privateKeyToAccount('0x...'),
   chain: arbitrum, // Set to the origin chain

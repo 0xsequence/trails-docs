@@ -38,11 +38,13 @@ appMetadata={{
 |------|------|-------------|
 | `walletConnectProjectId` | `string` | WalletConnect project ID |
 | `walletOptions` | `string[]` | Wallet connector IDs to show (e.g. `["metamask", "walletconnect"]`) |
-| `wagmiConnectors` | `Connector[]` | Custom wagmi connectors |
-| `decoupleWagmi` | `boolean` | Decouple from external wagmi provider |
-| `hideDisconnect` | `boolean` | Hide the disconnect button |
+| `adapters` | `TrailsAdapterEntry[]` | Explicit wallet runtime adapters. Use `wagmiAdapter` from [`@0xtrails/adapter-wagmi`](/sdk/hooks#apps-with-wagmi) to share an existing wagmi session, or build your own with `evmAdapter`. |
 | `hideAddWallet` | `boolean` | Hide "Add wallet" option |
 | `isSmartWallet` | `boolean` | Signal that the connected wallet is a smart wallet |
+
+<Note>
+The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Wagmi is no longer required by default — pass adapters via the `adapters` prop instead.
+</Note>
 
 #### Route options
 
