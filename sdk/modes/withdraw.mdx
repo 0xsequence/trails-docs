@@ -17,7 +17,7 @@ import { Withdraw } from '0xtrails/widget'
 
 <Withdraw
   apiKey="YOUR_API_KEY"
-  from={{ currency: "USDC", chain: "base" }}
+  from={{ token: "USDC", chain: "base" }}
 />
 ```
 
@@ -31,21 +31,25 @@ import { Withdraw } from '0xtrails/widget'
 
 ### Source (optional)
 
+Withdraw mode sources funds from crypto only — there is no fiat arm.
+
 | Prop | Type | Description |
 |------|------|-------------|
-| `from.currency` | `string` | Pre-select source token symbol or address |
+| `from.token` | `string` | Pre-select source ERC-20 token — symbol or contract address |
 | `from.chain` | `ChainIdentifier` | Pre-select source chain — name, ID, or viem Chain |
 | `from.amount` | `string \| number` | Pre-fill withdrawal amount |
 | `from.walletAddress` | `string` | Source wallet address (defaults to connected wallet) |
+| `from.supportedChains` | `ChainIdentifier[]` | Restrict origin chains the user can withdraw from |
+| `from.supportedTokensByChain` | `SupportedTokensByChainConfig[]` | Per-chain origin token allowlist |
 
 ### Destination (optional)
 
 | Prop | Type | Description |
 |------|------|-------------|
 | `to.recipient` | `string` | Recipient address (defaults to connected wallet) |
-| `to.currency` | `string` | Controlled destination token — locks selection |
+| `to.token` | `string` | Controlled destination token — locks selection (symbol or contract address) |
 | `to.chain` | `ChainIdentifier` | Controlled destination chain — locks selection |
-| `to.defaultCurrency` | `string` | Default destination token — user can change |
+| `to.defaultToken` | `string` | Default destination token — user can change |
 | `to.defaultChain` | `ChainIdentifier` | Default destination chain — user can change |
 | `to.amount` | `string \| number` | Exact output amount |
 | `to.calldata` | `string` | ABI-encoded calldata to execute at the destination |
@@ -82,10 +86,10 @@ import { Withdraw } from '0xtrails/widget'
 ```tsx
 <Withdraw
   apiKey="YOUR_API_KEY"
-  from={{ currency: "USDC", chain: "base" }}
+  from={{ token: "USDC", chain: "base" }}
   to={{
     recipient: "0xRecipientAddress",
-    defaultCurrency: "ETH",
+    defaultToken: "ETH",
     defaultChain: "ethereum",
   }}
   onWithdrawSuccess={({ sessionId }) => console.log("withdrawn", sessionId)}
@@ -97,9 +101,9 @@ import { Withdraw } from '0xtrails/widget'
 ```tsx
 <Withdraw
   apiKey="YOUR_API_KEY"
-  from={{ currency: "USDC", chain: "base" }}
+  from={{ token: "USDC", chain: "base" }}
   to={{
-    currency: "USDC",
+    token: "USDC",
     chain: "polygon",
   }}
 />
