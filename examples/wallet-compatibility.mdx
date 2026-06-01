@@ -1,243 +1,193 @@
 ---
 title: 'Wallet Compatibility'
-description: 'Comprehensive wallet integration support and compatibility across different blockchain ecosystems'
+description: 'Comprehensive wallet integration support across built-in wallets, wagmi, Privy, Sequence, and EIP-1193 providers'
 icon: 'wallet'
 ---
 
 Trails works with virtually all wallets, including embedded wallets like Privy, smart contract wallets like Sequence, or injected EOAs like MetaMask. This enables complex transaction orchestration cross-chain in 1-click without requiring wallets to natively support ERC-7702.
 
 <Note>
-Since `0xtrails@0.16.0`, Trails uses its own built-in EVM runtime by default — wagmi is no longer required. The patterns below still work for apps that share an existing wagmi session, via the `@0xtrails/adapter-wagmi` package. See the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0) for the migration.
+Since `0xtrails@0.16.0`, Trails uses its own built-in EVM runtime by default — wagmi is no longer required. Apps that already use wagmi can share that wallet session through `@0xtrails/adapter-wagmi`. See the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0) for migration details.
 </Note>
 
-## How It Works
+For full copy-paste setup snippets, see [Wallet Integration](/sdk/wallet-integration).
 
-Trails detects and uses connected wallets through its built-in runtime, or through wagmi connectors when you install the wagmi adapter. For apps that already use wagmi, wrap your app with a wagmi provider, include the desired wallet connectors in your config, and pass `wagmiAdapter({ wagmiConfig })` to `TrailsProvider`.
+## How it works
 
-## Basic Wagmi Setup
+Trails can connect wallets in two ways:
+
+1. Use the built-in wallet runtime, which is the default and requires no wallet provider setup.
+2. Pass an explicit adapter when your app already manages wallets through wagmi, Privy, Sequence, or a custom EIP-1193 provider.
+
+## Pick an integration path
+
+| Wallet setup | Recommended Trails integration |
+|--------------|--------------------------------|
+| No existing wallet setup | Use the [built-in wallet runtime](/sdk/wallet-integration#built-in-wallet-runtime) |
+| Existing wagmi app | Use [`wagmiAdapter`](/sdk/wallet-integration#wagmi) with the same `wagmiConfig` |
+| Sequence Embedded Wallet | Use Sequence's wagmi config with [`wagmiAdapter`](/sdk/wallet-integration#wagmi) |
+| Privy embedded wallet with wagmi | Use Privy's wagmi config with [`wagmiAdapter`](/sdk/wallet-integration#privy-with-wagmi) |
+| Privy embedded wallet without wagmi | Use Privy's EIP-1193 provider with [`evmAdapter`](/sdk/wallet-integration#privy-without-wagmi) |
+| Custom EIP-1193 provider | Use [`evmAdapter`](/sdk/wallet-integration#custom-eip-1193-providers) from `0xtrails` |
+
+## Built-in wallet runtime
+
+This is the simplest path. If your app does not already use wagmi, Privy, Sequence, or another wallet system, render a Trails widget or focused component directly.
 
 ```tsx
-import { createConfig, http, WagmiProvider } from 'wagmi'
-import { mainnet, base, arbitrum } from 'wagmi/chains'
-import { injected, walletConnect } from 'wagmi/connectors'
 import { Pay } from '0xtrails/widget'
 
-const config = createConfig({
-  chains: [mainnet, base, arbitrum],
-  connectors: [
-    injected(),
-    walletConnect({ projectId: 'your-walletconnect-project-id' })
-  ],
-  transports: {
-    [mainnet.id]: http(),
-    [base.id]: http(),
-    [arbitrum.id]: http(),
-  },
+export function Checkout() {
+  return (
+    <Pay
+      apiKey="YOUR_API_KEY"
+      to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }}
+    />
+  )
+}
+```
+
+## wagmi
+
+Use wagmi only when your app already has a `WagmiProvider` and Trails should share that session.
+
+```tsx
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+
+const adapters = [wagmiAdapter({ wagmiConfig })]
+```
+
+Checklist:
+
+- Install `0xtrails`, `@0xtrails/adapter-wagmi`, `wagmi`, `viem`, and `@tanstack/react-query`.
+- Reuse the exact same `wagmiConfig` instance for `WagmiProvider` and `wagmiAdapter(...)`.
+- Put adapters on either `TrailsProvider config.adapters` or a widget/focused component `adapters` prop, not both.
+
+### Sequence Embedded Wallet
+
+Sequence's current Embedded Wallet Web SDK is wagmi-based. Configure Sequence with `@0xsequence/connect`, then pass `sequenceConfig.wagmiConfig` to Trails.
+
+```tsx
+import { createConfig, SequenceConnect } from '@0xsequence/connect'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { TrailsProvider } from '0xtrails'
+import { Pay } from '0xtrails/widget'
+
+const sequenceConfig = createConfig('waas', {
+  projectAccessKey: 'YOUR_SEQUENCE_PROJECT_ACCESS_KEY',
+  waasConfigKey: 'YOUR_SEQUENCE_WAAS_CONFIG_KEY',
+  appName: 'Your App',
+  chainIds: [8453],
+  defaultChainId: 8453,
 })
+
+const adapters = [wagmiAdapter({ wagmiConfig: sequenceConfig.wagmiConfig })]
 
 export function App() {
   return (
-    <WagmiProvider config={config}>
-      <Pay
-        apiKey="YOUR_API_KEY"
-        to={{
-          recipient: "0x...",
-          currency: "USDC",
-          chain: "arbitrum",
-          amount: "1000",
-        }}
-      />
-    </WagmiProvider>
+    <SequenceConnect config={sequenceConfig}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+        <Pay to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }} />
+      </TrailsProvider>
+    </SequenceConnect>
   )
 }
 ```
 
-## Sequence Wallet Integration
+Do not pass the whole Sequence config object to Trails; pass `sequenceConfig.wagmiConfig`.
 
-Integrate Sequence smart contract wallets for enhanced security and user experience:
-
-```tsx
-import { createConfig, http, WagmiProvider } from 'wagmi'
-import { mainnet, base, arbitrum } from 'wagmi/chains'
-import { sequenceWallet } from '@0xsequence/wagmi-connector'
-import { Pay } from '0xtrails/widget'
-
-// Create Sequence connector
-const sequenceConnector = sequenceWallet({
-  connectOptions: {
-    app: "Your App Name",
-    apiKey: "your-sequence-project-key",
-  },
-  defaultNetwork: 1, // Mainnet
-  walletAppURL: "https://sequence.app",
-})
-
-const config = createConfig({
-  chains: [mainnet, base, arbitrum],
-  connectors: [sequenceConnector],
-  transports: {
-    [mainnet.id]: http(),
-    [base.id]: http(),
-    [arbitrum.id]: http(),
-  },
-})
-
-export function AppWithSequence() {
-  return (
-    <WagmiProvider config={config}>
-      <Pay
-        apiKey="YOUR_API_KEY"
-        to={{
-          recipient: "0x...",
-          currency: "USDC",
-          chain: "arbitrum",
-          amount: "1000",
-        }}
-      />
-    </WagmiProvider>
-  )
-}
-```
-
-## Privy Embedded Wallets
+## Privy embedded wallets
 
 Integrate Privy for seamless embedded wallet experiences. You can try live demos below:
 
 - [Headless SDK demo](https://demo-trails-privy-embedded.0xsequence.workers.dev/)
 - [Widget demo](https://demo-trails-modal-privy-embedded.0xsequence.workers.dev/)
 
-```tsx
-import React from 'react';
-import { PrivyProvider } from '@privy-io/react-auth';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { mainnet } from 'wagmi/chains';
-import { createConfig, WagmiProvider } from '@privy-io/wagmi';
-import { http } from 'wagmi';
-import { Pay } from '0xtrails/widget';
+Privy works with Trails either through wagmi or directly through Privy's EIP-1193 provider.
 
-const config = createConfig({
-  chains: [mainnet],
-  transports: {
-    [mainnet.id]: http(),
-  },
-});
+### Privy with wagmi
 
-const queryClient = new QueryClient();
-
-export function AppWithPrivy() {
-  return (
-    <PrivyProvider
-      appId="your-privy-app-id"
-      config={{
-        embeddedWallets: {
-          ethereum: {
-            createOnLogin: 'users-without-wallets',
-          },
-        },
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <Pay
-            apiKey="YOUR_API_KEY"
-            to={{
-              recipient: "0x...",
-              currency: "USDC",
-              chain: "arbitrum",
-              amount: "1000",
-            }}
-          />
-        </WagmiProvider>
-      </QueryClientProvider>
-    </PrivyProvider>
-  )
-}
-```
-
-## Multiple Wallet Support
-
-Combine multiple wallet connectors to give users choice:
+Use this when your app already uses wagmi hooks or wants Privy to manage the active wagmi wallet.
 
 ```tsx
-import { createConfig, http, WagmiProvider } from 'wagmi'
-import { mainnet, base, arbitrum } from 'wagmi/chains'
-import { injected, walletConnect } from 'wagmi/connectors'
-import { sequenceWallet } from '@0xsequence/wagmi-connector'
-import { createPrivyWalletConnector } from '@privy-io/wagmi-connector'
 import { PrivyProvider } from '@privy-io/react-auth'
-import { Pay } from '0xtrails/widget'
+import { createConfig, WagmiProvider } from '@privy-io/wagmi'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { http } from 'wagmi'
+import { base } from 'wagmi/chains'
 
-// Create all connectors
-const sequenceConnector = sequenceWallet({
-  connectOptions: {
-    app: "Your App",
-    apiKey: "your-sequence-key",
-  },
-  defaultNetwork: 1,
+const wagmiConfig = createConfig({
+  chains: [base],
+  transports: { [base.id]: http() },
 })
 
-const privyConnector = createPrivyWalletConnector({
-  appId: "your-privy-app-id",
-  name: "Privy",
-})
-
-const config = createConfig({
-  chains: [mainnet, base, arbitrum],
-  connectors: [
-    injected(),
-    walletConnect({ projectId: 'your-walletconnect-project-id' }),
-    sequenceConnector,
-    privyConnector,
-  ],
-  transports: {
-    [mainnet.id]: http(),
-    [base.id]: http(),
-    [arbitrum.id]: http(),
-  },
-})
-
-export function MultiWalletApp() {
-  return (
-    <PrivyProvider
-      appId="your-privy-app-id"
-      config={{
-        loginMethods: ["email", "google"],
-        embeddedWallets: { createOnLogin: "all-users" },
-      }}
-    >
-      <WagmiProvider config={config}>
-        <Pay
-          apiKey="YOUR_API_KEY"
-          to={{
-            recipient: "0x...",
-            currency: "USDC",
-            chain: "arbitrum",
-            amount: "1000",
-          }}
-        />
-      </WagmiProvider>
-    </PrivyProvider>
-  )
-}
+const adapters = [wagmiAdapter({ wagmiConfig })]
 ```
 
-## Supported Wallet Types
+Wrap `PrivyProvider`, `QueryClientProvider`, `WagmiProvider`, and `TrailsProvider` with that same config. See the [full Privy with wagmi setup](/sdk/wallet-integration#privy-with-wagmi).
 
-Trails works with all wagmi-compatible wallets including:
+### Privy without wagmi
 
-- **Injected Wallets**: MetaMask, Coinbase Wallet, Brave Wallet
-- **WalletConnect**: Any wallet supporting WalletConnect protocol
-- **Smart Contract Wallets**: Sequence, Safe, Biconomy
-- **Embedded Wallets**: Privy, Dynamic, Magic
-- **Mobile Wallets**: Rainbow, Trust Wallet, Phantom
-- **Hardware Wallets**: Ledger, Trezor (via connectors)
+Use this when your app wants Privy embedded wallets but does not want wagmi. Read the connected Privy wallet with `useWallets()`, get its EIP-1193 provider, then pass it to `evmAdapter`.
 
-## Key Benefits
+```tsx
+import { useWallets } from '@privy-io/react-auth'
+import { evmAdapter } from '0xtrails'
 
-- **Universal Compatibility**: Works with any wagmi connector
-- **No Wallet Modifications**: Wallets don't need ERC-7702, 4337, or other external dependencies
-- **Cross-Chain Transactions**: Complex multi-chain operations in 1-click
-- **Flexible Integration**: Use existing wallet infrastructure
-- **Future-Proof**: Automatically supports new wagmi connectors
+const { wallets } = useWallets()
+const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === 'privy')
+const provider = await embeddedWallet?.getEthereumProvider()
 
-For more configuration options, see our [Configuration Guide](/sdk/configuration).
+const adapters = provider
+  ? [
+      evmAdapter({
+        wallets: {
+          id: 'privy-embedded-wallet',
+          name: 'Privy Embedded Wallet',
+          provider,
+        },
+      }),
+    ]
+  : undefined
+```
+
+Render Trails only after Privy is ready and the provider exists. See the [full Privy without wagmi setup](/sdk/wallet-integration#privy-without-wagmi).
+
+## Custom EIP-1193 providers
+
+Use `evmAdapter` for any non-wagmi wallet that exposes a standard EIP-1193 provider.
+
+```tsx
+import { evmAdapter } from '0xtrails'
+
+const adapters = [
+  evmAdapter({
+    wallets: {
+      id: 'custom-wallet',
+      name: 'Custom Wallet',
+      provider: customEip1193Provider,
+      iconUrl: '/custom-wallet.svg',
+    },
+  }),
+]
+```
+
+## Supported wallet types
+
+Trails supports common wallet setups including:
+
+- **Built-in wallet runtime**: no wallet provider setup required
+- **Injected wallets**: MetaMask, Coinbase Wallet, Brave Wallet
+- **WalletConnect**: any wallet supporting WalletConnect
+- **Smart contract wallets**: Sequence, Safe, Biconomy
+- **Embedded wallets**: Privy, Dynamic, Magic
+- **Custom EIP-1193 providers**: in-app wallets, embedded wallets, or custom signers
+
+## Key benefits
+
+- **Universal compatibility**: Works with the built-in runtime, wagmi, or standard EIP-1193 providers
+- **No wallet modifications**: Wallets don't need ERC-7702, 4337, or other external dependencies
+- **Cross-chain transactions**: Complex multi-chain operations in 1-click
+- **Flexible integration**: Use Trails directly or share your existing wallet infrastructure
+
+For more configuration options, see the [Wallet Integration](/sdk/wallet-integration) and [Configuration Guide](/sdk/configuration).

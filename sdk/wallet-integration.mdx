@@ -1,0 +1,348 @@
+---
+title: Wallet Integration
+description: "Use Trails with the built-in runtime, wagmi, Privy, or custom EIP-1193 providers"
+sidebarTitle: "Wallet Integration"
+---
+
+Trails works with virtually all EVM wallets. By default, Trails uses its built-in wallet runtime, so most apps can render a widget or focused component directly. Add an adapter only when your app already has a wallet setup that Trails should share.
+
+## Pick an integration path
+
+| Your app has | Use | Install |
+|--------------|-----|---------|
+| No wallet setup | Built-in Trails runtime | `0xtrails` |
+| Existing wagmi app | `wagmiAdapter({ wagmiConfig })` | `0xtrails @0xtrails/adapter-wagmi wagmi viem @tanstack/react-query` |
+| Sequence Embedded Wallet | Sequence's wagmi config with `wagmiAdapter(...)` | `0xtrails @0xtrails/adapter-wagmi @0xsequence/connect @0xsequence/hooks wagmi ethers viem 0xsequence @tanstack/react-query` |
+| Privy embedded wallets with wagmi | Privy's wagmi config with `wagmiAdapter(...)` | `0xtrails @0xtrails/adapter-wagmi @privy-io/react-auth @privy-io/wagmi wagmi viem @tanstack/react-query` |
+| Privy embedded wallets without wagmi | Privy's EIP-1193 provider with `evmAdapter(...)` | `0xtrails @privy-io/react-auth @tanstack/react-query` |
+| Custom EIP-1193 provider | `evmAdapter({ wallets })` | `0xtrails @tanstack/react-query` |
+
+<Note>
+If your app already manages wallets, pass an explicit adapter to either `TrailsProvider config.adapters` or a widget/focused component `adapters` prop.
+</Note>
+
+## Built-in wallet runtime
+
+Use this path when your app does not already configure wallets. No `WagmiProvider`, `PrivyProvider`, or external wallet connector is required for widget-only usage.
+
+```tsx
+import { Pay } from '0xtrails/widget'
+
+export function Checkout() {
+  return (
+    <Pay
+      apiKey="YOUR_API_KEY"
+      to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }}
+    />
+  )
+}
+```
+
+For hooks, add `QueryClientProvider` and `TrailsProvider`:
+
+```tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TrailsProvider } from '0xtrails'
+
+const queryClient = new QueryClient()
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
+        {children}
+      </TrailsProvider>
+    </QueryClientProvider>
+  )
+}
+```
+
+## wagmi
+
+Use this path when your app already uses wagmi and Trails should share the same connected account, chain, and wallet session.
+
+```bash
+pnpm add 0xtrails @0xtrails/adapter-wagmi wagmi viem @tanstack/react-query
+```
+
+Create one wagmi config and pass the exact same object to `WagmiProvider` and `wagmiAdapter(...)`:
+
+```tsx
+'use client'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { TrailsProvider } from '0xtrails'
+import { Pay } from '0xtrails/widget'
+import { WagmiProvider, createConfig, http } from 'wagmi'
+import { base, mainnet } from 'wagmi/chains'
+import { injected, walletConnect } from 'wagmi/connectors'
+
+const wagmiConfig = createConfig({
+  chains: [base, mainnet],
+  connectors: [
+    injected(),
+    walletConnect({ projectId: 'YOUR_WALLETCONNECT_PROJECT_ID' }),
+  ],
+  transports: {
+    [base.id]: http(),
+    [mainnet.id]: http(),
+  },
+})
+
+const queryClient = new QueryClient()
+const adapters = [wagmiAdapter({ wagmiConfig })]
+
+export function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+          <Pay to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }} />
+        </TrailsProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+```
+
+For a widget-only page already wrapped by `WagmiProvider`, you can put `apiKey` and `adapters` directly on the focused component instead of using `TrailsProvider`. Do not configure adapters in both places.
+
+### Sequence Embedded Wallet
+
+The current Sequence Embedded Wallet Web SDK is wagmi-based. Configure Sequence with `@0xsequence/connect`, then pass `sequenceConfig.wagmiConfig` to Trails.
+
+```bash
+pnpm add 0xtrails @0xtrails/adapter-wagmi @0xsequence/connect @0xsequence/hooks wagmi ethers viem 0xsequence @tanstack/react-query
+```
+
+```tsx
+'use client'
+
+import { createConfig, SequenceConnect } from '@0xsequence/connect'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { TrailsProvider } from '0xtrails'
+import { Pay } from '0xtrails/widget'
+
+const sequenceConfig = createConfig('waas', {
+  projectAccessKey: 'YOUR_SEQUENCE_PROJECT_ACCESS_KEY',
+  waasConfigKey: 'YOUR_SEQUENCE_WAAS_CONFIG_KEY',
+  appName: 'Your App',
+  chainIds: [8453, 1],
+  defaultChainId: 8453,
+})
+
+const adapters = [
+  wagmiAdapter({ wagmiConfig: sequenceConfig.wagmiConfig }),
+]
+
+export function App() {
+  return (
+    <SequenceConnect config={sequenceConfig}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+        <Pay to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }} />
+      </TrailsProvider>
+    </SequenceConnect>
+  )
+}
+```
+
+Pass `sequenceConfig.wagmiConfig`, not the full Sequence config object. If your app uses Sequence's lower-level provider APIs, keep the same rule: Trails needs the wagmi config used by the active Sequence wallet session.
+
+## Privy embedded wallets
+
+Privy can integrate with Trails in two ways:
+
+- **With wagmi**: recommended when your app already uses wagmi hooks or wants Privy to manage the active wagmi wallet.
+- **Without wagmi**: use Privy's EIP-1193 provider directly with `evmAdapter`.
+
+### Privy with wagmi
+
+Privy's wagmi integration uses `createConfig` and `WagmiProvider` from `@privy-io/wagmi`. Pass that same config to `wagmiAdapter(...)`.
+
+```bash
+pnpm add 0xtrails @0xtrails/adapter-wagmi @privy-io/react-auth @privy-io/wagmi wagmi viem @tanstack/react-query
+```
+
+```tsx
+'use client'
+
+import { PrivyProvider } from '@privy-io/react-auth'
+import { createConfig, WagmiProvider } from '@privy-io/wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { TrailsProvider } from '0xtrails'
+import { Pay } from '0xtrails/widget'
+import { http } from 'wagmi'
+import { base, mainnet } from 'wagmi/chains'
+
+const wagmiConfig = createConfig({
+  chains: [base, mainnet],
+  transports: {
+    [base.id]: http(),
+    [mainnet.id]: http(),
+  },
+})
+
+const queryClient = new QueryClient()
+const adapters = [wagmiAdapter({ wagmiConfig })]
+
+export function App() {
+  return (
+    <PrivyProvider
+      appId="YOUR_PRIVY_APP_ID"
+      config={{
+        supportedChains: [base, mainnet],
+        defaultChain: base,
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
+        },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={wagmiConfig}>
+          <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+            <Pay to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }} />
+          </TrailsProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
+    </PrivyProvider>
+  )
+}
+```
+
+Use this setup for both Privy embedded wallets and Privy-connected external wallets when your app wants wagmi hooks such as `useAccount` or `useWalletClient`.
+
+### Privy without wagmi
+
+Use this path when your app uses Privy embedded wallets but does not want wagmi. Privy's connected wallets expose an EIP-1193 provider through `wallet.getEthereumProvider()`, which can be passed to `evmAdapter`.
+
+```bash
+pnpm add 0xtrails @privy-io/react-auth @tanstack/react-query
+```
+
+```tsx
+'use client'
+
+import { PrivyProvider, usePrivy, useWallets } from '@privy-io/react-auth'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TrailsProvider, evmAdapter, type TrailsAdapterEntry } from '0xtrails'
+import { Pay } from '0xtrails/widget'
+import { useEffect, useState } from 'react'
+
+const queryClient = new QueryClient()
+
+function TrailsWithPrivyWallet() {
+  const { ready, authenticated, login } = usePrivy()
+  const { wallets } = useWallets()
+  const [adapters, setAdapters] = useState<TrailsAdapterEntry[]>()
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadPrivyWallet() {
+      const embeddedWallet = wallets.find(
+        (wallet) => wallet.walletClientType === 'privy',
+      )
+
+      if (!ready || !authenticated || !embeddedWallet) {
+        setAdapters(undefined)
+        return
+      }
+
+      const provider = await embeddedWallet.getEthereumProvider()
+
+      if (!cancelled) {
+        setAdapters([
+          evmAdapter({
+            wallets: {
+              id: 'privy-embedded-wallet',
+              name: 'Privy Embedded Wallet',
+              provider,
+            },
+          }),
+        ])
+      }
+    }
+
+    loadPrivyWallet()
+
+    return () => {
+      cancelled = true
+    }
+  }, [ready, authenticated, wallets])
+
+  if (!ready) return null
+  if (!authenticated) return <button onClick={login}>Log in</button>
+  if (!adapters) return <div>Loading wallet...</div>
+
+  return (
+    <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+      <Pay to={{ recipient: '0x...', token: 'USDC', chain: 'base', amount: '25' }} />
+    </TrailsProvider>
+  )
+}
+
+export function App() {
+  return (
+    <PrivyProvider
+      appId="YOUR_PRIVY_APP_ID"
+      config={{
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
+        },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <TrailsWithPrivyWallet />
+      </QueryClientProvider>
+    </PrivyProvider>
+  )
+}
+```
+
+Render a connect or loading state until Privy is ready and an embedded wallet is available. If you want Trails to use a different Privy wallet, select that wallet from `useWallets()` before creating the adapter.
+
+## Custom EIP-1193 providers
+
+Use `evmAdapter` for non-wagmi wallets that expose an EIP-1193 provider: custom in-app wallets, embedded wallets, or any provider with a `request({ method, params })` API.
+
+```tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TrailsProvider, evmAdapter } from '0xtrails'
+
+const queryClient = new QueryClient()
+const adapters = [
+  evmAdapter({
+    wallets: {
+      id: 'in-app-wallet',
+      name: 'In-app Wallet',
+      provider: eip1193Provider,
+      iconUrl: '/wallet.svg',
+    },
+  }),
+]
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+        {children}
+      </TrailsProvider>
+    </QueryClientProvider>
+  )
+}
+```
+
+## Rules
+
+- Do not add wagmi only for Trails. Use the built-in runtime unless your app already uses wagmi.
+- Reuse the exact same wagmi config instance for `WagmiProvider` and `wagmiAdapter(...)`.
+- For Sequence, pass `sequenceConfig.wagmiConfig`, not the whole Sequence config.
+- For Privy without wagmi, wait for `wallet.getEthereumProvider()` before rendering Trails with `evmAdapter`.
+- Keep `queryClient`, wagmi config, Sequence config, and adapter arrays outside React components when they are static.
+- Put adapters on either `TrailsProvider config.adapters` or a widget/focused component `adapters` prop, not both.
