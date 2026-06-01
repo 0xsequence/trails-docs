@@ -15,7 +15,6 @@ Trails integrates with multiple liquidity sources and bridge providers to find t
 - **`SUSHI`**: Uses SushiSwap for on-chain swaps
 - **`ZEROX`**: Uses 0x protocol for DEX aggregation
 - **`LZ_OFT`**: Uses LayerZero Omnichain Fungible Token bridge
-- **`LZ_STARGATE`**: Uses LayerZero Stargate for native asset bridging
 - **`GASZIP`**: Uses Gas.zip for gas-optimized routing
 
 ## Configuration
@@ -120,20 +119,15 @@ SushiSwap provides on-chain swap routing using its V3 concentrated liquidity poo
 <Swap apiKey="YOUR_API_KEY" swapProvider="ZEROX" />
 ```
 
-### LayerZero (LZ_OFT / LZ_STARGATE)
+### LayerZero (LZ_OFT)
 
-LayerZero is an omnichain messaging protocol that powers two distinct bridge providers:
+LayerZero is an omnichain messaging protocol. The `LZ_OFT` provider routes via the Omnichain Fungible Token bridge for tokens that have native OFT deployments across chains (no wrapping, direct cross-chain transfers).
 
-**LZ_OFT** — Omnichain Fungible Token bridge. Used for tokens that have native OFT deployments across chains (no wrapping, direct cross-chain transfers). Live since late February 2025.
-
-**LZ_STARGATE** — Stargate protocol routes native assets across chains using a unified liquidity pool model, minimizing slippage on stable assets.
-
-- Both providers expand coverage to chains and tokens not served by Relay or CCTP
-- AUTO will select the appropriate LayerZero route when it is optimal
+- Expands coverage to chains and tokens not served by Relay or CCTP
+- AUTO will select LZ_OFT when it is the optimal route
 
 ```tsx
-<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_OFT" />    // For OFT-enabled tokens
-<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_STARGATE" /> // For Stargate native asset routes
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_OFT" />
 ```
 
 ### Gas.zip
