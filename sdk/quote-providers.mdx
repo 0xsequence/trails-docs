@@ -14,9 +14,15 @@ Trails integrates with multiple liquidity sources and bridge providers to find t
 - **`CCTP`**: Uses Circle's Cross-Chain Transfer Protocol for USDC transfers
 - **`SUSHI`**: Uses SushiSwap for on-chain swaps
 - **`ZEROX`**: Uses 0x protocol for DEX aggregation
+- **`LIFI`**: Uses LI.FI for cross-chain routing
 - **`LZ_OFT`**: Uses LayerZero Omnichain Fungible Token bridge
-- **`LZ_STARGATE`**: Uses LayerZero Stargate for native asset bridging
+- **`LZ_TRANSFER`**: Uses LayerZero's Value Transfer API for direct cross-chain value transfers
+- **`HYPERLANE`**: Uses Hyperlane warp routes for cross-chain messaging
+- **`OIF`**: Uses the Open Intents Framework for solver-filled cross-chain intents
 - **`GASZIP`**: Uses Gas.zip for gas-optimized routing
+- **`WETH`**: Wrap/unwrap ETH ↔ WETH on the same chain
+- **`SOMNIA_EXCHANGE`**: Uses Somnia Exchange for swaps on Somnia
+- **`SOMNIA_SWAP`**: Uses Somnia Swap for swaps on Somnia
 
 ## Configuration
 
@@ -120,31 +126,62 @@ SushiSwap provides on-chain swap routing using its V3 concentrated liquidity poo
 <Swap apiKey="YOUR_API_KEY" swapProvider="ZEROX" />
 ```
 
-### LayerZero (LZ_OFT / LZ_STARGATE)
+### LayerZero (LZ_OFT / LZ_TRANSFER)
 
 LayerZero is an omnichain messaging protocol that powers two distinct bridge providers:
 
-**LZ_OFT** — Omnichain Fungible Token bridge. Used for tokens that have native OFT deployments across chains (no wrapping, direct cross-chain transfers). Live since late February 2025.
+**LZ_OFT** — Omnichain Fungible Token bridge. Used for tokens that have native OFT deployments across chains (no wrapping, direct cross-chain transfers).
 
-**LZ_STARGATE** — Stargate protocol routes native assets across chains using a unified liquidity pool model, minimizing slippage on stable assets.
+**LZ_TRANSFER** — LayerZero's Value Transfer API. Direct cross-chain value transfers for supported tokens; requires explicit `bridgeProvider="LZ_TRANSFER"` selection (not currently picked by AUTO).
 
-- Both providers expand coverage to chains and tokens not served by Relay or CCTP
-- AUTO will select the appropriate LayerZero route when it is optimal
+- LZ_OFT expands coverage to chains and tokens not served by Relay or CCTP
+- AUTO will select LZ_OFT when it is optimal
 
 ```tsx
-<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_OFT" />    // For OFT-enabled tokens
-<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_STARGATE" /> // For Stargate native asset routes
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_OFT" />      // For OFT-enabled tokens
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="LZ_TRANSFER" /> // For Value Transfer routes
+```
+
+### Hyperlane
+
+Hyperlane is a permissionless interchain messaging protocol used for warp routes between chains. Trails uses Hyperlane for token pairs covered by deployed warp routes, with on-chain gas estimation for the interchain gas payment.
+
+- Included in AUTO routing — Hyperlane is considered alongside other bridges when scoring routes
+- AUTO will only select Hyperlane when a warp route exists for the token pair
+
+```tsx
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="HYPERLANE" />
+```
+
+### OIF (Open Intents Framework)
+
+The Open Intents Framework is a permissionless solver network for cross-chain intents. Trails supports OIF for explicit selection, with refund handling for expired or unfilled orders.
+
+- Available on `v1_5` only — Trails does not route OIF for `v1` quotes
+- Requires explicit `bridgeProvider="OIF"`; not currently selected by AUTO
+
+```tsx
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="OIF" />
 ```
 
 ### Gas.zip
 
-Gas.zip is a gas-optimized routing provider that reduces the total gas cost of cross-chain transactions. Shipping with v1.5.
+Gas.zip is a gas-optimized routing provider that reduces the total gas cost of cross-chain transactions.
 
 - Useful when minimizing gas costs is the priority over speed
 - AUTO will select Gas.zip when it provides the best cost efficiency
 
 ```tsx
 <Swap apiKey="YOUR_API_KEY" bridgeProvider="GASZIP" />
+```
+
+### Somnia (SOMNIA_EXCHANGE / SOMNIA_SWAP)
+
+Native swap providers on Somnia (chain id `5031`). Used for on-chain swaps within Somnia.
+
+```tsx
+<Swap apiKey="YOUR_API_KEY" swapProvider="SOMNIA_EXCHANGE" />
+<Swap apiKey="YOUR_API_KEY" swapProvider="SOMNIA_SWAP" />
 ```
 
 ## Best Practices
