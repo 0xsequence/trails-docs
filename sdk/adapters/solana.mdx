@@ -1,0 +1,155 @@
+---
+title: Solana Adapter
+description: "Accept or send payments from Solana wallets with the svmAdapter from @0xtrails/svm, auto-detect Wallet Standard wallets or bring your own Solana wallet stack."
+sidebarTitle: "Solana"
+---
+
+`svmAdapter` from `@0xtrails/svm` adds Solana (SVM) support to the Trails widget. It registers the SVM edge plugin and provides the Solana wallet context when passed through `adapters`.
+
+One adapter covers every integration style: built-in Wallet Standard auto-detection, the modern `@solana/react-hooks` stack, or the legacy `@solana/wallet-adapter-react` stack.
+
+## Install
+
+```bash
+pnpm add 0xtrails @0xtrails/svm
+```
+
+## Auto-detection (no Solana provider needed)
+
+The simplest setup — the adapter discovers [Wallet Standard](https://github.com/wallet-standard/wallet-standard) wallets (Phantom, Solflare, Backpack, …) on its own. No app-level Solana wallet provider is required:
+
+```tsx
+import { Fund } from '0xtrails'
+import { svmAdapter } from '@0xtrails/svm'
+
+<Fund
+  to={{recipient: "0x...", token: "USDC", chain: "polygon", amount: "100"}}
+  apiKey="YOUR_API_KEY"
+  adapters={[
+    svmAdapter({
+      rpcUrls: ['https://api.mainnet-beta.solana.com'], // Use your own private RPC for production
+    }),
+  ]}
+/>
+```
+
+Auto-detection options:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `rpcUrls` | `string[]` | RPC endpoints used by the built-in detection flow, falls back in the provided order |
+| `preferredWalletId` | `string` | Wallet Standard wallet id to select/connect first |
+| `silentReconnect` | `boolean` | Silently reconnect previously trusted wallets. Defaults to `true` |
+
+## Bring your own wallet (`@solana/react-hooks`)
+
+If your app already manages Solana wallet state, pass the wallet handle directly. With the modern `@solana/react-hooks` stack this is a one-liner:
+
+```tsx
+import { autoDiscover, createClient } from '@solana/client'
+import { SolanaProvider, useWalletConnection } from '@solana/react-hooks'
+import { Pay } from '0xtrails'
+import { svmAdapter } from '@0xtrails/svm'
+
+const solanaClient = createClient({
+  endpoint: SOLANA_RPC_URL,
+  walletConnectors: autoDiscover(),
+})
+
+function Checkout() {
+  const { wallet } = useWalletConnection()
+
+  return (
+    <Pay
+      apiKey="YOUR_API_KEY"
+      adapters={[svmAdapter({ wallet })]}
+      to={{recipient: "BSwK...", token: "USDC", chain: "solana", amount: "100"}}
+    />
+  )
+}
+
+export function App() {
+  return (
+    <SolanaProvider client={solanaClient}>
+      <Checkout />
+    </SolanaProvider>
+  )
+}
+```
+
+`wallet` accepts Wallet Standard wallets, standard-compatible wallet adapters, and Kit-style wallet sessions.
+
+## Legacy `@solana/wallet-adapter-react`
+
+The legacy Solana Wallet Adapter stack works too — adapt its `@solana/web3.js` transaction signing into the serialized signer shape `svmAdapter` expects:
+
+```tsx
+import { Fund } from '0xtrails'
+import { svmAdapter } from '@0xtrails/svm'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { Transaction, VersionedTransaction } from '@solana/web3.js'
+import { useMemo } from 'react'
+
+function deserializeTransaction(bytes: Uint8Array) {
+  try {
+    return VersionedTransaction.deserialize(bytes)
+  } catch {
+    return Transaction.from(bytes)
+  }
+}
+
+function Checkout() {
+  const { connection } = useConnection()
+  const { connected, publicKey, wallet, signTransaction } = useWallet()
+
+  const solanaWallet = useMemo(
+    () => ({
+      connected,
+      publicKey,
+      walletName: wallet?.adapter.name ?? 'Solana Wallet',
+      walletIcon: wallet?.adapter.icon,
+      connection: {
+        getLatestBlockhash: (commitment?: string) =>
+          connection.getLatestBlockhash(commitment as never),
+        sendRawTransaction: (transaction: unknown) =>
+          connection.sendRawTransaction(transaction as Uint8Array),
+      },
+      signSerializedTransaction: async (bytes: Uint8Array) => {
+        if (!signTransaction) {
+          throw new Error('Connected Solana wallet cannot sign transactions')
+        }
+        const signed = await signTransaction(deserializeTransaction(bytes))
+        return signed.serialize()
+      },
+    }),
+    [connected, connection, publicKey, signTransaction, wallet],
+  )
+
+  return (
+    <Fund
+      apiKey="YOUR_API_KEY"
+      adapters={[svmAdapter({ wallet: solanaWallet })]}
+      from={{token: "USDC", chain: "solana", amount: "100"}}
+      to={{token: "ETH", chain: "ethereum"}}
+    />
+  )
+}
+```
+
+## Options reference
+
+```ts
+svmAdapter({
+  // Bring-your-own-wallet mode
+  wallet,            // Wallet Standard wallet, wallet adapter, or Kit wallet session
+  account,           // optional explicit Wallet Standard account (defaults to first Solana account)
+  connection,        // optional RPC connection override
+  connected,         // optional explicit connected flag
+  chain,             // optional chain identifier
+
+  // Auto-detection mode
+  rpcUrls,           // RPC endpoints for built-in Wallet Standard detection
+  preferredWalletId, // preferred wallet to select/connect first
+  silentReconnect,   // silently reconnect trusted wallets (default: true)
+})
+```
