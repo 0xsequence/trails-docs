@@ -86,6 +86,17 @@
               "sdk/configuration",
               "sdk/hooks",
               {
+                "group": "Adapters",
+                "pages": [
+                  "sdk/adapters/overview",
+                  "sdk/adapters/wagmi",
+                  "sdk/adapters/solana",
+                  "sdk/adapters/eip-1193",
+                  "sdk/adapters/dynamic",
+                  "sdk/adapters/thirdweb"
+                ]
+              },
+              {
                 "group": "Composable Actions",
                 "pages": [
                   "sdk/composable-actions/overview",

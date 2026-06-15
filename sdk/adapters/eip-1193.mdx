@@ -1,0 +1,88 @@
+---
+title: EIP-1193 Adapter
+description: "Connect any EIP-1193 provider to Trails with the evmAdapter helper — browser wallets, embedded wallets, or any SDK that exposes a standard Ethereum provider."
+sidebarTitle: "EIP-1193 (evmAdapter)"
+---
+
+`evmAdapter` is the universal EVM adapter, exported directly from `0xtrails` — no extra package needed. It accepts anything that implements the [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) provider interface: `window.ethereum`, embedded wallet providers, or providers produced by wallet SDKs.
+
+If a wallet library can hand you an object with a `request({ method, params })` method, you can plug it into Trails with `evmAdapter`.
+
+## Quick start
+
+```tsx
+import { Swap, evmAdapter } from '0xtrails'
+
+const adapters = [
+  evmAdapter({
+    wallets: {
+      id: 'browser-eip1193',
+      name: 'Browser Wallet',
+      provider: () => window.ethereum ?? null,
+    },
+  }),
+]
+
+<Swap apiKey="YOUR_API_KEY" adapters={adapters} />
+```
+
+The provider can be passed as the object itself, or as a (sync or async) function returning it — useful when the provider isn't available at module load time.
+
+## Options
+
+```ts
+evmAdapter({
+  wallets,                  // one wallet descriptor or an array
+  chains,                   // optional: defaults to all Trails-supported chains
+  supportsWalletSelection,  // optional: defaults to true
+})
+```
+
+### Wallet descriptor
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Stable identifier for the wallet |
+| `name` | `string` | Display name in the Trails UI |
+| `icon` | `string` | Optional icon URL |
+| `provider` | `Eip1193ProviderLike \| () => provider \| Promise<provider>` | The EIP-1193 provider, or a factory returning it (or `null` when unavailable) |
+| `showDisconnect` | `boolean` | Whether Trails shows a disconnect action for this wallet. Defaults to `true` |
+
+The adapter subscribes to the provider's `accountsChanged`, `chainChanged`, and `disconnect` events, so account and network switches in the wallet are reflected in Trails automatically. Chain switching uses `wallet_switchEthereumChain`, adding the chain via `wallet_addEthereumChain` when needed.
+
+Viem chain objects are compatible with this shape.
+
+## Host-owned wallets
+
+When your app owns the wallet session — an embedded wallet, or a wallet SDK with its own connect UI — tell Trails to use the wallet without showing its own wallet-management surfaces:
+
+```tsx
+const adapters = [
+  evmAdapter({
+    wallets: {
+      id: 'embedded-wallet',
+      name: 'My App Wallet',
+      provider: embeddedProvider,
+      showDisconnect: false,      // your app owns disconnect
+    },
+    supportsWalletSelection: false, // hide Trails's wallet picker
+  }),
+]
+```
+
+This is exactly the pattern used to integrate wallet SDKs like [thirdweb](/sdk/adapters/thirdweb)
+
+## Multiple wallets
+
+Pass an array to offer several EIP-1193 wallets in the Trails connect UI:
+
+```tsx
+const adapters = [
+  evmAdapter({
+    wallets: [
+      { id: 'wallet-a', name: 'Wallet A', provider: providerA },
+      { id: 'wallet-b', name: 'Wallet B', provider: () => getProviderB() },
+    ],
+  }),
+]
+```

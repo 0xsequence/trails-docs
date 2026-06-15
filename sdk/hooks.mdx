@@ -57,7 +57,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
 
 ### Apps with wagmi
 
-If your app already uses wagmi and you want Trails to share the same wagmi session, install the wagmi adapter and pass your existing wagmi config through `adapters`:
+If your app already uses wagmi, wrap your app with `WagmiProvider` and use wagmi hooks (`useAccount`, `useWalletClient`, etc.) to supply wallet state to Trails hooks. For widget integrations that should share the same wagmi session, pass [`wagmiAdapter`](/sdk/adapters/wagmi) on the widget's `adapters` prop — see [Adapters](/sdk/adapters/overview).
 
 ```bash
 pnpm i @0xtrails/adapter-wagmi
@@ -67,7 +67,6 @@ pnpm i @0xtrails/adapter-wagmi
 'use client'
 
 import { TrailsProvider } from '0xtrails'
-import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { arbitrum, base, polygon } from 'wagmi/chains'
@@ -82,13 +81,12 @@ const wagmiConfig = createConfig({
 })
 
 const queryClient = new QueryClient()
-const adapters = [wagmiAdapter({ wagmiConfig })]
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
+        <TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY' }}>
           {children}
         </TrailsProvider>
       </QueryClientProvider>
@@ -97,7 +95,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
 }
 ```
 
-For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper exported from `0xtrails` (see the [0.16 release notes](/sdk/changelog/0xtrails-0.16.0#advanced-custom-adapters)).
+For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper on widget components — see [EIP-1193 adapter](/sdk/adapters/eip-1193).
 
 ### Configuration Options
 
@@ -118,45 +116,10 @@ For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper exported 
 ## Wallet adapters
 
 <Note>
-Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). The `adapters` config controls Trails's wallet runtime. Omit it to use the built-in EVM runtime, or pass adapters to integrate with an existing wallet stack.
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Adapters are a **widget-only** feature — pass them on focused widget components (`Pay`, `Fund`, `Swap`, …), not on `TrailsProvider`. See the [Adapters](/sdk/adapters/overview) section for wagmi, EIP-1193, Solana, and thirdweb integrations.
 </Note>
 
-### evmAdapter
-
-`evmAdapter` is exported from `0xtrails` for EIP-1193-style wallets (custom in-app wallets, embedded wallets, or any provider that conforms to the EIP-1193 interface).
-
-```tsx
-import { TrailsProvider, evmAdapter } from '0xtrails'
-
-const adapters = [
-  evmAdapter({
-    wallets: {
-      id: 'custom-wallet',
-      name: 'Custom Wallet',
-      provider: customEip1193Provider,
-      iconUrl: '/custom-wallet.svg',
-    },
-  }),
-]
-
-<TrailsProvider config={{ trailsApiKey: 'YOUR_API_KEY', adapters }}>
-  <App />
-</TrailsProvider>
-```
-
-### wagmiAdapter
-
-`wagmiAdapter` lives in the separate `@0xtrails/adapter-wagmi` package and lets Trails share an existing wagmi session. See [Apps with wagmi](#apps-with-wagmi) above for the full setup.
-
-```bash
-pnpm i @0xtrails/adapter-wagmi
-```
-
-```tsx
-import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
-
-const adapters = [wagmiAdapter({ wagmiConfig })]
-```
+Hooks-based integrations do not use adapters. Supply wallet state directly to hooks such as `useQuote` and `useTrailsSendTransaction` via `walletClient` and `address` from your own wallet stack (wagmi, viem, ethers, etc.).
 
 ## Chains
 

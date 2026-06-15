@@ -1,0 +1,123 @@
+---
+title: Using Dynamic
+description: "Use Dynamic embedded wallets (Fireblocks) with Trails — connect via Dynamic, sync into wagmi, and pass wagmiAdapter to the widget."
+sidebarTitle: "Dynamic"
+---
+
+[Dynamic](https://www.dynamic.xyz/) powers Fireblocks embedded wallets on web. Dynamic does not need a dedicated Trails adapter — it plugs into wagmi via [`@dynamic-labs/wagmi-connector`](https://www.dynamic.xyz/docs/react/reference/using-wagmi), and Trails shares that session through the standard [`wagmiAdapter`](/sdk/adapters/wagmi).
+
+No custom hook is required. Once the user connects with Dynamic's embedded wallet, the Trails widget reads the same wagmi connection state.
+
+The division of labor:
+
+- **Dynamic owns the wallet**: embedded wallet creation, auth, recovery, and connect UI (`DynamicWidget`).
+- **Trails owns the payment**: routing, quotes, and cross-chain execution, signed through the bridged wagmi session.
+
+## Install
+
+```bash
+pnpm add 0xtrails @0xtrails/adapter-wagmi \
+  @dynamic-labs/sdk-react-core @dynamic-labs/ethereum @dynamic-labs/wagmi-connector \
+  wagmi viem @tanstack/react-query
+```
+
+<Tip>
+Dynamic documents wagmi compatibility up to **v3.1.0**. If you hit connector issues, pin wagmi to a version Dynamic supports and test before upgrading.
+</Tip>
+
+## 1. Configure Dynamic + wagmi
+
+Create the wagmi config at **module scope** (not inside a component). Set `multiInjectedProviderDiscovery: false` — Dynamic handles injected provider discovery itself.
+
+```tsx
+// wagmi.config.ts
+import { createConfig, http } from 'wagmi'
+import { base, mainnet } from 'viem/chains'
+
+export const wagmiConfig = createConfig({
+  chains: [base, mainnet],
+  multiInjectedProviderDiscovery: false,
+  transports: {
+    [base.id]: http(),
+    [mainnet.id]: http(),
+  },
+})
+```
+
+Include every chain you enable in the Dynamic dashboard. Dynamic no longer auto-syncs chains into your wagmi config — you declare them explicitly in both places.
+
+## 2. Wrap the app
+
+`DynamicWagmiConnector` keeps Dynamic's active wallet in sync with wagmi. The user connects through `DynamicWidget` before using the Trails widget.
+
+```tsx
+// App.tsx
+import { DynamicContextProvider, DynamicWidget } from '@dynamic-labs/sdk-react-core'
+import { EthereumWalletConnectors } from '@dynamic-labs/ethereum'
+import { DynamicWagmiConnector } from '@dynamic-labs/wagmi-connector'
+import { WagmiProvider } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { wagmiConfig } from './wagmi.config'
+import { Checkout } from './Checkout'
+
+const queryClient = new QueryClient()
+
+export function App() {
+  return (
+    <DynamicContextProvider
+      settings={{
+        environmentId: 'YOUR_DYNAMIC_ENVIRONMENT_ID',
+        walletConnectors: [EthereumWalletConnectors],
+      }}
+    >
+      <WagmiProvider config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <DynamicWagmiConnector>
+            <DynamicWidget />
+            <Checkout />
+          </DynamicWagmiConnector>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </DynamicContextProvider>
+  )
+}
+```
+
+## 3. Pass wagmiAdapter to the widget
+
+Define adapters once at module scope. Pass the same `wagmiConfig` instance you use in `WagmiProvider`, or call `wagmiAdapter()` with no options to auto-bridge into the surrounding provider.
+
+```tsx
+// Checkout.tsx
+import { Fund } from '0xtrails/widget'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { useAccount } from 'wagmi'
+import { wagmiConfig } from './wagmi.config'
+
+const adapters = [wagmiAdapter({ wagmiConfig })]
+
+export function Checkout() {
+  const { isConnected } = useAccount()
+
+  if (!isConnected) {
+    return <p>Connect with Dynamic first.</p>
+  }
+
+  return (
+    <Fund
+      apiKey="YOUR_TRAILS_API_KEY"
+      adapters={adapters}
+      to={{ chain: "polygon", token: "USDC", amount: "100", recipient: "0x..." }}
+    />
+  )
+}
+```
+
+That's the full integration — Dynamic connects the embedded wallet, wagmi holds the session, and Trails signs through `wagmiAdapter`.
+
+## Tips
+
+- **Keep config stable** — define `wagmiConfig` and `adapters` at module scope (or memoize them). Recreating them on every render remounts the wallet runtime.
+- **Connect before the widget** — the Trails widget expects an active wagmi session. Use `DynamicWidget` (or your own Dynamic login flow) first.
+- **Match chains** — chains in `wagmiConfig`, the Dynamic dashboard, and your Trails destination chain should align.
+

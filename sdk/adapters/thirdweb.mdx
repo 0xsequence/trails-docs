@@ -1,0 +1,125 @@
+---
+title: Using thirdweb
+description: "Use thirdweb's Connect SDK with Trails — convert the active thirdweb wallet to an EIP-1193 provider and hand it to evmAdapter."
+sidebarTitle: "Thirdweb"
+---
+
+thirdweb doesn't need a dedicated Trails adapter package. Its Connect SDK can convert any active wallet — injected, in-app/social login, or smart account — into a standard EIP-1193 provider with `EIP1193.toProvider`, which plugs straight into Trails's built-in [`evmAdapter`](/sdk/adapters/eip-1193).
+
+The division of labor:
+
+- **thirdweb owns the wallet**: connection UI (`ConnectButton`), session persistence, social login, smart accounts.
+- **Trails owns the payment**: routing, quotes, and cross-chain execution, signed through the provider it was handed.
+
+## Install
+
+```bash
+pnpm add 0xtrails thirdweb @tanstack/react-query viem
+```
+
+## 1. Create the thirdweb client
+
+```tsx
+// thirdwebClient.ts
+import { createThirdwebClient } from 'thirdweb'
+import { base } from 'thirdweb/chains'
+
+export const thirdwebClient = createThirdwebClient({
+  clientId: 'YOUR_THIRDWEB_CLIENT_ID',
+})
+export const defaultChain = base
+```
+
+## 2. Bridge the active thirdweb wallet to a Trails adapter
+
+This hook is the entire integration. It reads the live wallet state with thirdweb's hooks, converts the wallet to EIP-1193, and wraps it with `evmAdapter`:
+
+```tsx
+// useThirdwebTrailsAdapters.ts
+import { evmAdapter, type Eip1193ProviderLike } from '0xtrails'
+import { useMemo } from 'react'
+import {
+  useActiveAccount,
+  useActiveWallet,
+  useActiveWalletChain,
+} from 'thirdweb/react'
+import { EIP1193 } from 'thirdweb/wallets'
+import { defaultChain, thirdwebClient } from './thirdwebClient'
+
+export function useThirdwebTrailsAdapters() {
+  const activeAccount = useActiveAccount()
+  const activeWallet = useActiveWallet()
+  const activeChain = useActiveWalletChain()
+
+  return useMemo(() => {
+    if (!activeAccount || !activeWallet) {
+      return undefined
+    }
+
+    // thirdweb wallet (injected, in-app, smart account, ...) → EIP-1193
+    const provider = EIP1193.toProvider({
+      wallet: activeWallet,
+      chain: activeChain ?? defaultChain,
+      client: thirdwebClient,
+    })
+
+    return [
+      evmAdapter({
+        wallets: [{
+          id: 'thirdweb-active-wallet',
+          name: 'thirdweb',
+          provider: provider as Eip1193ProviderLike,
+          showDisconnect: false,      // thirdweb owns disconnect
+        }],
+        supportsWalletSelection: false, // hide Trails's wallet picker
+      }),
+    ] as const
+  }, [activeAccount, activeWallet, activeChain])
+}
+```
+
+Two details matter here:
+
+- `showDisconnect: false` and `supportsWalletSelection: false` mark the wallet as **host-owned**: Trails uses it for signing but never shows its own connect, disconnect, or wallet-picker UI — thirdweb's `ConnectButton` owns that lifecycle.
+- The `useMemo` dependencies mean the adapter rebuilds whenever the user switches accounts or chains in thirdweb, so Trails always tracks the live wallet.
+
+## 3. Wire it up
+
+thirdweb handles connection; the widget renders once a wallet is active:
+
+```tsx
+// App.tsx
+import { Fund } from '0xtrails'
+import { ConnectButton, ThirdwebProvider } from 'thirdweb/react'
+import { thirdwebClient } from './thirdwebClient'
+import { useThirdwebTrailsAdapters } from './useThirdwebTrailsAdapters'
+
+function Checkout() {
+  const adapters = useThirdwebTrailsAdapters()
+
+  if (!adapters) {
+    return <p>Connect a wallet first.</p>
+  }
+
+  return (
+    <Fund
+      apiKey="YOUR_TRAILS_API_KEY"
+      adapters={adapters}
+      to={{chain: "polygon", token: "USDC", amount: "100", recipient: "0x..."}}
+    />
+  )
+}
+
+export function App() {
+  return (
+    <ThirdwebProvider>
+      <ConnectButton client={thirdwebClient} />
+      <Checkout />
+    </ThirdwebProvider>
+  )
+}
+```
+
+## The pattern generalizes
+
+Nothing here is thirdweb-specific from Trails's point of view: any wallet SDK that can expose an EIP-1193 provider integrates the same way — convert to a provider, wrap with `evmAdapter`, mark it host-owned. See the [EIP-1193 adapter](/sdk/adapters/eip-1193) page for the full `evmAdapter` API.
