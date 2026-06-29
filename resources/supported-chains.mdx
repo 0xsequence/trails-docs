@@ -73,9 +73,27 @@ Trails routes transactions through the optimal liquidity source for each transfe
 | **0x Protocol** | DEX aggregator | Best execution routing across multiple DEXs |
 | **LayerZero OFT** | Bridge | Omnichain Fungible Token bridge for native cross-chain transfers |
 | **LayerZero Stargate** | Bridge | Native asset bridging via unified Stargate liquidity pools |
+| **LayerZero Value Transfer** | Bridge | Direct cross-chain value transfers via LayerZero (`LZ_TRANSFER`) |
+| **Hyperlane** | Bridge | Permissionless interchain messaging; routed when a warp route exists for the token pair |
+| **OIF** | Bridge | Open Intents Framework — solver-filled cross-chain intents (explicit selection only) |
 | **Gas.zip** | Bridge | Gas-optimized cross-chain routing |
+| **Somnia Exchange** | DEX | On-chain swaps native to Somnia |
+| **Somnia Swap** | DEX | On-chain swaps native to Somnia |
 
 See [Route Providers](/sdk/quote-providers) for details on configuring bridge and swap providers.
+
+## Non-EVM Edge Rails
+
+In addition to EVM chains, Trails supports **edge rails** that bridge between non-EVM chains and the EVM intent flow. Edge rails are used as either the origin (funds enter the intent from a non-EVM chain) or destination (intent funds an address on a non-EVM chain) of a cross-chain intent.
+
+| Chain | Edge Modes |
+|-------|------------|
+| Solana | Origin, Destination |
+| Tron | Origin, Destination |
+
+Edge-rail availability can vary by deployment. Call [`GetEdges`](/api-reference/endpoints/get-edges) to discover which rails and modes are enabled, then use [`QuoteIntentEdge`](/api-reference/endpoints/quote-intent-edge) instead of `QuoteIntent` to price any intent that touches a non-EVM chain. Track the external leg with [`GetEdgeStatus`](/api-reference/endpoints/get-edge-status).
+
+In the SDK, Solana wallets are wired in through the [`svmAdapter`](/sdk/adapters/solana).
 
 ## Request a New Chain
 
