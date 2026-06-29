@@ -1,0 +1,50 @@
+---
+title: YieldGetNetworks
+openapi: ../trails-api.gen.json post /rpc/Trails/YieldGetNetworks
+---
+
+## Overview
+
+The `YieldGetNetworks` endpoint returns the networks (chains) that yield providers can be queried on. Use it to populate chain pickers in earn UIs or to validate that a target chain is supported before calling [`YieldGetMarkets`](/api-reference/endpoints/yield-get-markets).
+
+## Request
+
+`YieldGetNetworks` takes no parameters.
+
+## Response
+
+- **networks** (array of `YieldNetwork`):
+  - **id** (string)
+  - **name** (string)
+  - **category** (string)
+  - **logoURI** (string)
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetNetworks', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { networks } = await response.json();
+
+for (const network of networks) {
+  console.log(network.id, network.name);
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="YieldGetMarkets" icon="store" href="/api-reference/endpoints/yield-get-markets">
+    List markets on a network
+  </Card>
+  <Card title="YieldGetProviders" icon="list" href="/api-reference/endpoints/yield-get-providers">
+    List yield providers
+  </Card>
+</CardGroup>

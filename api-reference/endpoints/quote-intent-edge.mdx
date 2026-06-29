@@ -1,0 +1,100 @@
+---
+title: QuoteIntentEdge
+openapi: ../trails-api.gen.json post /rpc/Trails/QuoteIntentEdge
+---
+
+## Overview
+
+The `QuoteIntentEdge` endpoint requests a quote for a cross-chain intent that uses a non-EVM **edge rail** (Solana or Tron) on either the origin or destination side. Edge rails extend the standard intent flow with an external bridge hop that hands funds off to (or receives funds from) the EVM intent wallet.
+
+Use `QuoteIntent` for EVM-only routes. Use `QuoteIntentEdge` whenever Solana or Tron is involved.
+
+## Request Parameters
+
+### Required Fields
+
+- **intent** (`QuoteIntentRequest`): The outer intent shape. The origin must be left unset — `intent.originChainId` must be `0` (or omitted) when `edge.mode = ORIGIN`. The `edge` request determines the actual origin chain/token at quote time.
+- **edge** (`EdgeQuoteRequest`):
+  - **rail** (`EdgeRail`): `SOLANA` or `TRON`.
+  - **mode** (`EdgeMode`): `ORIGIN` (edge funds the intent from a non-EVM chain) or `DESTINATION` (intent funds an address on a non-EVM chain).
+  - **provider** (`RouteProvider`, optional): External bridge provider (defaults to AUTO selection).
+  - **tradeType** (`TradeType`, optional): Controls the external funding rail. Defaults to `EXACT_OUTPUT` (funds the fixed handoff amount required by the quoted intent). `EXACT_INPUT` spends `originTokenAmount` on the origin rail and derives the intent from the rail's quoted minimum output.
+
+### ORIGIN Mode Fields
+
+Required when `edge.mode = ORIGIN`:
+
+- **originChainId** (number): Non-EVM origin chain ID (Solana or Tron).
+- **originAddress** (string): User's address on the non-EVM chain.
+- **originTokenAddress** (string): Token address on the non-EVM chain.
+
+Optional for `ORIGIN`:
+
+- **originTokenAmount** (bigint): Required when `tradeType = EXACT_INPUT`.
+- **refundAddress** (string): Refund destination on the non-EVM chain.
+
+### DESTINATION Mode Fields
+
+Required when `edge.mode = DESTINATION`:
+
+- **destinationChainId** (number): Non-EVM destination chain ID.
+- **destinationAddress** (string): Recipient address on the non-EVM chain.
+- **destinationTokenAddress** (string): Token address on the non-EVM chain.
+
+## Response
+
+- **edgeId** (string): The Trails edge quote ID. Pass this to `GetEdgeStatus` to track the external rail leg.
+- **edge** (`EdgeQuoteResponse`): Quote details for the external rail, including the `handoff` describing the chain, token, amount, and recipient address used to hand funds off between the rail and the intent wallet, plus the provider-specific `providerQuote` and `executionPlan`.
+- **intent** (`Intent`, optional): The committed intent shape — same structure as `QuoteIntent` returns.
+- **gasFeeOptions** (`GasFeeOptions`, optional)
+- **transactionStates** (array, optional)
+- **passthrough** (`PassthroughInfo`, optional)
+
+## Discovery
+
+Call [`GetEdges`](/api-reference/endpoints/get-edges) to find out which edge rails and modes are enabled on this deployment before quoting.
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIntentEdge', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intent: {
+      ownerAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
+      originChainId: 0, // must be 0 in ORIGIN mode — set by edge
+      destinationChainId: 8453,
+      destinationTokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+      destinationToAddress: '0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1',
+      destinationTokenAmount: 100000000
+    },
+    edge: {
+      rail: 'SOLANA',
+      mode: 'ORIGIN',
+      tradeType: 'EXACT_OUTPUT',
+      originChainId: 1399811149, // Solana
+      originAddress: 'AbC...',
+      originTokenAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' // USDC mint
+    }
+  })
+});
+
+const { edgeId, edge, intent } = await response.json();
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetEdgeStatus" icon="signal" href="/api-reference/endpoints/get-edge-status">
+    Track the external rail leg's status
+  </Card>
+  <Card title="GetEdges" icon="list" href="/api-reference/endpoints/get-edges">
+    List enabled edge rails and modes
+  </Card>
+</CardGroup>
+
+{/* TODO: verify exact request examples against an integration test once available. */}

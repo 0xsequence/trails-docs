@@ -1,0 +1,45 @@
+---
+title: YieldGetProvider
+openapi: ../trails-api.gen.json post /rpc/Trails/YieldGetProvider
+---
+
+## Overview
+
+The `YieldGetProvider` endpoint returns a single yield provider by its ID. Use it to fetch full provider metadata (logo, description, website, TVL, supported standards, beneficiary support) when you already know the provider ID — for example, when rendering details for a market returned from [`YieldGetMarkets`](/api-reference/endpoints/yield-get-markets).
+
+## Request Parameters
+
+### Required Fields
+
+- **providerId** (string): The yield provider ID (for example `"aave"`, `"morpho"`, `"yearn"`).
+
+## Response
+
+- **provider** (`YieldProvider`): The full provider object including `name`, `id`, `logoURI`, `description`, `website`, `tvlUsd`, `type`, `references`, and `supportsBeneficiary`.
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetProvider', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ providerId: 'aave' })
+});
+
+const { provider } = await response.json();
+console.log(provider.name, provider.tvlUsd);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="YieldGetProviders" icon="list" href="/api-reference/endpoints/yield-get-providers">
+    List all yield providers
+  </Card>
+  <Card title="YieldGetMarkets" icon="store" href="/api-reference/endpoints/yield-get-markets">
+    List markets, optionally filtered by provider
+  </Card>
+</CardGroup>

@@ -1,0 +1,70 @@
+---
+title: BuildIntentRecoveryTransaction
+openapi: ../trails-api.gen.json post /rpc/Trails/BuildIntentRecoveryTransaction
+---
+
+## Overview
+
+The `BuildIntentRecoveryTransaction` endpoint verifies a signed recovery payload (produced via [`PrepareIntentRecovery`](/api-reference/endpoints/prepare-intent-recovery)) and returns executable transaction data the client can broadcast. The transaction sweeps recoverable balances from a stranded intent wallet to the configured refund address.
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique ID of the intent being recovered.
+- **payload** (any): The payload returned by `PrepareIntentRecovery`.
+- **signature** (string): User signature over the typed data from `PrepareIntentRecovery`.
+- **intentAddress** (string): The intent wallet to recover from (matches `PrepareIntentRecovery` response).
+
+### Optional Fields
+
+- **refundToAddress** (string): Defaults to the intent owner address when omitted.
+
+## Response
+
+- **to** (string): Transaction `to` address.
+- **data** (string): Transaction calldata.
+- **value** (string): Transaction value (bigint).
+- **chainId** (number): Chain to broadcast on.
+- **intentAddress** (string)
+- **requiresDeploy** (boolean): `true` if the intent wallet must be counterfactually deployed as part of this transaction.
+- **payloadHash** (string, optional)
+
+## Example
+
+```typescript
+// After PrepareIntentRecovery and user signing
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/BuildIntentRecoveryTransaction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({
+    intentId: 'intent_abc123',
+    payload,        // from PrepareIntentRecovery
+    signature,      // user signature over typedData
+    intentAddress   // from PrepareIntentRecovery
+  })
+});
+
+const tx = await response.json();
+
+const hash = await walletClient.sendTransaction({
+  to: tx.to,
+  data: tx.data,
+  value: BigInt(tx.value),
+  chainId: tx.chainId
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="PrepareIntentRecovery" icon="key" href="/api-reference/endpoints/prepare-intent-recovery">
+    Generate the payload to sign
+  </Card>
+  <Card title="GetIntent" icon="magnifying-glass" href="/api-reference/endpoints/get-intent">
+    Check intent state after recovery
+  </Card>
+</CardGroup>

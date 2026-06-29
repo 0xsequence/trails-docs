@@ -1,0 +1,54 @@
+---
+title: YieldGetMarketById
+openapi: ../trails-api.gen.json post /rpc/Trails/YieldGetMarketById
+---
+
+## Overview
+
+The `YieldGetMarketById` endpoint returns a single yield market — including its tokens, reward rate, statistics, risk ratings, status, mechanics, and current state — by market ID. Use it to fetch full detail for a market discovered through [`YieldGetMarkets`](/api-reference/endpoints/yield-get-markets).
+
+## Request Parameters
+
+### Required Fields
+
+- **marketId** (string): The market ID returned by `YieldGetMarkets`.
+
+## Response
+
+- **market** (`YieldMarket`): The full market object. Notable fields:
+  - **id**, **network**, **chainId**, **providerId**
+  - **inputTokens**, **outputToken**, **token**, **tokens** (`YieldToken`)
+  - **rewardRate** (`YieldRewardRate`): includes `total`, `rateType`, and per-source components
+  - **statistics** (`YieldStatistics`): `tvlUsd`, `tvl`, `uniqueUsers`, average position size, etc.
+  - **risk** (`YieldRiskSummary`): array of `{rating, source}` ratings
+  - **status** (`YieldStatus`): `{enter, exit}` booleans gating entry/exit
+  - **mechanics** (`YieldMechanics`): type, reward schedule, gas fee token, lockup, cooldown, fees, entry limits, requirements
+  - **state** (`YieldState`): price-per-share, concentrated-liquidity-pool state, capacity, liquidity, allocations
+  - **supportsBeneficiary** (boolean)
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldGetMarketById', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ marketId: 'market_abc123' })
+});
+
+const { market } = await response.json();
+console.log(market.providerId, market.rewardRate.total, market.statistics?.tvlUsd);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="YieldGetMarkets" icon="store" href="/api-reference/endpoints/yield-get-markets">
+    Search and list markets
+  </Card>
+  <Card title="YieldCreateEnterAction" icon="arrow-right" href="/api-reference/endpoints/yield-create-enter-action">
+    Build a deposit action for a market
+  </Card>
+</CardGroup>

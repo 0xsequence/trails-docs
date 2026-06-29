@@ -1,0 +1,76 @@
+---
+title: PrepareIntentRecovery
+openapi: ../trails-api.gen.json post /rpc/Trails/PrepareIntentRecovery
+---
+
+## Overview
+
+The `PrepareIntentRecovery` endpoint returns a backend-prepared payload and typed data that the user signs to recover funds stranded in an intent wallet. Combined with [`BuildIntentRecoveryTransaction`](/api-reference/endpoints/build-intent-recovery-transaction), this endpoint enables clients to drain recoverable balances from origin or destination intent addresses after an intent has failed, expired, or otherwise left funds behind.
+
+## Use Cases
+
+- Recover an intent's origin deposit when the route became unfillable
+- Sweep dust or leftover balances from an intent wallet
+- Refund a user from a stranded intent address
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The unique ID of the intent to recover.
+
+### Optional Fields
+
+- **intentAddress** (string): If omitted, the backend auto-selects the origin or destination intent address by recoverable balance.
+- **refundToAddress** (string): Defaults to the intent owner address when omitted.
+- **tokenAddress** (string): Constrain recovery token selection when multiple recoverable tokens exist.
+
+## Response
+
+- **intentId** (string)
+- **intentProtocol** (`IntentProtocolVersion`)
+- **intentAddress** (string): The intent wallet being recovered.
+- **chainId** (number): Chain ID of the intent wallet.
+- **intentSource** (string): `"origin"` or `"destination"` — which intent wallet was selected for recovery.
+- **recoveryTokens** (array of `IntentTokenBalance`, optional): The token balances eligible for recovery.
+- **payload** (any): Payload to be signed.
+- **typedData** (any): EIP-712 typed data for client signing.
+- **payloadHash** (string)
+
+## Flow
+
+1. Call `PrepareIntentRecovery` to get the payload and typed data.
+2. Have the user sign the typed data with their wallet.
+3. Call [`BuildIntentRecoveryTransaction`](/api-reference/endpoints/build-intent-recovery-transaction) with the signed payload to receive the executable transaction.
+4. Broadcast the transaction.
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/PrepareIntentRecovery', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ intentId: 'intent_abc123' })
+});
+
+const { typedData, payload, payloadHash, intentAddress } = await response.json();
+
+// Sign typedData with the user's wallet, then continue with BuildIntentRecoveryTransaction
+const signature = await walletClient.signTypedData(typedData);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="BuildIntentRecoveryTransaction" icon="hammer" href="/api-reference/endpoints/build-intent-recovery-transaction">
+    Build the executable recovery transaction
+  </Card>
+  <Card title="AbortIntent" icon="ban" href="/api-reference/endpoints/abort-intent">
+    Notify Trails of an on-chain abort
+  </Card>
+</CardGroup>
+
+{/* TODO: verify typedData example shape against a real recovery flow. */}

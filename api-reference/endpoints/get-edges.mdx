@@ -1,0 +1,48 @@
+---
+title: GetEdges
+openapi: ../trails-api.gen.json post /rpc/Trails/GetEdges
+---
+
+## Overview
+
+The `GetEdges` endpoint returns the edge rails and modes currently enabled on this Trails deployment. Use it to discover whether Solana or Tron edges are available — and whether they are configured for `ORIGIN`, `DESTINATION`, or both — before calling [`QuoteIntentEdge`](/api-reference/endpoints/quote-intent-edge).
+
+## Request
+
+`GetEdges` takes no parameters.
+
+## Response
+
+- **edges** (array of `EdgeRailModes`):
+  - **rail** (`EdgeRail`): `SOLANA` or `TRON`.
+  - **modes** (array of `EdgeMode`): One or both of `ORIGIN`, `DESTINATION`.
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetEdges', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({})
+});
+
+const { edges } = await response.json();
+
+for (const edge of edges) {
+  console.log(`${edge.rail} supports modes:`, edge.modes);
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="QuoteIntentEdge" icon="route" href="/api-reference/endpoints/quote-intent-edge">
+    Quote a cross-chain intent using an edge rail
+  </Card>
+  <Card title="GetEdgeStatus" icon="signal" href="/api-reference/endpoints/get-edge-status">
+    Track an edge rail's status
+  </Card>
+</CardGroup>
