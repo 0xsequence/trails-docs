@@ -807,6 +807,28 @@ components:
         status:
           type: number
           example: 422
+    ErrorIntentProtocolDeprecated:
+      type: object
+      required:
+        - error
+        - code
+        - msg
+        - status
+      properties:
+        error:
+          type: string
+          example: "IntentProtocolDeprecated"
+        code:
+          type: number
+          example: 3000
+        msg:
+          type: string
+          example: "Requested intent protocol version is outdated/deprecated. Please upgrade your Trails SDK, see https://docs.sequence.build for more information."
+        cause:
+          type: string
+        status:
+          type: number
+          example: 422
     ErrorNotFound:
       type: object
       required:
@@ -1223,6 +1245,9 @@ components:
           type: string
         intentProtocol:
           $ref: '#/components/schemas/IntentProtocolVersion'
+        timedRefundUnlockTimestamp:
+          type: number
+          description: Unix timestamp (in seconds) after which the timed-refund sapient signer can execute refunds for this intent's wallets. Only set when timed refund support was enabled at quote time (v1.5 intents).
         trailsContracts:
           $ref: '#/components/schemas/TrailsContracts'
         expiresAt:
