@@ -42,6 +42,11 @@ The Trails protocol consists of several core smart contracts:
 - **TrailsIntentEntrypoint** - Entry point for intent deposits with permit support
 - **TrailsRouterShim** - Execution wrapper with sentinel tracking for success/failure states
 - **HydrateProxy** - Runtime value injection for v1.5 intents. Resolves dynamic amounts and addresses (ERC-20 balances, intent wallet address) at execution time, enabling composable actions with `dynamic()` without committing exact amounts at quote time
+- **MalleableSapient** - Sapient signer that authorizes commitments whose calldata is hydrated on-chain (the signer module behind HydrateProxy)
+- **RequireUtils** - Precondition checks used inside intent execution to fail fast when on-chain state diverges from quote-time assumptions
+- **TrailsUtils** - Convenience contract that bundles `MalleableSapient`, `HydrateProxy`, and `RequireUtils` under a single deployed address. Its address is now returned by the API as `trailsUtilsAddress` alongside the other Trails contract addresses.
+- **TimedRefundSapient** - Sapient signer that authorizes a refund payload after a per-intent unlock timestamp. Combined with the API's intent recovery endpoints, lets users self-recover funds stranded in a counterfactual intent wallet after the configured timeout.
+- **PausableSapient** / **Pausable** - Sapient signer wrapping any inner signer with a circuit breaker. A set of designated operators can pause signature acceptance to halt new intent commitments without redeploying contracts; operator changes are emitted as events for observability.
 
 All contracts leverage Sequence v3 account abstraction for flexible, secure cross-chain operations.
 
