@@ -45,7 +45,7 @@ By default, standalone widgets and focused components use Trails' built-in EVM w
 | `isSmartWallet` | `boolean` | Signal that the connected wallet is a smart wallet |
 
 <Note>
-The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Wagmi is no longer required by default — pass adapters via the `adapters` prop instead.
+The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Wagmi is no longer required by default — pass adapters on the widget's `adapters` prop instead. See [Adapters](/sdk/adapters/overview).
 </Note>
 
 Use `@0xtrails/adapter-wagmi` for existing wagmi apps, and use `evmAdapter` from `0xtrails` for non-wagmi EVM providers. See [Wallet Integration](/sdk/wallet-integration).

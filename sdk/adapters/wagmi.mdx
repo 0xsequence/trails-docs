@@ -1,0 +1,118 @@
+---
+title: wagmi Adapter
+description: "Share your app's existing wagmi session with Trails using @0xtrails/adapter-wagmi. Supports wagmi 2 and wagmi 3."
+sidebarTitle: "Wagmi"
+---
+
+`@0xtrails/adapter-wagmi` lets Trails use the wagmi setup your app already has. Use it when your app owns `WagmiProvider`, chains, transports, and connectors, and you want the Trails widget to share that wallet state.
+
+A single package covers both major wagmi versions: `wagmi@^2.19.0 || ^3.2.0`. Wagmi-based stacks such as [Dynamic](/sdk/adapters/dynamic) (Fireblocks embedded wallets), [Privy](#embedded-wallets-privy), and Sequence Connect work through this adapter too.
+
+## Install
+
+```bash
+pnpm add @0xtrails/adapter-wagmi
+```
+
+## Quick start
+
+The adapter auto-detects a surrounding `WagmiProvider`
+
+```tsx
+import { Fund } from '0xtrails'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { WagmiProvider } from 'wagmi'
+
+const adapters = [wagmiAdapter()]
+
+export function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <Fund apiKey="YOUR_API_KEY" adapters={adapters} renderInline />
+    </WagmiProvider>
+  )
+}
+```
+
+## Options
+
+```ts
+wagmiAdapter({
+  wagmiConfig,  // optional: wagmi config for adapter-owned runtime fallback
+  wallets,      // optional: wallet descriptors for labels, ordering, custom connect flows
+  sequence,     // optional: host-owned Sequence Connect hooks
+})
+```
+
+### Custom wallet descriptors
+
+Pass `wallets` when runtime connector inference isn't enough — to control how a wallet appears in Trails, or to wire a custom connect flow:
+
+```tsx
+const adapters = [
+  wagmiAdapter({
+    wagmiConfig,
+    wallets: [
+      {
+        id: 'host-wallet',
+        name: 'My Wallet',
+        flow: 'direct',         // or 'embedded'
+        placement: 'featured',  // pin to the top of the wallet list
+      },
+    ],
+  }),
+]
+```
+
+Descriptors can also carry a `connect: () => Promise<void>` callback that Trails invokes when the user picks that wallet — this is how embedded-wallet login flows are wired in (see the Privy example below).
+
+## Embedded wallets (Privy)
+
+Privy exposes its embedded wallet through `@privy-io/wagmi`, so it works with this adapter. Build the wagmi config with Privy's `createConfig`, then describe the embedded wallet with a custom `connect` action that triggers Privy's login:
+
+```tsx
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+import { createConfig, WagmiProvider } from '@privy-io/wagmi'
+
+const wagmiConfig = createConfig({ chains, transports })
+
+function usePrivyTrailsAdapters() {
+  const connectPrivyEmbedded = usePrivyEmbeddedConnect() // your hook: connectOrCreateWallet + setActiveWallet
+
+  return useMemo(
+    () => [
+      wagmiAdapter({
+        wagmiConfig,
+        wallets: [
+          {
+            id: 'privy',
+            name: 'Privy Embedded',
+            flow: 'embedded',
+            placement: 'featured',
+            connect: connectPrivyEmbedded,
+          },
+        ],
+      }),
+    ],
+    [connectPrivyEmbedded],
+  )
+}
+```
+
+When the user selects "Privy Embedded" in the Trails connect UI, Trails calls your `connect` callback, Privy runs its login flow, and the resulting wagmi session is picked up automatically.
+
+## Sequence Connect
+
+When wrapping the app in `<SequenceConnect>`, pass the host-owned Sequence hooks so the adapter can expose Sequence's connect modal and WaaS fee options inside the widget:
+
+```tsx
+import { useOpenConnectModal, useWaasFeeOptions } from '@0xsequence/connect'
+import { wagmiAdapter } from '@0xtrails/adapter-wagmi'
+
+const adapters = [
+  wagmiAdapter({
+    wagmiConfig,
+    sequence: { useOpenConnectModal, useWaasFeeOptions },
+  }),
+]
+```
