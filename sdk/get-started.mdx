@@ -47,6 +47,8 @@ bun add 0xtrails
 
 The SDK exports `Pay`, `Fund`, `Swap`, `Withdraw`, and `Earn` as purpose-built alternatives to `TrailsWidget`. Pick the component that matches what you're building.
 
+For widget-only usage, no wallet providers are required. When there is no parent wallet context and no `adapters` prop, Trails uses its built-in EVM wallet runtime.
+
 ### Pay
 
 User pays a specific amount to a specific recipient:
@@ -223,4 +225,4 @@ Pin to a specific version (e.g. `@1.5.0`) in production instead of `@latest`.
 
 Detailed configuration: [Pay](/sdk/modes/pay) · [Fund](/sdk/modes/fund) · [Swap](/sdk/modes/swap) · [Withdraw](/sdk/modes/withdraw) · [Earn](/sdk/modes/earn)
 
-If you need hooks: wrap your app with `TrailsProvider`. See the [Hooks documentation](/sdk/hooks#trailsprovider).
+If you need hooks: wrap your app with `QueryClientProvider` and `TrailsProvider`. If your app already has a wallet setup, pass explicit adapters. See [Hooks](/sdk/hooks#trailsprovider) and [Wallet Integration](/sdk/wallet-integration).

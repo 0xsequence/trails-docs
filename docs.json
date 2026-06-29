@@ -84,6 +84,7 @@
             "pages": [
               "sdk/get-started",
               "sdk/configuration",
+              "sdk/wallet-integration",
               "sdk/hooks",
               {
                 "group": "Adapters",

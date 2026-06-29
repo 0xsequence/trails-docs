@@ -32,19 +32,23 @@ appMetadata={{
 }}
 ```
 
-#### Wallet options
+#### Wallet runtime options
+
+By default, standalone widgets and focused components use Trails' built-in EVM wallet runtime. If your app already has a wallet setup, pass explicit adapters on either `TrailsProvider config.adapters` or the widget/focused component `adapters` prop.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `walletConnectProjectId` | `string` | WalletConnect project ID |
-| `walletOptions` | `string[]` | Wallet connector IDs to show (e.g. `["metamask", "walletconnect"]`) |
-| `adapters` | `TrailsAdapterEntry[]` | Explicit wallet runtime adapters. Use `wagmiAdapter` from [`@0xtrails/adapter-wagmi`](/sdk/adapters/wagmi) to share an existing wagmi session, or build your own with [`evmAdapter`](/sdk/adapters/eip-1193). See [Adapters](/sdk/adapters/overview). |
+| `walletConnectProjectId` | `string` | WalletConnect project ID for the built-in wallet runtime |
+| `walletOptions` | `string[]` | Built-in wallet connector IDs to show (for example, `["metamask", "walletconnect"]`) |
+| `adapters` | `TrailsAdapterEntry[]` | Explicit wallet adapters; use either provider-level or widget-level adapters, not both |
 | `hideAddWallet` | `boolean` | Hide "Add wallet" option |
 | `isSmartWallet` | `boolean` | Signal that the connected wallet is a smart wallet |
 
 <Note>
 The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Wagmi is no longer required by default — pass adapters on the widget's `adapters` prop instead. See [Adapters](/sdk/adapters/overview).
 </Note>
+
+Use `@0xtrails/adapter-wagmi` for existing wagmi apps, and use `evmAdapter` from `0xtrails` for non-wagmi EVM providers. See [Wallet Integration](/sdk/wallet-integration).
 
 #### Route options
 
@@ -115,4 +119,3 @@ See the individual mode pages for full prop details:
 - [Swap](/sdk/modes/swap) — `from`, `to`, `onSwapStart/Success/Error`
 - [Withdraw](/sdk/modes/withdraw) — `from`, `to`, `onWithdrawStart/Success/Error`
 - [Earn](/sdk/modes/earn) — `to` with `calldata`, `onEarnStart/Success/Error`
-
