@@ -1,0 +1,55 @@
+---
+title: GetEdgeStatus
+openapi: ../trails-api.gen.json post /rpc/Trails/GetEdgeStatus
+---
+
+## Overview
+
+The `GetEdgeStatus` endpoint returns the current status of an edge rail leg created by [`QuoteIntentEdge`](/api-reference/endpoints/quote-intent-edge). Use it to track the external (Solana / Tron) bridge hop's progress alongside the inner intent's `WaitIntentReceipt`/`GetIntentReceipt` stream.
+
+## Request Parameters
+
+### Required Fields
+
+- **edgeId** (string): The Trails edge quote ID returned by `QuoteIntentEdge`. The server resolves the underlying `relayRequestId` and origin chain from this ID, then queries the external provider.
+
+## Response
+
+- **status** (string): The edge rail status. Maps to the `EdgeStatus` enum values: `PENDING`, `DEPOSITED`, `FILLED`, `REFUNDED`, `FAILED`.
+- **initTransactionHash** (string, optional): The transaction hash that initiated the edge leg (deposit on the non-EVM origin chain, or handoff transfer for destination mode).
+- **fillTransactionHash** (string, optional): The transaction hash that filled the edge leg.
+- **refundTransactionHash** (string, optional): The transaction hash that refunded the edge leg when it could not be filled.
+- **transactionStates** (array, optional): Detailed per-transaction state info.
+- **failReason** (string, optional): Populated when the edge rail failed.
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/GetEdgeStatus', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ edgeId: 'edge_abc123' })
+});
+
+const status = await response.json();
+
+if (status.status === 'FILLED') {
+  console.log('Edge filled, fill tx:', status.fillTransactionHash);
+} else if (status.status === 'REFUNDED') {
+  console.log('Edge refunded:', status.refundTransactionHash);
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="QuoteIntentEdge" icon="route" href="/api-reference/endpoints/quote-intent-edge">
+    Create the edge quote
+  </Card>
+  <Card title="WaitIntentReceipt" icon="clock" href="/api-reference/endpoints/wait-intent-receipt">
+    Stream the inner intent's receipt updates
+  </Card>
+</CardGroup>

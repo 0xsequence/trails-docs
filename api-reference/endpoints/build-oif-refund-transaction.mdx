@@ -1,0 +1,73 @@
+---
+title: BuildOIFRefundTransaction
+openapi: ../trails-api.gen.json post /rpc/Trails/BuildOIFRefundTransaction
+---
+
+## Overview
+
+The `BuildOIFRefundTransaction` endpoint returns the direct on-chain transaction needed to refund an expired or unfilled OIF (Open Intents Framework) order through its input settler. After the order's `orderExpiresAt` deadline passes without a solver fill, any wallet can broadcast this transaction to return funds to the user.
+
+## Use Cases
+
+- Refund an OIF order whose solver did not fill before expiry
+- Self-serve recovery from a stranded OIF deposit
+
+## Request Parameters
+
+### Required Fields
+
+- **intentId** (string): The intent whose OIF order should be refunded.
+
+## Response
+
+- **intentId** (string)
+- **orderId** (string, optional): The on-chain OIF order ID, when known.
+- **to** (string): Transaction `to` address — the input settler contract.
+- **data** (string): Transaction calldata.
+- **value** (string): Transaction value (bigint).
+- **chainId** (number): Chain to broadcast on.
+- **orderExpiresAt** (string, optional): The expiry timestamp; the refund cannot be submitted until after this time.
+- **ready** (boolean): `true` when the order is in a state where the refund can be submitted now.
+- **status** (string): Current order state.
+
+## Example
+
+```typescript
+const response = await fetch('https://trails-api.sequence.app/rpc/Trails/BuildOIFRefundTransaction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY'
+  },
+  body: JSON.stringify({ intentId: 'intent_abc123' })
+});
+
+const tx = await response.json();
+
+if (!tx.ready) {
+  console.log('OIF order is not yet refundable. Status:', tx.status, 'expires:', tx.orderExpiresAt);
+  return;
+}
+
+const hash = await walletClient.sendTransaction({
+  to: tx.to,
+  data: tx.data,
+  value: BigInt(tx.value),
+  chainId: tx.chainId
+});
+```
+
+<Info>
+OIF refunds are only available for intents that used the `OIF` route provider. See [Route Providers — OIF](/sdk/quote-providers#oif-open-intents-framework) for routing details.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GetIntent" icon="magnifying-glass" href="/api-reference/endpoints/get-intent">
+    Inspect the intent's state and OIF order details
+  </Card>
+  <Card title="AbortIntent" icon="ban" href="/api-reference/endpoints/abort-intent">
+    Notify Trails after broadcasting the refund
+  </Card>
+</CardGroup>

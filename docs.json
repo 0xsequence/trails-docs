@@ -142,10 +142,13 @@
             "group": "Intents",
             "pages": [
               "api-reference/endpoints/quote-intent",
+              "api-reference/endpoints/quote-intent-edge",
               "api-reference/endpoints/commit-intent",
               "api-reference/endpoints/execute-intent",
               "api-reference/endpoints/get-intent-receipt",
               "api-reference/endpoints/wait-intent-receipt",
+              "api-reference/endpoints/get-edge-status",
+              "api-reference/endpoints/get-edges",
               "api-reference/endpoints/get-intent",
               "api-reference/endpoints/search-intents",
               "api-reference/endpoints/get-intent-history"
@@ -172,7 +175,10 @@
             "group": "Earn",
             "pages": [
               "api-reference/endpoints/yield-get-markets",
+              "api-reference/endpoints/yield-get-market-by-id",
+              "api-reference/endpoints/yield-get-networks",
               "api-reference/endpoints/yield-get-providers",
+              "api-reference/endpoints/yield-get-provider",
               "api-reference/endpoints/yield-get-balances",
               "api-reference/endpoints/yield-create-enter-action",
               "api-reference/endpoints/yield-create-exit-action",
@@ -183,7 +189,10 @@
             "group": "Intents (Advanced)",
             "pages": [
               "api-reference/endpoints/abort-intent",
-              "api-reference/endpoints/retry-intent"
+              "api-reference/endpoints/retry-intent",
+              "api-reference/endpoints/prepare-intent-recovery",
+              "api-reference/endpoints/build-intent-recovery-transaction",
+              "api-reference/endpoints/build-oif-refund-transaction"
             ]
           }
         ]
