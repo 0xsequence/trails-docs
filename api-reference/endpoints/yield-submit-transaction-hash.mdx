@@ -1,0 +1,76 @@
+---
+title: YieldSubmitTransactionHash
+description: "Report the on-chain hash of a broadcast Yield deposit or withdrawal transaction"
+openapi: ../trails-api.gen.json post /rpc/Trails/YieldSubmitTransactionHash
+---
+
+## Overview
+
+`YieldSubmitTransactionHash` reports the on-chain transaction hash of a broadcast Yield action back to Trails' upstream Yield provider so it can advance lifecycle tracking and discover the resulting position in aggregate balance queries.
+
+Yield actions are constructed through [`YieldCreateEnterAction`](/api-reference/endpoints/yield-create-enter-action) and [`YieldCreateExitAction`](/api-reference/endpoints/yield-create-exit-action), then signed and broadcast by the client. This endpoint is how the client hands the resulting hash back to Trails so the position shows up in [`YieldGetBalances`](/api-reference/endpoints/yield-get-balances).
+
+## Request Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `transactionId` | string | Yes | Yield transaction ID returned in the `YieldAction` payload from `YieldCreateEnterAction` / `YieldCreateExitAction` |
+| `transactionHash` | string | Yes | On-chain hash of the broadcast transaction |
+
+Both fields are trimmed and rejected as `InvalidArgument` if empty.
+
+## Response
+
+- **transaction** (`YieldTransaction`): The updated Yield transaction record.
+
+## Example
+
+```typescript
+// Step 1: Build the deposit action
+const actionResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/YieldCreateEnterAction', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    earnMarketId: 'base-usdc-aave-v3-lending',
+    userWalletAddress: '0xYourWalletAddress',
+  }),
+})
+const { action } = await actionResponse.json()
+const { transactions } = JSON.parse(action.payload)
+
+// Step 2: Sign and broadcast on-chain
+const hash = await walletClient.sendTransaction({
+  to: transactions[0].to,
+  data: transactions[0].data,
+  value: BigInt(transactions[0].value ?? 0),
+})
+
+// Step 3: Report the broadcast hash back to Yield
+await fetch('https://trails-api.sequence.app/rpc/Trails/YieldSubmitTransactionHash', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Access-Key': 'YOUR_ACCESS_KEY',
+  },
+  body: JSON.stringify({
+    transactionId: action.transactionId,
+    transactionHash: hash,
+  }),
+})
+```
+
+## Errors
+
+| Error | When |
+|-------|------|
+| `InvalidArgument` | `transactionId` or `transactionHash` is missing/empty |
+| `Unavailable` | The Yield provider is not configured on this deployment |
+
+## See also
+
+- [YieldCreateEnterAction](/api-reference/endpoints/yield-create-enter-action) — Build a deposit action
+- [YieldCreateExitAction](/api-reference/endpoints/yield-create-exit-action) — Build a withdrawal action
+- [YieldGetBalances](/api-reference/endpoints/yield-get-balances) — Read aggregate Yield balances
