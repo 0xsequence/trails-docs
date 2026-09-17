@@ -191,7 +191,7 @@ Native swap provider on Katana (chain id `747474`). Used for same-chain swaps be
 
 - Same-chain swaps only; not used for bridging
 - Exact-input (`tradeType: "EXACT_INPUT"`) only — exact-output is not supported
-- Requires explicit `swapProvider="EVERLONG"`; not currently selected by AUTO
+- Selected by `AUTO` for Katana swaps, ranked after `WETH` and ahead of `SUSHI`, `RELAY` and `LIFI`
 
 ```tsx
 <Swap apiKey="YOUR_API_KEY" swapProvider="EVERLONG" />
