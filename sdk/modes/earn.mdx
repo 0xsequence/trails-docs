@@ -32,7 +32,7 @@ Pre-configure the destination protocol:
     chain: "katana",
     calldata: encodedDepositCalldata,
   }}
-  onEarnSuccess={({ sessionId }) => console.log("deposited", sessionId)}
+  onEarnSuccess={({ intentId }) => console.log("deposited", intentId)}
 />
 ```
 
@@ -92,9 +92,12 @@ The `from` shape is a discriminated union on `paymentMethod`.
 
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
-| `onEarnStart` | `({ sessionId }) => void` | User begins the deposit flow |
-| `onEarnSuccess` | `({ sessionId }) => void` | Deposit completes successfully |
-| `onEarnError` | `({ sessionId, error }) => void` | Deposit encounters an error |
+| `onEarnStart` | `({ sessionId }) => void` | User begins the deposit flow. Fires before quoting, so no `intentId` yet |
+| `onEarnSuccess` | `({ sessionId, intentId }) => void` | Deposit completes successfully |
+| `onEarnError` | `({ sessionId, intentId, error }) => void` | Deposit encounters an error |
+
+`intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
+quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
 
 ## Examples
 
@@ -105,7 +108,7 @@ import { Earn } from '0xtrails/widget'
 
 <Earn
   apiKey="YOUR_API_KEY"
-  onEarnSuccess={({ sessionId }) => console.log("deposited", sessionId)}
+  onEarnSuccess={({ intentId }) => console.log("deposited", intentId)}
 />
 ```
 

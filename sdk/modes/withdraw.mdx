@@ -62,9 +62,12 @@ Recipient inputs accept `.eth` ENS names and resolve them automatically.
 
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
-| `onWithdrawStart` | `({ sessionId }) => void` | User begins the withdrawal flow |
-| `onWithdrawSuccess` | `({ sessionId }) => void` | Withdrawal completes successfully |
-| `onWithdrawError` | `({ sessionId, error }) => void` | Withdrawal encounters an error |
+| `onWithdrawStart` | `({ sessionId }) => void` | User begins the withdrawal flow. Fires before quoting, so no `intentId` yet |
+| `onWithdrawSuccess` | `({ sessionId, intentId }) => void` | Withdrawal completes successfully |
+| `onWithdrawError` | `({ sessionId, intentId, error }) => void` | Withdrawal encounters an error |
+
+`intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
+quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
 
 ## Examples
 
@@ -75,7 +78,7 @@ import { Withdraw } from '0xtrails/widget'
 
 <Withdraw
   apiKey="YOUR_API_KEY"
-  onWithdrawSuccess={({ sessionId }) => console.log("withdrawn", sessionId)}
+  onWithdrawSuccess={({ intentId }) => console.log("withdrawn", intentId)}
 >
   <button>Withdraw</button>
 </Withdraw>
@@ -92,7 +95,7 @@ import { Withdraw } from '0xtrails/widget'
     defaultToken: "ETH",
     defaultChain: "ethereum",
   }}
-  onWithdrawSuccess={({ sessionId }) => console.log("withdrawn", sessionId)}
+  onWithdrawSuccess={({ intentId }) => console.log("withdrawn", intentId)}
 />
 ```
 

@@ -91,9 +91,12 @@ The `from` shape is a discriminated union on `paymentMethod`. For wallet, exchan
 
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
-| `onSwapStart` | `({ sessionId }) => void` | User begins the swap flow |
-| `onSwapSuccess` | `({ sessionId }) => void` | Swap completes successfully |
-| `onSwapError` | `({ sessionId, error }) => void` | Swap encounters an error |
+| `onSwapStart` | `({ sessionId }) => void` | User begins the swap flow. Fires before quoting, so no `intentId` yet |
+| `onSwapSuccess` | `({ sessionId, intentId }) => void` | Swap completes successfully |
+| `onSwapError` | `({ sessionId, intentId, error }) => void` | Swap encounters an error |
+
+`intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
+quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
 
 ## Examples
 
@@ -104,7 +107,7 @@ import { Swap } from '0xtrails/widget'
 
 <Swap
   apiKey="YOUR_API_KEY"
-  onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
+  onSwapSuccess={({ intentId }) => console.log("swapped", intentId)}
 >
   <button>Swap Tokens</button>
 </Swap>
@@ -117,7 +120,7 @@ import { Swap } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   from={{ token: "ETH", chain: "ethereum" }}
   to={{ token: "USDC", chain: "base" }}
-  onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
+  onSwapSuccess={({ intentId }) => console.log("swapped", intentId)}
 />
 ```
 
@@ -127,7 +130,7 @@ import { Swap } from '0xtrails/widget'
 <Swap
   apiKey="YOUR_API_KEY"
   to={{ token: "USDC", chain: "base" }}
-  onSwapSuccess={({ sessionId }) => console.log("swapped", sessionId)}
+  onSwapSuccess={({ intentId }) => console.log("swapped", intentId)}
 />
 ```
 
@@ -138,7 +141,7 @@ import { Swap } from '0xtrails/widget'
   apiKey="YOUR_API_KEY"
   from={{ token: "USDC", chain: "ethereum" }}
   to={{ token: "USDC", chain: "base", amount: "100" }}
-  onSwapSuccess={({ sessionId }) => console.log("bridged", sessionId)}
+  onSwapSuccess={({ intentId }) => console.log("bridged", intentId)}
 />
 ```
 
@@ -308,8 +311,8 @@ useEffect(() => {
   onSwapStart={({ sessionId }) => {
     console.log('Swap started:', sessionId)
   }}
-  onSwapSuccess={({ sessionId }) => {
-    console.log('Swap completed:', sessionId)
+  onSwapSuccess={({ intentId }) => {
+    console.log('Swap completed:', intentId)
   }}
   onSwapError={({ sessionId, error }) => {
     console.error('Swap failed:', error)

@@ -23,7 +23,7 @@ import { Fund } from '0xtrails/widget'
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "USD", amount: 100 }}
   to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
-  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
 />
 ```
 
@@ -125,9 +125,12 @@ Control which funding methods are shown to the user:
 
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
-| `onFundingStart` | `({ sessionId }) => void` | User begins the funding flow |
-| `onFundingSuccess` | `({ sessionId }) => void` | Funding completes successfully |
-| `onFundingError` | `({ sessionId, error }) => void` | Funding encounters an error |
+| `onFundingStart` | `({ sessionId }) => void` | User begins the funding flow. Fires before quoting, so no `intentId` yet |
+| `onFundingSuccess` | `({ sessionId, intentId }) => void` | Funding completes successfully |
+| `onFundingError` | `({ sessionId, intentId, error }) => void` | Funding encounters an error |
+
+`intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
+quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
 
 ## Examples
 
@@ -141,7 +144,7 @@ import { Fund } from '0xtrails/widget'
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "EUR", amount: 100 }}
   to={{ token: "USDC", chain: "base" }}
-  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
 />
 ```
 
@@ -212,7 +215,7 @@ To open the exchange flow directly instead of showing the funding method selecto
     },
   }}
   to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
-  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
 />
 ```
 
@@ -282,7 +285,7 @@ const depositCalldata = encodeFunctionData({
     chain: "katana",
     calldata: depositCalldata,
   }}
-  onFundingSuccess={({ sessionId }) => console.log("deposited", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("deposited", intentId)}
 />
 ```
 

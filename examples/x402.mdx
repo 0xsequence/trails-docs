@@ -194,8 +194,8 @@ export default function PayWidget() {
 
   // Handle Trails payment completion
   const handleTrailsComplete = useCallback(
-    async (data: { sessionId: string }) => {
-      console.log("✅ Trails payment complete:", data.sessionId)
+    async (data: { sessionId: string; intentId: string | null }) => {
+      console.log("✅ Trails payment complete:", data.intentId)
       
       // Close Trails modal
       widgetRef.current?.closeModal?.()
