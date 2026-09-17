@@ -122,6 +122,7 @@
               },
               "sdk/theming",
               "sdk/customization",
+              "sdk/onramp/stripe",
               "sdk/quote-providers",
               "sdk/tokens-and-chains",
               "sdk/changelog"
