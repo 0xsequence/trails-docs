@@ -9,22 +9,15 @@ The headline of this release is **Tron support** — Trails' second non-EVM edge
 
 ## Highlights
 
-- **Tron (TVM) support** — pay *from* Tron (Tron → EVM) and *to* Tron (EVM → Tron) via [edge rails](/architecture/edge-alt-vms), same intent lifecycle and widget you already use.
+- **Tron (TVM) support** — pay *from* Tron via [edge rails](/architecture/edge-alt-vms), same intent lifecycle and widget you already use.
 - **New package [`@0xtrails/tvm`](/sdk/adapters/tron)** exporting `tronAdapter`, with TronLink / OKX / TokenPocket / Trust / MetaMask (Tron) / WalletConnect auto-detection.
 - **Leaner send flow** — `CommitIntent` is skipped for new integrations. Non-edge sends call [`ExecuteIntent`](/api-reference/endpoints/execute-intent) directly on a `QUOTED` intent, and edge sends arm via [`ExecuteIntentEdge`](/api-reference/endpoints/execute-intent-edge) before the user pays on the edge chain.
 
 ## Introducing Tron
 
-Tron joins Solana as an edge chain reached through an [edge rail](/architecture/edge-alt-vms). The intent is still anchored in the EVM orchestration described in [How Trails Works](/architecture/how-it-works); the Tron leg sits at the edge as either the origin the user funds from or the destination funds settle into.
+Tron joins Solana as an edge chain reached through an [edge rail](/architecture/edge-alt-vms). The intent is still anchored in the EVM orchestration described in [How Trails Works](/architecture/how-it-works); the Tron leg sits at the edge as the origin the user funds from.
 
-### What you can build
-
-| Direction | Wallet the user needs | SDK adapter |
-|--|--|--|
-| **Tron → EVM** (edge as origin) | A Tron wallet | Required — [`tronAdapter`](/sdk/adapters/tron) |
-| **EVM → Tron** (edge as destination) | A standard EVM wallet | Not required — just a Tron recipient address |
-
-Paying **from** Tron requires an ecosystem-native signer, because a viem `walletClient` can't sign a Tron transaction — supply it with `tronAdapter`. Paying **to** Tron works with a plain EVM wallet: the user signs one EVM origin transaction and Trails settles to the Tron recipient. See [Edge & Alternative VMs](/architecture/edge-alt-vms#origin-vs-destination) for the full model.
+Paying **from** Tron requires an ecosystem-native signer, because a viem `walletClient` can't sign a Tron transaction — supply it with `tronAdapter`. Use [`GetEdges`](/api-reference/endpoints/get-edges) to see which modes (`ORIGIN`, `DESTINATION`) the deployment enables for `TRON`. See [Edge & Alternative VMs](/architecture/edge-alt-vms#origin-vs-destination) for the full model.
 
 ### Add it to your widget
 
@@ -84,4 +77,5 @@ This release requires a trails-api deployment that executes `QUOTED` intents dir
 ## Patch releases
 
 - **0.18.1** — Include `dist/` in the published `@0xtrails/api` package. Releases 0.18.0 shipped without the built output under pnpm 11.22.0.
-- **0.18.2** — Minor fix in the Tron connector.
+- **0.18.2** — Wallet discovery fix in `@0xtrails/wallet`: a wallet announcing its own EIP-6963 `rdns` is shown as itself even when it sets a
+  compatibility flag such as `isMetaMask`, and MetaMask Flask / Institutional resolve as MetaMask.

@@ -14,6 +14,10 @@ Two integration styles are supported: built-in Tron wallet auto-detection (TronL
 pnpm add 0xtrails @0xtrails/tvm
 ```
 
+<Warning>
+`@0xtrails/tvm` requires a `Buffer` global in the browser. Set up the [polyfill](/sdk/adapters/overview#buffer-polyfill-for-tron) before importing the adapter, or the page renders blank.
+</Warning>
+
 ## Auto-detection (no Tron provider needed)
 
 The simplest setup — the adapter discovers Tron wallets on its own. No app-level Tron wallet provider is required:
@@ -51,7 +55,7 @@ function Checkout() {
     <Fund
       apiKey="YOUR_API_KEY"
       adapters={[tronAdapter({ wallet })]}
-      to={{ recipient: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', token: 'USDT', chain: 'tron', amount: '100' }}
+      to={{ recipient: '0x...', token: 'USDC', chain: 'polygon', amount: '100' }}
     />
   )
 }
