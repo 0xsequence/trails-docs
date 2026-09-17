@@ -215,7 +215,7 @@ const executeResponse = await fetch('https://trails-api.sequence.app/rpc/Trails/
 </CodeGroup>
 
 <Note>
-Quotes expire after **5 minutes**. Call `ExecuteIntent` before that window closes or request a new quote. For a Solana or Tron origin, call [`ExecuteIntentEdge`](/api-reference/endpoints/execute-intent-edge) instead — it arms the server-side fill monitor before the user pays on the edge chain.
+Quotes expire **15 minutes** after `QuoteIntent`. Call `ExecuteIntent` before that window closes or request a new quote. For a Solana or Tron origin, call [`ExecuteIntentEdge`](/api-reference/endpoints/execute-intent-edge) instead — it arms the server-side fill monitor before the user pays on the edge chain.
 </Note>
 
 ## Next steps
