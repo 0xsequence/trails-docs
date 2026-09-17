@@ -16,8 +16,8 @@ Two user-facing additions: a **Stripe onramp funding method**, and a **`labels` 
 
 ## Stripe onramp
 
-Stripe joins Mesh and Meld as a funding provider. It is a separate fund-method tile with its own screen, not a variant of an existing one, and it
-appears automatically — unlike the Mesh exchange tile, it does not require the `onramp` prop.
+Stripe joins Mesh and Meld as a funding provider. It is a separate fund-method tile with its own screen, not a variant of an existing one. Unlike the
+Mesh exchange tile it does not require the `onramp` prop; it appears once the Trails API reports Stripe as enabled for your project.
 
 Select the environment when you need the sandbox:
 
@@ -57,12 +57,12 @@ All four keys are optional, and a blank string falls back to the built-in copy. 
 
 ## Improvements
 
-- Read zero-fee route providers in the fee breakdown and the swap quote details panel, instead of having them filtered out.
+- Zero-fee route providers are now listed in the fee breakdown instead of being filtered out.
 
 ## New Exports
 
 - `TrailsLabels` — the type of the `labels` prop, exported from `0xtrails` and `0xtrails/widget`.
-- `StripeConfig` and `StripeEnvironment` — the shape of `onramp.stripe`.
+- `StripeConfig` — the shape of `onramp.stripe`.
 - `"stripe-onramp"` joins the `FundMethodListOption` union; `"onramp-stripe"` joins the SDK `FundMethod` union.
 
 ## Breaking Changes

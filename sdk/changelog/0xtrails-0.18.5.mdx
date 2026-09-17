@@ -14,8 +14,8 @@ This release covers changes after `0xtrails@0.18.4` through `0xtrails@0.18.5`.
 
 ## Connect screen
 
-The network tabs are gone. The connect screen now shows a single flat wallet list with a Select Chain picker for every wallet, and the connect
-call-to-action is scoped to EVM.
+The network tabs are gone. The connect screen now shows a single flat wallet list. Picking a wallet opens a Select Chain picker (the WalletConnect
+QR option still opens its own flow directly), and the "Connect EVM wallet" call-to-action opens the list scoped to EVM wallets.
 
 Wallets can be connected in any order: the EVM owner wallet is requested just-in-time when the flow actually needs it, rather than being forced
 first. This matters most for edge flows, where a user arriving with only a Solana or Tron wallet was previously blocked at the first step.
@@ -25,8 +25,7 @@ first. This matters most for edge flows, where a user arriving with only a Solan
 - Present Stripe above the credit-card method in the default fund-method order. The full default order is `wallet`, `onramp-stripe`, `onramp-meld`,
 `direct-transfer`, `onramp-mesh`.
 - See an accurate Installed badge on wallet rows.
-- Omit `countryCode` when calling `getOnrampProviderAvailability`: the server now resolves it from the connecting edge, so browser clients need no
-separate geo lookup.
+- Token and recipient selectors are disabled with a "Connect EVM wallet first" tooltip while the flow is waiting on the EVM owner wallet.
 
 ## Fixes
 
@@ -35,7 +34,9 @@ separate geo lookup.
 ## New Exports
 
 - `useAnnouncedProviderRdns` from `@0xtrails/wallet`.
-- `network?: ConnectWalletNetwork` on `TrailsConnectWalletProps`, scoping the connect CTA.
+- `rdns?: string | readonly string[]` on `WalletConnectorLike` in `@0xtrails/wallet`.
+- `network?: ConnectWalletNetwork` on `TrailsConnectWalletProps`, scoping the connect CTA. `ConnectWalletNetwork` (`"evm" | EdgeRailId`) is not
+itself exported; pass the string literal.
 
 ## API Bindings
 
@@ -47,11 +48,10 @@ broadcast transaction hash to Yield for lifecycle tracking.
 - `SettlementProvider`, `QuoteSettlementParams`, `QuoteSettlementInfo` and `IntentSettlement`, which describe settling a quote through an external
 payment processor. This is a merchant-side settlement path, distinct from the [Stripe onramp](/sdk/onramp/stripe) funding method, and is driven by
 calling the API directly rather than through the widget.
-- `countryCode` is now optional on `GetOnrampProviderAvailabilityRequest`.
+- `countryCode` is now optional on `GetOnrampProviderAvailabilityRequest`. The SDK still resolves and sends it.
+- `settlement?` is added to `QuoteIntentRequest`, `QuoteIntentResponse` and `IntentReceipt`; `description?` is added to `TransactionStateInfo`.
 
 ## Breaking Changes
 
-Both affect deep import paths only; neither type is reachable from the `0xtrails` barrel.
-
-- `ConnectWalletNetwork` no longer includes `"all"`. It is now `"evm" | EdgeRailId`.
-- `ConnectWalletTab` is removed along with the tabbed connect UI.
+None to the public type surface. Internally, `ConnectWalletNetwork` no longer includes `"all"` and `ConnectWalletTab` is removed with the tabbed
+UI; neither type was reachable from a published entrypoint.

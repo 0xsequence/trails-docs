@@ -10,7 +10,8 @@ Requires `0xtrails@0.18.3` or later.
 
 ## Enable it
 
-Nothing is required — Stripe appears in the funding method list by default. Unlike the Mesh exchange tile, it does not depend on the `onramp` prop.
+No SDK configuration is required — Stripe appears in the funding method list once the Trails API reports it as enabled for your project. Unlike the
+Mesh exchange tile, it does not depend on the `onramp` prop.
 
 Pass the `onramp.stripe` config only when you need the sandbox:
 
@@ -50,13 +51,16 @@ Stripe's identifier in `fundOptions.fundMethodsList` is `"stripe-onramp"`:
 />
 ```
 
-The default order is connected wallet, Stripe, credit card (Meld), crypto transfer, then exchange (Mesh).
+From `0xtrails@0.18.5` the default order is connected wallet, Stripe, credit card (Meld), crypto transfer, then exchange (Mesh). In 0.18.3 and 0.18.4
+Stripe is last.
+
+In pay mode the payment method screen ignores `fundMethodsList` and `hideUnlistedFundMethods`; Stripe shows there whenever it is enabled.
 
 ## Flow
 
 1. The user picks **Pay with Stripe** on the funding or payment method screen.
-2. They enter an amount; Trails quotes the purchase.
-3. On submit, a popup opens and Trails creates a Stripe onramp session keyed to the intent.
+2. They enter an amount (in pay mode the amount is fixed by the payment request); Trails quotes the purchase.
+3. On submit, a popup opens, the intent is committed, and Trails creates a Stripe onramp session keyed to the intent.
 4. The user completes the card payment in the popup while the widget monitors session status.
 5. Funds arrive as USDC on Base and the intent proceeds to its normal pending and receipt screens.
 
@@ -77,8 +81,8 @@ error during checkout rather than hiding the tile up front.
 Below the $1.00 minimum, production refuses to quote and the widget shows a minimum-amount message.
 
 <Warning>
-In sandbox, Stripe settles on **Base Sepolia** and always delivers a fixed **0.5 USDC** regardless of the amount quoted. Do not read sandbox
-delivery amounts as a test of production quoting.
+In sandbox, Stripe settles on **Base Sepolia** and always delivers a fixed **0.5 USDC** regardless of the amount quoted, and source amounts below
+$1.00 are clamped up to $1.00. Do not read sandbox delivery amounts as a test of production quoting.
 </Warning>
 
 ## Compared with the other providers
@@ -88,5 +92,3 @@ delivery amounts as a test of production quoting.
 | Stripe | Card | Card payment, settles to USDC on Base |
 | Meld | Card | Card payment through Meld's provider network |
 | Mesh | Exchange | Withdraw from a linked exchange account |
-
-Where several providers are available for a category, Trails prefers Meld over Stripe, since Stripe has the tighter country coverage.
