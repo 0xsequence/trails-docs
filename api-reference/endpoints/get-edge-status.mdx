@@ -17,8 +17,11 @@ The `GetEdgeStatus` endpoint returns the current status of an edge rail leg crea
 
 - **status** (string): The edge rail status. Maps to the `EdgeStatus` enum values: `PENDING`, `DEPOSITED`, `FILLED`, `REFUNDED`, `FAILED`.
 - **initTransactionHash** (string, optional): The transaction hash that initiated the edge leg (deposit on the non-EVM origin chain, or handoff transfer for destination mode).
+- **initChainId** (number, optional): Chain ID the `initTransactionHash` was submitted on.
 - **fillTransactionHash** (string, optional): The transaction hash that filled the edge leg.
+- **fillChainId** (number, optional): Chain ID the `fillTransactionHash` was submitted on.
 - **refundTransactionHash** (string, optional): The transaction hash that refunded the edge leg when it could not be filled.
+- **refundChainId** (number, optional): Chain ID the `refundTransactionHash` was submitted on.
 - **transactionStates** (array, optional): Detailed per-transaction state info.
 - **failReason** (string, optional): Populated when the edge rail failed.
 

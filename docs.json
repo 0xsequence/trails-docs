@@ -193,6 +193,7 @@
               "api-reference/endpoints/yield-get-balances",
               "api-reference/endpoints/yield-create-enter-action",
               "api-reference/endpoints/yield-create-exit-action",
+              "api-reference/endpoints/yield-submit-transaction-hash",
               "api-reference/endpoints/get-earn-pools"
             ]
           },
