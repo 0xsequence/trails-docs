@@ -39,8 +39,8 @@ import { Pay } from '0xtrails/widget'
     chain: "polygon",
     amount: "25",
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    updateOrderStatus(orderId, 'paid', sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    updateOrderStatus(orderId, 'paid', intentId)
   }}
 >
   <button>Pay $25</button>
@@ -61,7 +61,7 @@ Use Circle's CCTP for native USDC bridging:
     amount: "500",
   }}
   bridgeProvider="CCTP"
-  onPaymentSuccess={({ sessionId }) => processLargePayment(sessionId)}
+  onPaymentSuccess={({ intentId }) => processLargePayment(intentId)}
 >
   <button>Pay $500</button>
 </Pay>
@@ -97,8 +97,8 @@ export const CrossChainNFTPurchase = () => {
         amount: "0.00002",
         calldata: purchaseCalldata,
       }}
-      onPaymentSuccess={({ sessionId }) => {
-        console.log('NFT purchased:', sessionId)
+      onPaymentSuccess={({ intentId }) => {
+        console.log('NFT purchased:', intentId)
       }}
       onPaymentError={({ sessionId, error }) => {
         console.error('Purchase failed:', sessionId, error)
@@ -148,15 +148,15 @@ export function CheckoutButton({ order }) {
         createPaymentRecord({ orderId: order.id, sessionId, status: 'processing' })
         setStatus('processing')
       }}
-      onPaymentSuccess={async ({ sessionId }) => {
-        const verified = await verifyPayment(sessionId)
+      onPaymentSuccess={async ({ intentId }) => {
+        const verified = await verifyPayment(intentId)
         if (verified) {
           await fulfillOrder(order.id)
           setStatus('complete')
         }
       }}
-      onPaymentError={({ sessionId, error }) => {
-        logPaymentError(sessionId, error)
+      onPaymentError={({ sessionId, intentId, error }) => {
+        logPaymentError(sessionId, intentId, error)
         setStatus('failed')
       }}
     >
@@ -178,8 +178,8 @@ import { Trails } from '@0xtrails/api'
 
 const trails = new Trails({ accessKey: process.env.TRAILS_ACCESS_KEY })
 
-export async function verifyPayment(sessionId: string, expectedAmount: string) {
-  const receipt = await trails.getIntentReceipt({ intentId: sessionId })
+export async function verifyPayment(intentId: string, expectedAmount: string) {
+  const receipt = await trails.getIntentReceipt({ intentId })
 
   if (receipt.status !== 'COMPLETED') {
     return { verified: false, reason: 'Payment not completed' }

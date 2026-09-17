@@ -36,8 +36,8 @@ export const BaseDeposit = () => {
         currency: "USDC",
         chain: "polygon",
       }}
-      onFundingSuccess={({ sessionId }) => {
-        console.log('Deposit completed:', sessionId)
+      onFundingSuccess={({ intentId }) => {
+        console.log('Deposit completed:', intentId)
       }}
     />
   )
@@ -146,8 +146,8 @@ export const CustomVaultDeposit = () => {
         chain: "katana",
         calldata: depositCalldata,
       }}
-      onFundingSuccess={({ sessionId }) => {
-        console.log('Vault deposit completed:', sessionId)
+      onFundingSuccess={({ intentId }) => {
+        console.log('Vault deposit completed:', intentId)
       }}
     />
   )

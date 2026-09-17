@@ -28,8 +28,8 @@ export const BasicSwap = () => {
   return (
     <Swap
       apiKey="YOUR_API_KEY"
-      onSwapSuccess={({ sessionId }) => {
-        console.log('Swap completed:', sessionId)
+      onSwapSuccess={({ intentId }) => {
+        console.log('Swap completed:', intentId)
       }}
       onSwapError={({ sessionId, error }) => {
         console.error('Swap failed:', sessionId, error)
@@ -52,8 +52,8 @@ export const ETHtoUSDC = () => {
       apiKey="YOUR_API_KEY"
       from={{ token: "ETH", chain: "ethereum" }}
       to={{ token: "USDC", chain: "base" }}
-      onSwapSuccess={({ sessionId }) => {
-        console.log('Swap completed:', sessionId)
+      onSwapSuccess={({ intentId }) => {
+        console.log('Swap completed:', intentId)
       }}
     >
       <button>Swap ETH → USDC</button>
@@ -74,8 +74,8 @@ export const CCTPSwap = () => {
       bridgeProvider="CCTP"
       from={{ token: "USDC", chain: "ethereum" }}
       to={{ token: "USDC", chain: "base" }}
-      onSwapSuccess={({ sessionId }) => {
-        console.log('Swap completed:', sessionId)
+      onSwapSuccess={({ intentId }) => {
+        console.log('Swap completed:', intentId)
       }}
     >
       <button>Bridge USDC via CCTP</button>
