@@ -79,6 +79,12 @@ const { intentStatus } = await armResponse.json()
 // Step 4: Poll GetIntentReceipt / WaitIntentReceipt for completion.
 ```
 
+## Timing Requirements
+
+<Warning>
+Arm the intent within the quote's expiration window (**15 minutes** from `QuoteIntentEdge`). After arming, the user must complete the edge deposit before the intent's overall expiry, otherwise the intent refunds.
+</Warning>
+
 ## Errors
 
 | Error | When |
