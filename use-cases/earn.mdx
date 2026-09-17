@@ -30,8 +30,8 @@ export const App = () => {
       apiKey="YOUR_API_KEY"
       renderInline={true}
       theme="auto"
-      onEarnSuccess={({ sessionId }) => {
-        console.log('Deposit completed:', sessionId)
+      onEarnSuccess={({ intentId }) => {
+        console.log('Deposit completed:', intentId)
       }}
     />
   )

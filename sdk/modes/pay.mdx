@@ -23,7 +23,7 @@ import { Pay } from '0xtrails/widget'
     chain: "base",
     amount: "50",
   }}
-  onPaymentSuccess={({ sessionId }) => markOrderPaid(sessionId)}
+  onPaymentSuccess={({ intentId }) => markOrderPaid(intentId)}
 />
 ```
 
@@ -90,9 +90,12 @@ All focused components share these optional props:
 
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
-| `onPaymentStart` | `({ sessionId }) => void` | User initiates the payment flow |
-| `onPaymentSuccess` | `({ sessionId }) => void` | Payment completes successfully |
-| `onPaymentError` | `({ sessionId, error }) => void` | Payment encounters an error |
+| `onPaymentStart` | `({ sessionId }) => void` | User initiates the payment flow. Fires before quoting, so no `intentId` yet |
+| `onPaymentSuccess` | `({ sessionId, intentId }) => void` | Payment completes successfully |
+| `onPaymentError` | `({ sessionId, intentId, error }) => void` | Payment encounters an error |
+
+`intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
+quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
 
 ## Examples
 
@@ -111,8 +114,8 @@ import { Pay } from '0xtrails/widget'
     chain: "polygon",
     amount: "25",
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    updateOrderStatus(orderId, "paid", sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    updateOrderStatus(orderId, "paid", intentId)
   }}
 >
   <button>Pay $25</button>
@@ -136,7 +139,7 @@ Lock the user to pay from ETH on Ethereum:
     token: "ETH",
     chain: "ethereum",
   }}
-  onPaymentSuccess={({ sessionId }) => console.log("paid", sessionId)}
+  onPaymentSuccess={({ intentId }) => console.log("paid", intentId)}
 />
 ```
 
@@ -203,7 +206,7 @@ const mintCalldata = encodeFunctionData({
     amount: "0.00002",
     calldata: mintCalldata,
   }}
-  onPaymentSuccess={({ sessionId }) => console.log("minted", sessionId)}
+  onPaymentSuccess={({ intentId }) => console.log("minted", intentId)}
 >
   <button>Mint NFT</button>
 </Pay>
@@ -227,7 +230,7 @@ const mintCalldata = encodeFunctionData({
     imageUrl: "https://mystore.com/logo.png",
   }}
   onPaymentStart={({ sessionId }) => console.log("started", sessionId)}
-  onPaymentSuccess={({ sessionId }) => markOrderPaid(sessionId)}
+  onPaymentSuccess={({ intentId }) => markOrderPaid(intentId)}
   onPaymentError={({ error }) => console.error("failed", error)}
 />
 ```
