@@ -183,7 +183,7 @@ console.log('Receipt:', receipt);
 ## Timing Requirements
 
 <Warning>
-Call `ExecuteIntent` within the quote's expiration window (**5 minutes** from `QuoteIntent`). If the quote expires before execution, request a new quote and execute again. Legacy callers that committed first have **10 minutes** after `CommitIntent` to execute.
+Call `ExecuteIntent` within the quote's expiration window (**15 minutes** from `QuoteIntent`). If the quote expires before execution, request a new quote and execute again. Legacy callers that committed first still share this same quote-expiry window — `CommitIntent` does not extend it.
 </Warning>
 
 ## Error Handling

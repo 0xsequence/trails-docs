@@ -122,7 +122,7 @@ Use `EXACT_INPUT` when you know how much you want to spend, and `EXACT_OUTPUT` w
     The `intent` object contains everything needed to execute the intent and the server rejects mutated payloads, so pass it back unchanged.
 
 <Warning>
-Quotes expire **5 minutes** after being issued. Call `ExecuteIntent` (or `ExecuteIntentEdge` for Solana/Tron origins) within this window, or request a new quote. Legacy callers that commit first have **10 minutes** after commit to execute.
+Quotes expire **15 minutes** after being issued. Call `ExecuteIntent` (or `ExecuteIntentEdge` for Solana/Tron origins) within this window, or request a new quote. Committing first does not extend the window; legacy callers still share the same 15-minute quote expiry.
 </Warning>
   </Step>
 
@@ -536,12 +536,12 @@ Quotes have strict time limits:
 
 | Stage | Time Limit | What Happens |
 |-------|------------|--------------|
-| Quote validity | 5 minutes | Quote expires, request a new one |
+| Quote validity | 15 minutes | Quote expires, request a new one |
 | After ExecuteIntent / ExecuteIntentEdge | N/A | Trails handles execution timing |
-| Legacy: After CommitIntent | 10 minutes | Must call ExecuteIntent within this window |
+| Legacy: After CommitIntent | Shares quote expiry | Must call ExecuteIntent before the original 15-minute window closes |
 
 <Tip>
-Always check quote expiration before executing. The `intent.expiresAt` timestamp indicates when the quote becomes invalid.
+Always check quote expiration before executing. The `intent.expiresAt` timestamp is the single deadline for calling `ExecuteIntent` (or `ExecuteIntentEdge`), whether or not you committed first.
 </Tip>
 
 ## Rate Limiting
