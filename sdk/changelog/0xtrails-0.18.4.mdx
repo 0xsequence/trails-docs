@@ -1,0 +1,52 @@
+---
+title: "0xtrails@0.18.4"
+description: "Release notes for the 0xtrails SDK v0.18.4 — consent checkbox"
+---
+
+_Released September 1, 2026_
+
+This release covers changes after `0xtrails@0.18.3` through `0xtrails@0.18.4`.
+
+## Highlights
+
+- **`consentCheckbox` prop** — gate the confirm button behind a terms tick.
+
+## Consent checkbox
+
+Pass `consentCheckbox` to render a consent line directly above the primary form button:
+
+```tsx
+<Fund
+  apiKey="YOUR_TRAILS_API_KEY"
+  consentCheckbox={{
+    label:
+      `I've read and agree to the ` +
+      `<a href="https://example.org/terms">Terms &amp; Conditions</a>`,
+    requiredMessage: 'Please accept the Terms & Conditions to continue.',
+  }}
+/>
+```
+
+Setting the prop with a non-blank `label` makes the tick mandatory — there is no separate required flag. While the box is unticked the button is
+not disabled, and pressing it flags the row instead of submitting, so a ready quote still reads as ready. Consent is per session and never
+persisted.
+
+`label` is inline HTML sanitised against a fixed allowlist. See [Consent checkbox](/sdk/customization#consent-checkbox) for the sanitising rules and
+runtime behaviour.
+
+## Improvements
+
+- Gate every fund method by geographic availability, including methods listed explicitly in `fundOptions.fundMethodsList`. In 0.18.3 an explicit
+listing bypassed the availability check. Gated methods are withheld while availability is loading rather than shown and then removed.
+- Stripe country and quote failures now surface as readable messages ("Stripe onramp isn't available in your country", "Stripe couldn't provide a
+quote") instead of raw errors.
+- Reduce repeated country lookups: the resolved country is cached in `sessionStorage` for 10 minutes.
+
+## New Exports
+
+- `TrailsConsentCheckbox` — the type of the `consentCheckbox` prop, exported from `0xtrails` and `0xtrails/widget`.
+- `countryCode?` on `GetStripeOnrampQuotesRequest` in `@0xtrails/api`; the SDK sends the detected country with Stripe quote requests.
+
+## Breaking Changes
+
+None to the type surface. Note the availability change above: a fund method you list explicitly is now hidden where the API reports it unsupported.

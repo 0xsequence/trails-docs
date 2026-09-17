@@ -155,6 +155,95 @@ Variables cascade as normal CSS custom properties. You can set them globally or 
 
 ---
 
+## Widget copy overrides
+
+Pass `labels` to replace the widget's default copy. Every key is optional, and a blank string falls back to the built-in text.
+
+```tsx
+import { Fund } from '0xtrails/widget'
+
+<Fund
+  apiKey="YOUR_API_KEY"
+  labels={{
+    confirmButton: 'Donate',
+    formTitle: 'Donate',
+    methodsTitle: 'Choose a donation method',
+    tokensTitle: 'Donate with any token',
+  }}
+/>
+```
+
+| Key | What it renames | Default |
+|-----|-----------------|---------|
+| `confirmButton` | The action verb on the primary form button, and on the modal trigger button | `Fund`, `Pay`, `Swap`, `Deposit`, `Withdraw` by mode; the modal trigger shows `Earn` in earn mode |
+| `formTitle` | The amount form screen, and the crypto-transfer screens that continue it, so the header stays put across the flow | `Fund`, `Pay`, `Swap`, `Withdraw`, `Earn` by mode; `Deposit` on the transfer screens |
+| `methodsTitle` | The payment method picker | `Choose a funding method`; `Choose a payment method` in pay and earn modes; `Payment methods` on the pay flow's own picker |
+| `tokensTitle` | The screen where the user picks what to pay *with* | Varies by mode — `Fund with any token`, `Select From Token`, and others |
+
+Overrides apply only to the **configured mode's** screens. With `mode="fund"`, a `confirmButton` override does not follow the user onto the swap
+sub-screen reached from the fund header.
+
+<Note>
+Destination token pickers keep their own titles, and transient button states — "Enter an amount", "Getting quote...", "Connect your wallet",
+"Processing...", "Insufficient Balance" — are never overridden.
+</Note>
+
+Where a modal trigger button is rendered, an explicit `buttonText` prop takes precedence over `labels.confirmButton`.
+
+---
+
+## Consent checkbox
+
+Pass `consentCheckbox` to render a consent line directly above the primary form button.
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  consentCheckbox={{
+    label:
+      `I've read and agree to the ` +
+      `<a href="https://example.org/terms">Terms &amp; Conditions</a>`,
+    requiredMessage: 'Please accept the Terms & Conditions to continue.',
+  }}
+/>
+```
+
+| Key | Required | Purpose |
+|-----|----------|---------|
+| `label` | Yes | The consent line, as inline HTML |
+| `requiredMessage` | No | Standing notice shown under the checkbox after the button is pressed unticked |
+
+Setting the prop makes the tick **mandatory** — there is no separate required flag. While the box is unticked the button is not disabled by the
+checkbox; pressing it flags the row instead of submitting, so a ready quote still reads as ready. A failed press moves focus to the checkbox. With
+`requiredMessage` set, the notice stands under the row until the box is ticked and is announced to assistive technology. Without it, a failed press
+shakes and tints the row, and the tint clears itself (both are skipped under `prefers-reduced-motion`).
+
+The row is not a `<label>`: clicking a link inside the consent line follows the link and does not tick the box.
+
+The checkbox renders on the confirm screens of every mode, and is scoped to the configured mode exactly as `labels` is. Consent is per session and
+never persisted — a reload asks again, which is what makes the tick evidence of assent rather than a remembered preference.
+
+### Label sanitising
+
+`label` is inline HTML, sanitised against a fixed allowlist:
+
+- Allowed tags: `a`, `b`, `strong`, `i`, `em`, `span`, `br`. Every other tag is unwrapped — the tag goes, its text stays — except `script`,
+`style`, `template`, `iframe`, `object`, `embed` and `noscript`, which are removed with their contents. Every attribute is stripped.
+- Surviving anchors are rewritten with `target="_blank" rel="noopener noreferrer"`, so following the link never costs the user a filled-in quote.
+- An anchor keeps its `href` only if that href resolves to `http:`, `https:` or `mailto:` — which includes relative (`/terms`) and protocol-relative
+(`//host/path`) forms. Anything else, such as `javascript:` or `data:`, is unwrapped to plain text so nothing inert is left looking clickable.
+
+<Warning>
+A blank or whitespace-only `label` counts as no checkbox at all — and therefore no gate. The SDK logs a console warning when this happens. Bind
+this to a CMS or i18n value with care.
+
+Without `DOMParser` (server rendering), the label degrades to plain text: all markup is stripped, including allowed tags and links.
+
+If you interpolate an untrusted value into an `href`, validate it yourself. The allowlist is not that check.
+</Warning>
+
+---
+
 ## CSS variable reference
 
 ### Typography

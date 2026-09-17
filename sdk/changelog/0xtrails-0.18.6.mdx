@@ -1,0 +1,54 @@
+---
+title: "0xtrails@0.18.6"
+description: "Release notes for the 0xtrails SDK v0.18.6 — Arc chain support"
+---
+
+_Released September 16, 2026_
+
+This release covers changes after `0xtrails@0.18.5` through `0xtrails@0.18.6`.
+
+## Highlights
+
+- **Arc chain support** — chain id 5042, with USDC as the native gas token.
+- The `onramp.mesh.exchanges` allowlist now actually filters the Mesh exchange list.
+
+## Arc
+
+Arc (chain id **5042**) joins the supported mainnet chains. Its native gas token is **USDC**, with 18 decimals.
+
+Upgrading the SDK adds Arc to the chain registry, RPC client and indexer mapping. Refer to it by id `5042` or by the name `"arc"` anywhere a chain
+identifier is accepted. Which chains appear in the widget's chain list, and which routes are available to and from Arc, is decided by the Trails API.
+
+See [Supported Chains](/resources/supported-chains) for the full chain list.
+
+## Features
+
+- Filter the Mesh exchange list with `onramp.mesh.exchanges`. The option existed before but had no effect. An entry selects an exchange brand, not
+one Mesh integration variant: `"binance"` matches every Binance integration Mesh runs, while `"binanceUs"` is a separate name. Matching is
+case-insensitive and ignores spaces, hyphens and underscores; an entry that is not a known brand still matches a Mesh key or integration id
+exactly. The picker follows allowlist order, and the allowlist applies before the geographic and mobile filters. Brand names are the keys of
+`MESH_EXCHANGE_ALIASES`.
+
+## Fixes
+
+- Apply the origin chain-list filter in Pay mode.
+- Skip the chain picker for wallets that support a single chain.
+- Report Earn transaction hashes after broadcast so portfolio balances stay discoverable, and skip message-only Yield transactions when building
+Earn deposit calls.
+- Align the send-time passthrough gate with the quote-time gate. Sending now requires the same same-chain, same-token, non-multicall conditions
+that quoting does, so a transfer that was quoted as an intent is no longer sent as a direct passthrough.
+- Patch dependency advisories that reach the published packages.
+
+## New Exports
+
+- `MESH_EXCHANGE_ALIASES`, `MeshExchangeName`, `filterMeshExchangesByAllowlist`, `getMeshExchangeName`, `matchesMeshExchangeAllowlistEntry` from
+`0xtrails`.
+
+## API Bindings
+
+- `chainId` is added to `QuoteSettlementParams` (optional), `QuoteSettlementInfo` and `IntentSettlement` in `@0xtrails/api`.
+
+## Breaking Changes
+
+None. Note that `onramp.mesh.exchanges` now filters: if you were passing a list that did not match the exchanges you expect, those exchanges will
+disappear from the picker.

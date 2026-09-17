@@ -1,0 +1,23 @@
+---
+title: "0xtrails@0.18.1"
+description: "Release notes for the 0xtrails SDK v0.18.1"
+---
+
+_Released August 18, 2026_
+
+This release covers changes after `0xtrails@0.18.0` through `0xtrails@0.18.1`.
+
+A packaging fix with no source-code changes.
+
+<Warning>
+Upgrade to 0.18.1 if you installed 0.18.0. `@0xtrails/api@0.18.0` was published without its `dist/` directory and is unusable.
+</Warning>
+
+## Fixes
+
+- Install `@0xtrails/api` and get its built output: the package now declares a `files: ["dist"]` allowlist. Since pnpm 11.22.0, packing a workspace
+package with no `files` field falls back to the repository root `.gitignore`, which excludes `dist`.
+
+## Breaking Changes
+
+None.

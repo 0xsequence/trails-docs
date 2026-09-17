@@ -1,0 +1,21 @@
+---
+title: "0xtrails@0.18.2"
+description: "Release notes for the 0xtrails SDK v0.18.2"
+---
+
+_Released August 18, 2026_
+
+This release covers changes after `0xtrails@0.18.1` through `0xtrails@0.18.2`.
+
+A wallet-discovery fix in `@0xtrails/wallet`.
+
+## Fixes
+
+- Show a wallet that announces its own EIP-6963 `rdns` as itself, even when it sets a compatibility flag such as `isMetaMask`. An unrecognised `rdns`
+no longer falls through to flag-based detection and claims the MetaMask slot. Flag selectors still apply to legacy `window.ethereum` providers that
+announce no `rdns`.
+- Resolve MetaMask Flask (`io.metamask.flask`) and MetaMask Institutional (`io.metamask.mmi`) as MetaMask rather than as a generic injected wallet.
+
+## Breaking Changes
+
+None.

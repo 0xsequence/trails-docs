@@ -7,6 +7,11 @@ _Released August 18, 2026_
 
 The headline of this release is **Tron support** — Trails' second non-EVM edge chain — plus a **leaner send flow** that skips `CommitIntent` for new integrations.
 
+<Note>
+Install `0xtrails@0.18.1` rather than `0.18.0`. The `@0xtrails/api@0.18.0` package was published without its `dist/` directory and is unusable;
+[0.18.1](/sdk/changelog/0xtrails-0.18.1) is a packaging-only fix on top of this release.
+</Note>
+
 ## Highlights
 
 - **Tron (TVM) support** — pay *from* Tron via [edge rails](/architecture/edge-alt-vms), same intent lifecycle and widget you already use.
@@ -17,7 +22,7 @@ The headline of this release is **Tron support** — Trails' second non-EVM edge
 
 Tron joins Solana as an edge chain reached through an [edge rail](/architecture/edge-alt-vms). The intent is still anchored in the EVM orchestration described in [How Trails Works](/architecture/how-it-works); the Tron leg sits at the edge as the origin the user funds from.
 
-Paying **from** Tron requires an ecosystem-native signer, because a viem `walletClient` can't sign a Tron transaction — supply it with `tronAdapter`. Use [`GetEdges`](/api-reference/endpoints/get-edges) to see which modes (`ORIGIN`, `DESTINATION`) the deployment enables for `TRON`. See [Edge & Alternative VMs](/architecture/edge-alt-vms#origin-vs-destination) for the full model.
+Paying **from** Tron requires an ecosystem-native signer, because a viem `walletClient` can't sign a Tron transaction — supply it with `tronAdapter`. See [Edge & Alternative VMs](/architecture/edge-alt-vms#origin-vs-destination) for the full model.
 
 ### Add it to your widget
 
@@ -58,24 +63,137 @@ The following exports remain published but are **deprecated** and no longer invo
 - `commitIntentFn` — the send option that overrode the client-side commit call
 - `skipCommit` — the send option that skipped the client-side commit call
 
+Remove any custom commit step. This is not a compile break — the options are still accepted, just ignored:
+
+```diff
+ const { send } = await prepareSend({
+   // …
+-  commitIntentFn: myCommitIntent,
+ })
+
+-await send({ skipCommit: true })
++await send({})
+```
+
+If you relied on `commitIntentFn` for side effects such as analytics, move that logic into your own code. The SDK now writes the local
+committed-intent cache itself, so Recover, history and offline-history fallbacks stay populated without the round trip.
+
 <Note>
 This release requires a trails-api deployment that executes `QUOTED` intents directly. Deployments running the [`ExecuteIntentEdge`](/api-reference/endpoints/execute-intent-edge)-capable release (August 2026 onward) satisfy this — see the [trails-api release branch](https://github.com/0xsequence/trails-api/tree/release).
 </Note>
 
-## New package
+## Migration Notes
 
-- Add [`@0xtrails/tvm`](/sdk/adapters/tron), exporting `tronAdapter` for Tron (TVM) wallet support. Install it alongside `0xtrails`:
+### Edge sends now arm before depositing
 
-  ```bash
-  pnpm add 0xtrails @0xtrails/tvm
-  ```
+`send()` on a Solana- or Tron-origin intent calls `ExecuteIntentEdge({ intentId })` before the edge deposit. This is the server's signal that the user
+is proceeding: it resolves and validates the edge quote from the intent and starts fill monitoring.
+
+The practical effect is that arm failures — an expired quote, or an intent in `ABORTED`, `FAILED`, `REFUNDED` or `INVALID` — now throw *before* the
+wallet prompt, so no funds move on the edge chain. Retrying against an intent already in `EXECUTING` or `SUCCEEDED` skips the duplicate deposit and
+falls through to receipt polling.
+
+### Replace `setSolanaSupportEnabled`
+
+The Solana-specific toggle is gone in favour of a rail-agnostic pair:
+
+```diff
+-import { setSolanaSupportEnabled } from '0xtrails'
++import { setEdgeRailSupportEnabled, EDGE_RAIL } from '0xtrails'
+
+-setSolanaSupportEnabled(true)
++setEdgeRailSupportEnabled(EDGE_RAIL.SOLANA, true)
+```
+
+`isEdgeRailSupportEnabled(railId)` is the matching getter. Rail ids are `"solana"` and `"tron"`.
+
+## Features
+
+### Edge and intents
+
+- Pass an edge-token address anywhere a Solana mint was accepted — Tron base58 addresses now validate as destination tokens.
+
+### Composable actions
+
+- Pass `actions?: ActionItem[]` to `TrailsWidget` to run composable destination calls after funding the destination intent wallet. Mutually exclusive
+with `toCalldata`. `toAddress` is not passed as the quote recipient, so use per-action recipients instead.
+
+### Wallet connection
+
+- Connect a wallet your host app has already connected to, instead of seeing "Could not connect wallet".
+- Register the Solana Mobile Wallet Adapter through the new `SvmMobileWalletAdapterConfig` and `SvmMobileWalletAdapterOptions` types in
+`@0xtrails/svm`.
+- Connect over WalletConnect on iOS, with wallet-specific options, scoped pairing URI state and a QR fallback.
+- See connectable wallets prioritised in the wallet list.
+
+### Funding and swap flows
+
+- Select a Solana or Tron funding wallet and have that rail's origin token seeded automatically, even when `fromToken` and `fromChainId` preselect an
+EVM origin. Deselecting the edge wallet reverts to the configured origin.
+- Fund from an exchange in swap mode instead of dead-ending after the intent is armed.
+- Copy the Intent ID from quote details.
+- See provider names and links in the fee breakdown for Everlong, Gas.zip, OIF, Somnia Exchange, Somnia Swap and WETH, which previously rendered as
+bare provider ids.
+
+### v1.5 multicall encoding
+
+- Approve the destination token to the real target contract: `destinationApproveAddress` is derived from the call target when a `to.calls` batch has
+exactly one unique target. Multi-target batches drop an explicit `to.approve` and rely on inner hydrate approvals.
 
 ## Improvements
 
-- Forward `TrailsWidget` composable `actions` through widget payment forms so destination calls execute instead of falling back to a plain payment transfer.
+- Read readable messages instead of raw viem errors for wallets lacking `wallet_addEthereumChain` or `wallet_switchEthereumChain`, for other
+chain switch and add failures, and for insufficient funds.
+- Recover from EIP-1193 `4901` on chain switch by attempting `addChain` first, then surfacing a clear unsupported-network error.
+- Treat TronLink's "Confirmation declined by user" as a user rejection, returning to the retry screen.
+- Read a friendly provider-busy message when TronGrid endpoints are exhausted.
+- Keep Mesh sessions alive across widget rerenders.
+- Leave EIP-6963 provider objects unmutated during discovery, and tolerate malformed providers.
+- See correct APY on the Withdraw market component, and earn provider logos load.
 
-## Patch releases
+## Fixes
 
-- **0.18.1** — Include `dist/` in the published `@0xtrails/api` package. Releases 0.18.0 shipped without the built output under pnpm 11.22.0.
-- **0.18.2** — Wallet discovery fix in `@0xtrails/wallet`: a wallet announcing its own EIP-6963 `rdns` is shown as itself even when it sets a
-  compatibility flag such as `isMetaMask`, and MetaMask Flask / Institutional resolve as MetaMask.
+- Report a refunded edge intent as failed rather than "Completed". Terminal `REFUNDED`, `FAILED` and `ABORTED` states now take precedence over the
+submitted-deposit shortcut.
+- Link edge explorer entries using each hash's API-reported chain (`initChainId`, `fillChainId`, `refundChainId`) instead of inferring it from hash
+format. Requires a trails-api that reports those fields.
+- Prevent selecting an edge chain as both origin and destination in swap mode.
+
+## New Package
+
+- `@0xtrails/tvm` — Tron (TVM) plugin for the 0xtrails SDK, exporting `TronPluginProvider`, `tronAdapter`, `createTronWallet`,
+`useDetectedTronWallet`, `executeRelayTronQuote`, `withPersistentTronDisconnect`, `clearWalletDisconnected`, `markWalletDisconnected` and
+`readDisconnectedWalletIds`.
+
+## New Exports
+
+New widget props on `TrailsWidgetProps`: `tronRpcUrl`, `tronApiKey`, `tronWallet`, `actions`. `tronRpcUrl` is the base URL of a TronGrid-compatible
+HTTP API (default `https://api.trongrid.io`); `tronApiKey` is sent as the `TRON-PRO-API-KEY` header; `tronWallet` bridges a wallet your host app
+already manages, mirroring `solanaWallet`.
+
+New `TrailsProviderConfig` fields: `tronRpcUrl`, `tronApiKey`.
+
+New exports from `0xtrails`:
+
+- Chains: `isTronChainId`, `isEdgeChainId`, `TRON_MAINNET_CHAIN_ID`, `TRON_EDGE_CHAIN_ID`, `getEdgeChainListItem`,
+`buildBuiltinEdgeDestinationConfig`, `buildBuiltinEdgeDestinationConfigForChain`
+- Edge plugin configs: `createTronEdgeDestinationConfig`, `createTronEdgeOriginConfig`, `isTronEdgeDestinationConfig`, `isTronEdgeOriginConfig`
+- Addresses: `isTronAddress`, `isEdgeAddress`, `tokenAddressEqualForChain`, `chainAgnosticAddressEqual`
+- Configuration: `setEdgeRailSupportEnabled`, `isEdgeRailSupportEnabled`
+- Tron tokens: `TRON_USDT_ADDRESS`, `getTronToken`, `getTronTokens`, `getTronTokenPriceUsd`
+
+New exports from `0xtrails/widget`: `useOptionalTronWalletContext`, `useOptionalTvmWalletContext`, and the types `TronWalletContextValue`,
+`TvmWalletAdapter`, `TronTransaction`.
+
+New exports from `@0xtrails/wallet`: the types `EdgeWalletRailInput`, `TrailsExternalEdgeWallet`, `TrailsExternalTronWallet`, `WalletRailId`.
+
+New exports from `0xtrails/plugins/edge`: the types `TronEdgeOriginConfig`, `TronEdgeDestinationConfig`.
+
+New in `@0xtrails/api`: `executeIntentEdge` on the client, plus `ExecuteIntentEdgeRequest` and `ExecuteIntentEdgeResponse`.
+
+## Breaking Changes
+
+- Requires a trails-api deployment exposing `ExecuteIntentEdge` and executing `QUOTED` intents.
+- `setSolanaSupportEnabled` is no longer exported. Use `setEdgeRailSupportEnabled(railId, enabled)`.
+- The `SolanaEdgeWalletConfig` type is no longer exported from the `0xtrails` root. Import it from `0xtrails/plugins/edge`.
+- `commitIntent`, `useCommitIntent`, `commitIntentFn` and `skipCommit` are deprecated and ignored. They remain exported, so no compile break.
