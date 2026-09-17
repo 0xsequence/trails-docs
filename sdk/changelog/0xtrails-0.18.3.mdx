@@ -1,0 +1,70 @@
+---
+title: "0xtrails@0.18.3"
+description: "Release notes for the 0xtrails SDK v0.18.3 — Stripe onramp funding and widget copy overrides"
+---
+
+_Released August 30, 2026_
+
+This release covers changes after `0xtrails@0.18.2` through `0xtrails@0.18.3`.
+
+Two user-facing additions: a **Stripe onramp funding method**, and a **`labels` prop** for overriding widget copy.
+
+## Highlights
+
+- **Stripe onramp** — a first-class "Pay with Stripe" funding method, card-funded into USDC on Base.
+- **`labels` prop** — override the widget's button verb and screen titles without forking components.
+
+## Stripe onramp
+
+Stripe joins Mesh and Meld as a funding provider. It is a separate fund-method tile with its own screen, not a variant of an existing one, and it
+appears automatically — unlike the Mesh exchange tile, it does not require the `onramp` prop.
+
+Select the environment when you need the sandbox:
+
+```tsx
+<TrailsWidget
+  apiKey="YOUR_TRAILS_API_KEY"
+  onramp={{ stripe: { environment: 'sandbox' } }}
+  renderInline
+/>
+```
+
+`environment` accepts `"sandbox"` or `"production"` and defaults to `"production"`. No Stripe key is ever passed to the SDK — Stripe credentials are
+configured server-side, and the browser receives only a publishable key.
+
+Control ordering and inclusion through `fundOptions.fundMethodsList` using the identifier `"stripe-onramp"`.
+
+See [Stripe onramp](/sdk/onramp/stripe) for restrictions, flow detail and configuration.
+
+## Widget copy overrides
+
+Pass `labels` to replace the widget's default copy for the configured mode:
+
+```tsx
+<Fund
+  apiKey="YOUR_TRAILS_API_KEY"
+  labels={{
+    confirmButton: 'Donate',
+    formTitle: 'Donate',
+    methodsTitle: 'Choose a donation method',
+    tokensTitle: 'Donate with any token',
+  }}
+/>
+```
+
+All four keys are optional, and a blank string falls back to the built-in copy. Overrides apply only to the configured mode's screens. See
+[Widget copy overrides](/sdk/customization#widget-copy-overrides) for the full key reference.
+
+## Improvements
+
+- Read zero-fee route providers in the fee breakdown and the swap quote details panel, instead of having them filtered out.
+
+## New Exports
+
+- `TrailsLabels` — the type of the `labels` prop, exported from `0xtrails` and `0xtrails/widget`.
+- `StripeConfig` and `StripeEnvironment` — the shape of `onramp.stripe`.
+- `"stripe-onramp"` joins the `FundMethodListOption` union; `"onramp-stripe"` joins the SDK `FundMethod` union.
+
+## Breaking Changes
+
+None.

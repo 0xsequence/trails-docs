@@ -6,9 +6,30 @@ description: "Release notes and migration notes for the 0xtrails SDK"
 Track SDK releases, migration guidance, and notable changes.
 
 <CardGroup cols={1}>
+  <Card title="0xtrails@0.18.6" icon="tag" href="/sdk/changelog/0xtrails-0.18.6">
+    September 16, 2026 · Arc chain support (id 5042, USDC gas, CCTP routing), and the `onramp.mesh.exchanges` allowlist now filters.
+  </Card>
+  <Card title="0xtrails@0.18.5" icon="tag" href="/sdk/changelog/0xtrails-0.18.5">
+    September 10, 2026 · Connect screen rework — one flat wallet list, wallets connectable in any order, EVM owner requested just-in-time.
+  </Card>
+  <Card title="0xtrails@0.18.4" icon="tag" href="/sdk/changelog/0xtrails-0.18.4">
+    September 1, 2026 · `consentCheckbox` prop gates the confirm button behind a terms tick.
+  </Card>
+  <Card title="0xtrails@0.18.3" icon="tag" href="/sdk/changelog/0xtrails-0.18.3">
+    August 30, 2026 · Stripe onramp funding method, and a `labels` prop for overriding widget copy.
+  </Card>
+  <Card title="0xtrails@0.18.2" icon="tag" href="/sdk/changelog/0xtrails-0.18.2">
+    August 18, 2026 · Wallet discovery fix — wallets that spoof a compatibility flag no longer claim the MetaMask slot.
+  </Card>
+  <Card title="0xtrails@0.18.1" icon="tag" href="/sdk/changelog/0xtrails-0.18.1">
+    August 18, 2026 · Packaging fix; `@0xtrails/api@0.18.0` shipped without its build output.
+  </Card>
   <Card title="0xtrails@0.18.0" icon="tag" href="/sdk/changelog/0xtrails-0.18.0">
     August 18, 2026 · Tron support via the new `@0xtrails/tvm` adapter, and a leaner send flow that skips `CommitIntent` — non-edge intents execute
     directly from `QUOTED` and edge intents arm through `ExecuteIntentEdge`.
+  </Card>
+  <Card title="0xtrails@0.17.1" icon="tag" href="/sdk/changelog/0xtrails-0.17.1">
+    July 27, 2026 · Adds the `EVERLONG` route provider to the API bindings.
   </Card>
   <Card title="0xtrails@0.17.0" icon="tag" href="/sdk/changelog/0xtrails-0.17.0">
     July 21, 2026 · Solana support arrives — pay from and to Solana via edge rails with the new `@0xtrails/svm` adapter, plus gasless

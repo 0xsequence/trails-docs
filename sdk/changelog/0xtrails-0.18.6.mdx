@@ -1,0 +1,45 @@
+---
+title: "0xtrails@0.18.6"
+description: "Release notes for the 0xtrails SDK v0.18.6 — Arc chain support"
+---
+
+_Released September 16, 2026_
+
+This release covers changes after `0xtrails@0.18.5` through `0xtrails@0.18.6`.
+
+## Highlights
+
+- **Arc chain support** — chain id 5042, routed primarily over CCTP.
+- The `onramp.mesh.exchanges` allowlist now actually filters the Mesh exchange list.
+
+## Arc
+
+Arc (chain id **5042**) joins the supported mainnet chains. Its native gas token is **USDC**, and Trails bridges to and from it over **CCTP**, with
+Relay covering pairs CCTP does not connect. Arc has no swap routes.
+
+No integration work is required: upgrade the SDK and Arc appears in the chain registry, chain list, RPC client and indexer mapping. Refer to it by
+id `5042` or by the name `"arc"` anywhere a chain identifier is accepted.
+
+See [Supported Chains](/resources/supported-chains) for the full chain list.
+
+## Features
+
+- Filter the Mesh exchange list with `onramp.mesh.exchanges`. The option existed before but had no effect.
+
+## Fixes
+
+- Apply the origin chain-list filter in Pay mode.
+- Skip the chain picker for wallets that support a single chain.
+- Report Earn transaction hashes after broadcast so portfolio balances stay discoverable, and skip message-only Yield transactions when building
+Earn deposit calls.
+- Align the send-time passthrough gate with the quote-time gate, so a quote that was priced as a passthrough is also sent as one.
+- Patch dependency advisories that reach the published packages.
+
+## New Exports
+
+- `MESH_EXCHANGE_ALIASES`, `MeshExchangeName`, `filterMeshExchangesByAllowlist`, `getMeshExchangeName`, `matchesMeshExchangeAllowlistEntry`.
+
+## Breaking Changes
+
+None to the type surface. Note that `onramp.mesh.exchanges` now filters: if you were passing a list that did not match the exchanges you expect,
+those exchanges will disappear from the picker.
