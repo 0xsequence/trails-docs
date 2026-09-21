@@ -1,0 +1,98 @@
+---
+title: 'Checkout'
+description: 'Accept crypto at checkout and settle in USD on your Stripe account.'
+icon: 'cart-shopping'
+---
+
+## Merchant checkout with Trails
+
+Trails checkout turns "pay with crypto" into a normal Stripe charge. The shopper pays with any token they hold on any supported chain; Stripe pay-with-crypto attributes the resulting USDC deposit to a PaymentIntent on your account, and you settle in USD with a Stripe-hosted receipt.
+
+| Shopper pays with | You receive | Trails handles |
+|-------------------|-------------|----------------|
+| ETH on Arbitrum | USD on Stripe | Swap + bridge + Stripe deposit |
+| USDC on Polygon | USD on Stripe | Bridge + Stripe deposit |
+| USDC on Base | USD on Stripe | Stripe deposit |
+
+Compared with [Pay](/use-cases/pay), where you receive tokens at an address you control, checkout ends in fiat on a processor you already use. Order management, refunds and reporting stay in Stripe.
+
+<Card title="Polygon Checkout" icon="arrow-up-right-from-square" href="https://polygon.technology/checkout">
+  Accept crypto payments in your existing Stripe workflow. Book a demo, talk to sales, or ask about enabling Stripe checkout for your project.
+</Card>
+
+## Use cases
+
+- Add a **Pay with crypto** option next to card and PayPal in an ecommerce checkout
+- Sell digital goods, tickets or subscriptions to crypto-holding customers worldwide
+- Let marketplaces and platforms accept stablecoins without touching custody
+- Cut card fees and chargeback exposure while keeping settlement in USD
+
+## Example
+
+The whole integration is one widget prop. State the price in cents and pass your order reference:
+
+```tsx
+import { TrailsWidget } from '0xtrails'
+
+export function PayWithCrypto({ order }) {
+  return (
+    <TrailsWidget
+      apiKey={process.env.NEXT_PUBLIC_TRAILS_API_KEY}
+      stripe={{ amountCents: order.totalCents, orderRef: order.id }}
+      onPaymentCreated={({ settlement }) => {
+        // Stripe PaymentIntent id is known at quote time
+        recordPendingPayment(order.id, settlement.reference)
+      }}
+      onSuccess={({ intentId }) => {
+        // Verify server-side, then fulfill
+        fetch('/api/fulfill', { method: 'POST', body: JSON.stringify({ orderId: order.id, intentId }) })
+      }}
+      renderInline
+    />
+  )
+}
+```
+
+`onSuccess` waits for Stripe to confirm the deposit, so it fires when the money is actually on your Stripe account, not when the on-chain transfer lands.
+
+### Verify server-side
+
+The price is declared by the browser, so always confirm the settled amount against your order before fulfilling:
+
+```ts
+import { TrailsApi } from '@0xtrails/api'
+
+const trails = new TrailsApi(process.env.TRAILS_ACCESS_KEY)
+
+export async function fulfill(orderId: string, intentId: string) {
+  const order = await loadOrder(orderId)
+  const { intentReceipt } = await trails.getIntentReceipt({ intentId })
+  const settlement = intentReceipt.settlement
+
+  if (!settlement?.settled) throw new Error('not settled')
+  if (settlement.amountCents !== order.totalCents) throw new Error('amount mismatch')
+
+  await markPaid(orderId, { stripePaymentIntent: settlement.reference, receipt: settlement.externalUrl })
+}
+```
+
+## Fund the payment with a card too
+
+A checkout can also offer the [Stripe onramp](/sdk/stripe/onramp) tile, so a shopper with no crypto can pay the same order with a card. Both integrations are enabled per project on the Trails API side.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Stripe checkout reference" icon="code" href="/sdk/stripe/checkout">
+    Every prop, callback and the settlement flow
+  </Card>
+  <Card title="Pay" icon="bolt" href="/use-cases/pay">
+    Receive tokens directly instead of settling in fiat
+  </Card>
+  <Card title="Settlement on the receipt" icon="receipt" href="/api-reference/endpoints/get-intent-receipt#settlement">
+    Verify payments from your backend
+  </Card>
+  <Card title="Stripe onramp" icon="credit-card" href="/sdk/stripe/onramp">
+    Card funding for shoppers without crypto
+  </Card>
+</CardGroup>

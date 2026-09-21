@@ -30,6 +30,12 @@ The response includes:
   - `true`: Intent is complete (SUCCEEDED or FAILED)
   - `false`: Intent is still processing (may require another call)
 
+<Note>
+`done` tracks the intent's on-chain status only. For [settlement intents](/api-reference/endpoints/get-intent-receipt#settlement) (Stripe checkout),
+the processor confirmation arrives after `done: true`, and settlement-only changes do not wake this long-poll. Poll
+[`GetIntentReceipt`](/api-reference/endpoints/get-intent-receipt) for `settlement.terminal` once the intent completes.
+</Note>
+
 ## Behavior
 
 This endpoint will:

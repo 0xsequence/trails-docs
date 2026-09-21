@@ -8,7 +8,7 @@ icon: 'money-bill'
 
 Traditional funding flows require users to find an external bridge, swap to the required deposit token, pay multiple gas fees across networks, and navigate complex UIs.
 
-Trails handles all of that in a single transaction. Users can deposit from any token they hold on any supported chain — or use a fiat onramp, exchange transfer, or QR code — all in one embedded experience.
+Trails handles all of that in a single transaction. Users can deposit from any token they hold on any supported chain — or use a fiat card onramp ([Stripe](/sdk/stripe/onramp) or Meld), an exchange transfer (Mesh), or a QR code — all in one embedded experience. Fiat purchases land as USDC and route to the destination like any other origin funds, so the destination can be a token or chain the onramp itself does not support.
 
 ## Use cases
 
@@ -222,6 +222,7 @@ Quotes expire **15 minutes** after `QuoteIntent`. Call `ExecuteIntent` before th
 
 - [**Composable actions**](/use-cases/composable-actions) — programmatic DeFi deposits using `lend`, `deposit`, and `swap`
 - [**Fund mode configuration**](/sdk/modes/fund) — complete configuration options
+- [**Stripe onramp**](/sdk/stripe/onramp) — card funding restrictions, sandbox, and tile placement
 - [**SDK configuration**](/sdk/configuration) — widget setup and event handling
 - [**Theming**](/sdk/theming) — customize appearance
 - [**Hooks reference**](/sdk/hooks) — programmatic control

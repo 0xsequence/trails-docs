@@ -587,6 +587,11 @@ Explore additional endpoints to enhance your integration:
 - **[WaitIntentReceipt](/api-reference/endpoints/wait-intent-receipt)** - Stream intent updates with automatic polling until completion
 - **[GetIntentHistory](/api-reference/endpoints/get-intent-history)** - Get complete transaction history with receipts for a user's wallet address
 
+### Checkout
+
+- **[QuoteIntent with `settlement`](/api-reference/endpoints/quote-intent#settlement-quotes)** - Quote a payment that settles in USD on the merchant's Stripe account instead of at a destination address
+- **[GetIntentReceipt `settlement`](/api-reference/endpoints/get-intent-receipt#settlement)** - Read the Stripe settlement outcome and hosted receipt to verify a checkout before fulfilling
+
 ### Discovery & Search
 
 - **[SearchIntents](/api-reference/endpoints/search-intents)** - Search and filter intents by status, user, chain, or date range

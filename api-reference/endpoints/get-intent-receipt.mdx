@@ -41,6 +41,7 @@ The response includes:
 - **originTransaction** (IntentTransaction): Origin chain transaction details
 - **destinationTransactionId** (number): ID of destination transaction
 - **destinationTransaction** (IntentTransaction): Destination chain transaction details
+- **settlement** (IntentSettlement): External processor settlement, present when the intent was quoted with `settlement`. See [Settlement](#settlement)
 - **updatedAt** (string): Last update timestamp
 - **createdAt** (string): Creation timestamp
 
@@ -123,6 +124,51 @@ async function pollReceipt(intentId: string, maxAttempts = 60) {
 const receipt = await pollReceipt('intent_123abc');
 console.log('Completed!', receipt);
 ```
+
+## Settlement
+
+Intents created from a [settlement quote](/api-reference/endpoints/quote-intent#settlement-quotes) (the widget's
+[Stripe checkout](/sdk/stripe/checkout)) carry a `settlement` object computed at read time. The intent reaches `SUCCEEDED` when the destination
+transaction confirms; settlement continues afterwards until Stripe attributes the deposit, usually within one to two minutes. Pending payments refresh
+from Stripe at most every five seconds.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | `"stripe"` | Processor confirming the deposit |
+| `label`, `description` | `string` | Step copy for transaction-step UIs |
+| `reference` | `string` | Stripe PaymentIntent id |
+| `currency` | `string` | Lowercase ISO 4217 |
+| `amountCents` | `number` | Charge amount as declared at quote time |
+| `chainId` | `number` | Chain the deposit landed on |
+| `status` | `string` | Raw Stripe payment status, as last observed |
+| `settled` | `boolean` | Stripe confirmed the deposit |
+| `failed` | `boolean` | Terminal non-settled state (e.g. the PaymentIntent was canceled) |
+| `terminal` | `boolean` | The settlement will not change again. Key terminality on this, never on `status` |
+| `externalUrl` | `string` | Stripe-hosted receipt page, once available |
+
+Verify a checkout server-side before fulfilling:
+
+```typescript
+import { TrailsApi } from '@0xtrails/api'
+const trailsApi = new TrailsApi('YOUR_API_KEY')
+
+async function verifyStripeCheckout(intentId: string, expectedCents: number) {
+  const { intentReceipt } = await trailsApi.getIntentReceipt({ intentId });
+  const s = intentReceipt.settlement;
+
+  if (!s) throw new Error('Not a settlement intent');
+  if (!s.terminal) return { done: false };
+  if (!s.settled) throw new Error(`Settlement failed: ${s.status}`);
+  if (s.amountCents !== expectedCents) throw new Error('Amount mismatch');
+
+  return { done: true, paymentIntent: s.reference, receiptUrl: s.externalUrl };
+}
+```
+
+<Warning>
+The settled amount and order reference were declared by the checkout page under a public access key. Always compare them with your own order record;
+a settled payment proves the deposit, not the price.
+</Warning>
 
 ## Block Explorer Links
 

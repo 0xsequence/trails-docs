@@ -115,7 +115,7 @@ Control which funding methods are shown to the user:
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `fundMethodsList` | `FundMethodListOption[]` | Ordered list: `"connected-wallet"`, `"crypto-transfer"`, `"cc-onramp"`, `"exchange"` |
+| `fundMethodsList` | `FundMethodListOption[]` | Ordered list: `"connected-wallet"`, `"stripe-onramp"`, `"cc-onramp"`, `"crypto-transfer"`, `"exchange"` |
 | `hideUnlistedFundMethods` | `boolean` | Hide methods not in `fundMethodsList` (default: `false`) |
 | `hideSwap` | `boolean` | Hide the swap tab in the fund UI (default: `false`) |
 | `hideWallets` | `string[]` | Wallet addresses to exclude from the source wallet list |
@@ -145,6 +145,21 @@ import { Fund } from '0xtrails/widget'
   from={{ currency: "EUR", amount: 100 }}
   to={{ token: "USDC", chain: "base" }}
   onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
+/>
+```
+
+### Buy with Stripe
+
+The [Stripe onramp](/sdk/stripe/onramp) is a separate tile from the Meld card flow. It needs no configuration and appears once Stripe is enabled for
+your project; pass `onramp.stripe.environment` only for the sandbox, and pin its position with `fundMethodsList`:
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  to={{ recipient: "0x...", currency: "USDC", chain: "base" }}
+  onramp={{ stripe: { environment: "sandbox" } }}
+  fundMethodsList={["connected-wallet", "stripe-onramp"]}
+  hideUnlistedFundMethods
 />
 ```
 
