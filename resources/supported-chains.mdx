@@ -82,15 +82,22 @@ On **Arc**, USDC is the native gas token (18 decimals).
 
 Trails routes transactions through the optimal liquidity source for each transfer:
 
-| Provider | Type | Description |
-|----------|------|-------------|
-| **Relay** | Bridge / Filler | Fast cross-chain execution via intent-based filler network |
-| **CCTP V2** | Bridge | Native USDC cross-chain transfers via Circle |
-| **SushiSwap** | DEX | On-chain swap routing with V3 concentrated liquidity |
-| **0x Protocol** | DEX aggregator | Best execution routing across multiple DEXs |
-| **LayerZero OFT** | Bridge | Omnichain Fungible Token bridge for native cross-chain transfers |
-| **LayerZero Stargate** | Bridge | Native asset bridging via unified Stargate liquidity pools |
-| **Gas.zip** | Bridge | Gas-optimized cross-chain routing |
+| Provider | ID | Type | Description |
+|----------|----|------|-------------|
+| **Relay** | `RELAY` | Bridge / Filler | Fast cross-chain execution via intent-based filler network |
+| **CCTP V2** | `CCTP` | Bridge | Native USDC cross-chain transfers via Circle's burn-and-mint |
+| **Hyperlane** | `HYPERLANE` | Bridge | Warp routes over Hyperlane interchain messaging |
+| **LayerZero OFT** | `LZ_OFT` | Bridge | Omnichain Fungible Token and Stargate pool routes |
+| **LayerZero Transfer** | `LZ_TRANSFER` | Bridge | LayerZero Value Transfer API; explicit selection only |
+| **Open Intents Framework** | `OIF` | Bridge | Solver-filled cross-chain intents; explicit selection only |
+| **Gas.zip** | `GASZIP` | Bridge | Gas-optimized cross-chain routing |
+| **LI.FI** | `LIFI` | Bridge / DEX aggregator | Aggregated cross-chain and same-chain routing |
+| **0x Protocol** | `ZEROX` | DEX aggregator | Best execution routing across multiple DEXs |
+| **SushiSwap** | `SUSHI` | DEX | On-chain swap routing with V3 concentrated liquidity |
+| **Somnia Exchange** | `SOMNIA_EXCHANGE` | DEX | Multi-hop swap routes on Somnia |
+| **Somnia Swap** | `SOMNIA_SWAP` | DEX | USDso and USDC.e swaps on Somnia |
+| **Everlong** | `EVERLONG` | DEX | Same-chain swaps on Katana |
+| **WETH** | `WETH` | Wrapper | Native token wrapping and unwrapping on the same chain |
 
 See [Route Providers](/sdk/quote-providers) for details on configuring bridge and swap providers.
 
