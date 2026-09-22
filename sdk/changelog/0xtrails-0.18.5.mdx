@@ -46,7 +46,7 @@ SDK prop or hook.
 - `yieldSubmitTransactionHash(req)` on the client, with `SubmitYieldTransactionHashRequest` and `SubmitYieldTransactionHashResponse`, reporting a
 broadcast transaction hash to Yield for lifecycle tracking.
 - `SettlementProvider`, `QuoteSettlementParams`, `QuoteSettlementInfo` and `IntentSettlement`, which describe settling a quote through an external
-payment processor. This is a merchant-side settlement path, distinct from the [Stripe onramp](/sdk/onramp/stripe) funding method, and is driven by
+payment processor. This is a merchant-side settlement path, distinct from the [Stripe onramp](/sdk/stripe/onramp) funding method, and is driven by
 calling the API directly rather than through the widget.
 - `countryCode` is now optional on `GetOnrampProviderAvailabilityRequest`. The SDK still resolves and sends it.
 - `settlement?` is added to `QuoteIntentRequest`, `QuoteIntentResponse` and `IntentReceipt`; `description?` is added to `TransactionStateInfo`.

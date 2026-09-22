@@ -12,7 +12,6 @@
     "dark": "#3A0084"
   },
   "favicon": "/favicon.ico",
-
   "navigation": {
     "global": {
       "anchors": [
@@ -40,6 +39,7 @@
             "group": "Use Cases",
             "pages": [
               "use-cases/pay",
+              "use-cases/checkout",
               "use-cases/swap",
               "use-cases/fund",
               "use-cases/earn",
@@ -122,7 +122,14 @@
               },
               "sdk/theming",
               "sdk/customization",
-              "sdk/onramp/stripe",
+              {
+                "group": "Stripe",
+                "pages": [
+                  "sdk/stripe/overview",
+                  "sdk/stripe/onramp",
+                  "sdk/stripe/checkout"
+                ]
+              },
               "sdk/quote-providers",
               "sdk/tokens-and-chains",
               "sdk/changelog"
@@ -260,6 +267,10 @@
     {
       "source": "/use-cases/compose-actions",
       "destination": "/use-cases/composable-actions"
+    },
+    {
+      "source": "/sdk/onramp/stripe",
+      "destination": "/sdk/stripe/onramp"
     }
   ],
   "footer": {

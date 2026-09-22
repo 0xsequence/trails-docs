@@ -1,0 +1,155 @@
+---
+title: "Stripe Checkout"
+description: "Accept any token on any EVM chain and settle in USD on your Stripe account with the widget stripe prop"
+sidebarTitle: "Checkout"
+---
+
+Stripe checkout is Trails' merchant settlement path: you state a price in USD, the shopper pays with any token they hold on any supported EVM chain, and you settle in USD on **your** Stripe account with a Stripe-hosted receipt.
+
+Requires `0xtrails@0.19.0` or later. Access is arranged through [Polygon Checkout](https://polygon.technology/checkout); the `stripe` prop fails at quote time until a Stripe merchant key is mapped to your Trails project.
+
+## Quick start
+
+```tsx
+import { TrailsWidget } from '0xtrails'
+
+<TrailsWidget
+  apiKey="YOUR_TRAILS_API_KEY"
+  stripe={{ amountCents: 500, orderRef: 'order-123' }}
+  onPaymentCreated={({ settlement }) => {
+    // Stripe PaymentIntent reference, exact USD amount, livemode, settlement chain
+    savePendingPayment(settlement.reference, settlement.amountUsd)
+  }}
+  onSuccess={({ intentId, settlement }) => {
+    // Also fires when the payment failed or the settlement hold timed out,
+    // so always check `settled` before treating the order as paid.
+    if (!settlement?.settled) return showPaymentPending(intentId)
+    markOrderPaid('order-123', { intentId, reference: settlement.reference })
+  }}
+  renderInline
+/>
+```
+
+That is the whole integration. The `stripe` prop forces pay mode and derives the destination server-side, so the destination props (`toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata`, `actions`, and the advanced `settlement` prop) must be left unset. Passing any of them alongside `stripe` throws at render.
+
+<Note>
+Use `TrailsWidget` from `0xtrails` for Stripe checkout. The focused `<Pay />` component requires a `to` destination, which conflicts with the server-derived one, and does not expose `onPaymentCreated`.
+</Note>
+
+## How it works
+
+All Stripe knowledge lives in the Trails API. The SDK forwards a settlement request through the normal quote flow, and the API creates and arms a Stripe PaymentIntent, allocates the USDC deposit address, and derives the destination from it. Trails routes the shopper's token into that deposit, and the settle step is tracked on the intent receipt until Stripe attributes the deposit. No Stripe key ever reaches the browser, and no merchant backend is required to take a payment. The wire types shipped earlier in `@0xtrails/api@0.18.5`.
+
+Origins must be EVM chains; settlement quotes are not supported from non-EVM (edge) origins.
+
+## The `stripe` prop
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `amountCents` | `number` | Price in USD cents (`500` is $5.00). Must be a positive integer. |
+| `orderRef` | `string` | Your order or cart id. Recorded in the PaymentIntent metadata and used as the checkout identity: a new `orderRef` mints a fresh checkout, so a new order never reuses a previous order's payment. Strongly recommended. |
+| `chainId` | `number` | Chain the USDC deposit settles on. Live keys accept Base (`8453`, default), Polygon (`137`) and Ethereum (`1`); test keys settle on Base Sepolia (`84532`) only. Unsupported values throw at render with the supported list. |
+| `testMode` | `boolean` | Set when the project's merchant key is a Stripe test-mode key. Aligns the pre-quote display with Base Sepolia; the executed destination always comes from the quote. |
+
+Changing `amountCents` while `orderRef` stays the same keeps the checkout reference: the API cancels the armed payment and re-arms it at the new amount. When `orderRef` is omitted, one checkout reference spans the lifetime of the `stripe` prop, so set the prop to `undefined` between purchases on a long-lived mount.
+
+Use `getStripeSettlementChainIds(mode)` to validate a chain taken from untrusted input before passing it as `chainId`:
+
+```ts
+import { getStripeSettlementChainIds } from '0xtrails'
+
+getStripeSettlementChainIds('live') // [8453, 137, 1]
+getStripeSettlementChainIds('test') // [84532]
+```
+
+## Callbacks
+
+| Callback | Payload | When it fires |
+|----------|---------|---------------|
+| `onPaymentCreated` | `{ sessionId, settlement: QuoteSettlementInfo }` | Once per armed payment, at quote time, before the shopper executes. Re-quotes under the same checkout reuse the payment and do not fire again. |
+| `onSuccess` | `CheckoutEventBase & { settlement?: IntentSettlement }` | Held while settlement is pending, then fires once Stripe confirms the deposit, the payment fails, or the pending hold times out. Check `settlement.settled`; never treat the callback alone as payment. Carries `intentId` for receipt lookups. |
+
+`QuoteSettlementInfo` has `provider`, `reference` (the Stripe PaymentIntent id), `currency`, `amountCents`, `amountUsd`, `livemode` and `chainId`.
+
+`IntentSettlement` adds the live state: `status` (raw Stripe status), `settled`, `failed`, `terminal`, and `externalUrl` (the Stripe-hosted receipt once available). Key terminality on `terminal`, never on the status string. `terminal` can be true with both `settled` and `failed` false when the payment was retired with an unknown outcome, so gate fulfillment on `settled` alone.
+
+## Flow
+
+1. The widget quotes with a `settlement` descriptor instead of a destination. The API creates and arms a Stripe PaymentIntent for the checkout reference and returns the derived destination. `onPaymentCreated` fires.
+2. The shopper picks any token on any chain and confirms once. Trails swaps, bridges and deposits USDC to the Stripe-allocated address.
+3. The intent reaches its terminal on-chain status. The pending screen shows a single **processing** state instead of per-hop steps.
+4. Stripe attributes the deposit, usually within one to two minutes. The receipt's `settlement.settled` flips, the receipt screen shows the Stripe receipt link, and `onSuccess` fires.
+
+Settlement quotes never take the passthrough (direct transfer) path, so every settled payment has an intent id your backend can verify.
+
+### Bounded waits
+
+Settlement tracking fails open rather than holding checkout forever. If the payment stays pending past the hold window, `onSuccess` fires with the pending `settlement` attached (`settled: false`) and polling continues slowly in the background. A failed payment releases the same way with `settlement.failed` set. The windows are exported as constants (`INTENT_SETTLEMENT_POLL_MS`, `INTENT_SETTLEMENT_PENDING_HOLD_MS`) if you need to mirror them.
+
+## Verify before you fulfill
+
+<Warning>
+`amountCents` and `orderRef` are declared by the browser under a public access key. A settled payment proves the declared amount was deposited, **not** that it matches your order. Your fulfillment backend must independently check the settled amount, order reference and chain against your own records before shipping.
+</Warning>
+
+Read the intent receipt with the [`GetIntentReceipt`](/api-reference/endpoints/get-intent-receipt) endpoint and compare `settlement` to the order:
+
+```ts
+// api/verify-stripe-checkout.ts
+import { TrailsApi } from '@0xtrails/api'
+
+const trails = new TrailsApi('YOUR_ACCESS_KEY')
+
+export async function verifyStripeCheckout(intentId: string, order: { totalCents: number; ref: string }) {
+  const { intentReceipt } = await trails.getIntentReceipt({ intentId })
+  const s = intentReceipt.settlement
+
+  if (!s || s.provider !== 'stripe') return { ok: false, reason: 'no stripe settlement on this intent' }
+  if (!s.terminal) return { ok: false, reason: 'not settled yet' }
+  if (!s.settled) return { ok: false, reason: s.failed ? 'payment failed' : 'unknown outcome' }
+  if (s.amountCents !== order.totalCents) return { ok: false, reason: 'amount mismatch' }
+
+  // s.reference is the Stripe PaymentIntent id; cross-check its metadata.orderRef
+  // with your Stripe secret key if you want a second source of truth.
+  return { ok: true, reference: s.reference, receiptUrl: s.externalUrl }
+}
+```
+
+This is the canonical verification example; the API reference and use-case pages link back here.
+
+## Tracking settlement outside the widget
+
+An order confirmation page that outlives the widget can poll the receipt itself with `useIntentSettlement`. See [Settlement](/sdk/hooks#stripe-settlement) in the hooks reference for the hook, its state shape and a full example.
+
+## Presentation
+
+The `stripe` prop implies `merchantCheckout`, which renders the widget as a payment step rather than a standalone transfer tool: one processing state while pending, and a receipt that keeps only the payment receipt links (no explorer link, completion time or "Start new transaction"). Set `merchantCheckout={false}` to keep the standalone presentation, or set it to `true` on any other integration to borrow the checkout look.
+
+The recipient selector is read-only for settlement checkouts, since the deposit address belongs to Stripe.
+
+## Headless
+
+Everything the widget does is available to headless integrations:
+
+- `useQuote` accepts a `settlement` option (`QuoteSettlementParams`: `provider: 'stripe'`, `amountCents`, `checkoutRef`, `orderRef?`, `chainId?`) and the quote result carries `settlement`. The hook still needs a `to` with `chain`, `token` and `recipient` before it quotes; pass the settlement chain and its USDC address as placeholders (the widget uses the USDC contract address as the recipient). The SDK strips them from the request and the API derives the real destination from the armed payment. Do not pass `to.calls`, `to.calldata`, `actions` or `from.amount`: settlement quotes are exact-output and the hook throws on those.
+- The advanced `settlement` widget prop takes the same params directly when you manage the checkout reference lifecycle yourself.
+- `useIntentSettlement` and `getTrailsClient` cover receipt polling.
+
+```tsx
+const { quote } = useQuote({
+  from: { chain: 'arbitrum', token: 'ETH' },
+  to: { chain: 'base', token: USDC_BASE, recipient: USDC_BASE }, // placeholder, replaced server-side
+  settlement: { provider: 'stripe', amountCents: 2500, checkoutRef, orderRef: 'order-4821' },
+  walletClient,
+})
+```
+
+The API surface is documented under [`QuoteIntent`](/api-reference/endpoints/quote-intent#stripe-settlement-quotes) and [`GetIntentReceipt`](/api-reference/endpoints/get-intent-receipt#stripe-settlement).
+
+## Test mode
+
+With a Stripe test-mode merchant key, deposits settle on Base Sepolia only and `stripe.testMode` must be set. Requesting any other `chainId` under a test key is rejected before a payment is created. Treat test-mode checkouts as an integration check, not a pricing check.
+
+## Compared with the Stripe onramp
+
+The onramp is the reverse direction: a card funds crypto into an intent. The two can be combined, so a checkout with the `stripe` prop can still offer the Stripe onramp tile as one way for the shopper to fund the payment. See the [Stripe overview](/sdk/stripe/overview) for a side-by-side comparison.

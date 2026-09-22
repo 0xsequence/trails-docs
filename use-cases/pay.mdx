@@ -13,6 +13,7 @@ Trails enables cross-chain 1-click payments — users pay with whatever token th
 | USDC on Polygon | ETH on Arbitrum | Bridge + Swap |
 | USDC on Polygon | POL on Polygon | Swap |
 | USDC on Base | USDC on Base | Normal execution |
+| USD on your Stripe account | Any token, any chain | Swap + Bridge + [Stripe checkout](/sdk/stripe/checkout) |
 
 ## Use cases
 
@@ -194,6 +195,26 @@ export async function verifyPayment(intentId: string, expectedAmount: string) {
 }
 ```
 
+### Settle in USD with Stripe
+
+If you would rather end up with dollars on a Stripe account than tokens at an address, swap the `to` destination for the `stripe` prop on
+`TrailsWidget`. The shopper still pays with any token on any chain; Stripe pay-with-crypto attributes the deposit to a PaymentIntent on your
+account and issues a hosted receipt.
+
+```tsx
+import { TrailsWidget } from '0xtrails'
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  stripe={{ amountCents: 2500, orderRef: order.id }}
+  onSuccess={({ intentId, settlement }) => settlement?.settled && fulfillOrder(order.id, intentId, settlement.reference)}
+  renderInline
+/>
+```
+
+`onSuccess` is held while Stripe confirms settlement and also fires on a failed or timed-out payment, so check `settlement.settled`. See the [Checkout use case](/use-cases/checkout) and the
+[Stripe checkout reference](/sdk/stripe/checkout); access is arranged through [Polygon Checkout](https://polygon.technology/checkout).
+
 ### API-based fee estimation
 
 For server-side fee estimation or custom UIs:
@@ -232,5 +253,8 @@ const { intent } = await quote.json()
   </Card>
   <Card title="x402 payments" icon="globe" href="/examples/x402">
     HTTP 402 payment flows with Trails
+  </Card>
+  <Card title="Stripe checkout" icon="cart-shopping" href="/use-cases/checkout">
+    Settle crypto payments in USD on Stripe
   </Card>
 </CardGroup>

@@ -1,10 +1,14 @@
 ---
 title: "Stripe Onramp"
 description: "Let users fund a Trails intent with a card through Stripe"
+sidebarTitle: "Onramp"
 ---
 
 Stripe is a card funding provider: the user pays with a card and Trails receives USDC on Base, which then routes to the intent's destination like any
 other origin funds. It joins Meld as a card-category provider, and sits alongside the Mesh exchange provider.
+
+This page covers the onramp, where a card funds crypto. For the reverse direction, where a shopper pays in crypto and you settle in USD on your own
+Stripe account, see [Stripe checkout](/sdk/stripe/checkout).
 
 Requires `0xtrails@0.18.3` or later.
 
@@ -31,7 +35,8 @@ import { TrailsWidget } from '0xtrails'
 
 <Note>
 No Stripe key is ever passed to the SDK. Stripe credentials live in the Trails API configuration, and the browser receives only a publishable key.
-Contact the Trails team to have Stripe enabled for your project.
+Stripe is enabled per project as part of [Polygon Checkout](https://polygon.technology/checkout); book a demo or talk to sales there, or reach the
+Trails team on [Telegram](https://t.me/build_with_trails), to have it turned on for your project.
 </Note>
 
 The tile renders only when the API reports Stripe as enabled for your project and country. Unlike the general onramp availability check, Stripe fails
@@ -92,3 +97,13 @@ In sandbox, Stripe settles on **Base Sepolia** and always delivers a fixed **0.5
 | Stripe | Card | Card payment, settles to USDC on Base |
 | Meld | Card | Card payment through Meld's provider network |
 | Mesh | Exchange | Withdraw from a linked exchange account |
+
+## Pre-selecting the tile
+
+To open the widget directly on the Stripe onramp screen, set `fundMethod="onramp-stripe"` (`WidgetFundMethod.OnrampStripe`). Explicit selection
+bypasses the availability gate that only prunes default options, so Stripe must be enabled for your project or the checkout fails at quote time.
+
+## In a merchant checkout
+
+A [Stripe checkout](/sdk/stripe/checkout) integration can keep the onramp tile enabled so that a shopper with no crypto pays the same order with a
+card. The card purchase funds the intent, and the intent settles to the merchant's Stripe account like any other checkout payment.

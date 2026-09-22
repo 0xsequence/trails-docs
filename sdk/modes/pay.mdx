@@ -62,6 +62,9 @@ To control the payment method, set `paymentMethod`:
 | `"CREDIT_DEBIT_CARD"` | Fiat on-ramp |
 | `"EXCHANGE"` | CEX transfer (Coinbase, Binance, etc.) |
 
+The payment method screen also shows a **Pay with Stripe** tile whenever the [Stripe onramp](/sdk/stripe/onramp) is enabled for your project. In pay
+mode this tile ignores `fundMethodsList` and `hideUnlistedFundMethods`.
+
 ### Destination options
 
 | Prop | Type | Description |
@@ -177,6 +180,26 @@ Let the user pay with a credit card:
 />
 ```
 
+### Settle in USD with Stripe
+
+To receive dollars on your Stripe account instead of tokens at `to.recipient`, use `TrailsWidget` with the `stripe` prop. It forces pay mode, derives
+the destination from the armed Stripe payment, and holds `onSuccess` while Stripe confirms settlement:
+
+```tsx
+import { TrailsWidget } from '0xtrails'
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  stripe={{ amountCents: 5000, orderRef: "order-4821" }}
+  onPaymentCreated={({ settlement }) => console.log("stripe payment", settlement.reference)}
+  onSuccess={({ intentId, settlement }) => settlement?.settled && markOrderPaid(intentId, settlement)}
+  renderInline
+/>
+```
+
+The focused `<Pay />` component is not used here because its `to` destination conflicts with the server-derived one. Full reference:
+[Stripe checkout](/sdk/stripe/checkout).
+
 ### Payment with contract execution
 
 Execute a function on the destination chain with the payment:
@@ -240,3 +263,4 @@ const mintCalldata = encodeFunctionData({
 - [Pay use cases](/use-cases/pay) — merchant integration, NFT purchases, x402
 - [Configuration reference](/sdk/configuration) — full prop list
 - [Quote providers](/sdk/quote-providers) — CCTP, Relay, and more
+- [Stripe checkout](/sdk/stripe/checkout) — settle payments in USD on Stripe

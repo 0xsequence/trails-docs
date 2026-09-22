@@ -1,6 +1,6 @@
 ---
 title: "0xtrails@0.19.0"
-description: "Release notes for the 0xtrails SDK v0.19.0 — intentId on widget callbacks"
+description: "Release notes for the 0xtrails SDK v0.19.0 — Stripe checkout via the widget stripe prop, and intentId on widget callbacks"
 ---
 
 _Unreleased_
@@ -9,8 +9,44 @@ This release covers changes after `0xtrails@0.18.6` through `0xtrails@0.19.0`.
 
 ## Highlights
 
+- **Stripe checkout** — a merchant states a price, the shopper pays with any token on any chain, and the merchant settles in USD on their own Stripe
+account. One `stripe` prop on `TrailsWidget`; all Stripe knowledge stays in the Trails API. See [Stripe checkout](/sdk/stripe/checkout).
 - **`intentId` on widget callbacks** — every lifecycle callback that fires after a quote exists now carries the intent id alongside `sessionId`,
 so you can correlate widget events with the Trails API and Trailscan without reading it off the quote object.
+
+## Stripe checkout
+
+- New `stripe` prop on `TrailsWidget`: `{ amountCents, orderRef?, chainId?, testMode? }`. Forces pay mode and derives the destination server-side
+from the armed Stripe PaymentIntent, so it is mutually exclusive with `toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata`, `actions` and
+`settlement`. Requires a Stripe merchant key mapped to the project and an EVM origin chain.
+- `chainId` selects where the USDC deposit settles: live keys default to Base (`8453`) and also accept Polygon (`137`) and Ethereum (`1`); test keys
+settle on Base Sepolia (`84532`) only. Unsupported chains throw at prop resolution with the supported list.
+- New `onPaymentCreated` callback fires once per armed payment reference, at quote time, with `{ sessionId, settlement: QuoteSettlementInfo }`.
+- `onSuccess` gains `settlement?: IntentSettlement` and is held while settlement is pending. It releases when Stripe confirms the deposit, the payment
+fails, or the pending hold times out; check `settlement.settled`.
+- New `merchantCheckout` prop for the checkout presentation (single processing state, payment-only receipt). Implied by `stripe`.
+- Settlement quotes never take the passthrough path, so every settled payment has an intent id a backend can verify.
+- Settlement tracking is bounded: a settlement that stays pending, a missing projection, or a settled payment without a receipt URL all fail open
+after their windows instead of holding checkout indefinitely.
+- Headless: `useQuote` accepts a `settlement` option and the quote result carries `settlement`; `useIntentSettlement` polls the receipt outside the
+widget; `getStripeSettlementChainIds(mode)` lists a key mode's settlement chains.
+- `"onramp-stripe"` joins `WidgetFundMethod` so the Stripe onramp tile can be pre-selected with `fundMethod`.
+
+## Fixes
+
+- The standalone IIFE build (`dist/iife/trails.min.js`) never initialised in `0xtrails@0.18.5` and earlier because a JSON module import reordered
+the bundle's initialisers; `window.TrailsWidget` was undefined. The version is now injected at build time.
+- The quote key includes wallet-client presence, so `send()` no longer runs against a null client while an adapter's client is still resolving.
+- Settlement and custom-calldata checkouts lock the recipient to the destination; the recipient selector renders read-only.
+- The origin token selector applies its chain filter immediately on selection.
+- The widget now defaults to the light theme; pass `theme="auto"` to follow the OS preference.
+
+## Other changes
+
+- Robinhood Chain (id 4663) support.
+- `disablePassthrough` on `useQuote` and the widget props forces intent execution even when a direct transfer would be eligible.
+- Bluvo exchange onramp support is removed; Mesh is the exchange provider.
+- Intent history no longer throws on null token arrays in balance lookups.
 
 ## Features
 
@@ -27,8 +63,13 @@ See [Callback payloads](/sdk/configuration#callback-payloads).
 ## New Exports
 
 - `CheckoutEventBase` (`{ sessionId: string; intentId: string | null }`) and `TransactionConfirmationEvent` from `0xtrails`.
+- `TrailsStripeCheckoutProps` (the `stripe` prop shape), `useIntentSettlement`, `IntentSettlementState`, `isSettlementReceiptUnavailable`,
+`sanitizeSettlementReceiptUrl`, `resolveIntentSettlementPollInterval`, `getStripeSettlementChainIds`, and the constants `INTENT_SETTLEMENT_POLL_MS`
+and `INTENT_SETTLEMENT_PENDING_HOLD_MS`. The API types `IntentSettlement`, `QuoteSettlementInfo` and `QuoteSettlementParams` are re-exported from
+`0xtrails`.
 
 ## Breaking Changes
 
-None. The new field is additive; handlers that destructure `sessionId` keep working. If you typed a callback parameter yourself as
+None. The widget defaults to the light theme instead of following the OS; pass `theme="auto"` to keep the previous behaviour. The Bluvo exchange
+onramp is removed; integrations that referenced it fall back to Mesh. The `intentId` field is additive; handlers that destructure `sessionId` keep working. If you typed a callback parameter yourself as
 `{ sessionId: string }` rather than using `TrailsWidgetProps`, the handler still compiles because the widget passes a superset.
