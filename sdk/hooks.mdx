@@ -1664,11 +1664,12 @@ executeIntent({
 })
 ```
 
-## Settlement
+## Stripe settlement
 
 <Note>
-Added with [Stripe checkout](/sdk/stripe/checkout). Settlement is the post-execution step where an external payment processor (Stripe) confirms the
-deposit an intent made. The Trails API owns all processor knowledge; these hooks only read the receipt's `settlement` projection.
+Added with [Stripe checkout](/sdk/stripe/checkout). Settlement is the post-execution step where Stripe confirms the USDC deposit an intent made
+and the merchant's PaymentIntent succeeds. Stripe is the only settlement provider today. The Trails API owns all Stripe knowledge; these hooks only
+read the receipt's `settlement` projection.
 </Note>
 
 ```ts
@@ -1689,7 +1690,7 @@ import {
 
 ### useIntentSettlement
 
-Polls `GetIntentReceipt` for an intent's settlement until it is terminal. Use it on pages that outlive the widget, such as an order confirmation.
+Polls `GetIntentReceipt` for an intent's Stripe settlement until it is terminal. Use it on pages that outlive the widget, such as an order confirmation.
 
 ```tsx
 import { getTrailsClient, useIntentSettlement, sanitizeSettlementReceiptUrl } from '0xtrails'
@@ -1720,21 +1721,21 @@ function OrderStatus({ intentId }: { intentId: string }) {
 ```ts
 type IntentSettlementState = {
   resolved: boolean                    // first read finished
-  settlement?: IntentSettlement        // undefined when the intent has no processor step
-  receiptUrlTimedOut: boolean          // settled, but no receipt URL within the grace window
+  settlement?: IntentSettlement        // undefined when the intent has no Stripe settle step
+  receiptUrlTimedOut: boolean          // settled, but no Stripe receipt URL within the grace window
   awaitingExpectedSettlement: boolean  // expected projection not on the receipt yet
   pendingTimedOut: boolean             // pending past the hold window; consumers should fail open
 }
 
 type IntentSettlement = {
   provider: 'stripe'
-  label: string          // step label, e.g. "Settle"
+  label: string          // Stripe settle step label, e.g. "Settle"
   description: string
   reference: string      // Stripe PaymentIntent id
   currency: string       // lowercase ISO 4217, "usd" today
   amountCents: number
   chainId: number        // chain the USDC deposit landed on
-  status: string         // raw processor status
+  status: string         // raw Stripe PaymentIntent status
   settled: boolean
   failed: boolean
   terminal: boolean      // key terminality on this, never on status; can be true with settled and failed both false (unknown outcome)
@@ -1744,7 +1745,7 @@ type IntentSettlement = {
 
 ### Helpers
 
-- `isSettlementReceiptUnavailable(state)` — `true` when no processor receipt will arrive within the bounds consumers wait on, so a UI can stop showing a spinner.
+- `isSettlementReceiptUnavailable(state)` — `true` when no Stripe receipt will arrive within the bounds consumers wait on, so a UI can stop showing a spinner.
 - `sanitizeSettlementReceiptUrl(url)` — returns the URL only for `http(s)` schemes; use it before rendering `externalUrl` in an `<a href>`.
 - `resolveIntentSettlementPollInterval(settlement, settledForMs, pendingForMs)` — the poll cadence the hook uses, exported for custom pollers.
 - `getStripeSettlementChainIds(mode)` — chain ids a Stripe merchant key can settle on: `[8453, 137, 1]` for `'live'`, `[84532]` for `'test'`.

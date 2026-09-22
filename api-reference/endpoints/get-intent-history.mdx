@@ -72,6 +72,11 @@ The receipt object includes comprehensive transaction information:
 - **destinationTransaction** (IntentTransaction): Destination chain transaction details
 - **summary** (IntentReceiptSummary): Summary with token metadata and route providers
 
+<Note>
+History receipts do not include the Stripe `settlement` projection. For intents created by a [Stripe checkout](/sdk/stripe/checkout), call
+[`GetIntentReceipt`](/api-reference/endpoints/get-intent-receipt#stripe-settlement) per intent to read whether Stripe has settled the payment.
+</Note>
+
 ## Examples
 
 ### Basic Request (First Page)

@@ -119,7 +119,7 @@ This is the canonical verification example; the API reference and use-case pages
 
 ## Tracking settlement outside the widget
 
-An order confirmation page that outlives the widget can poll the receipt itself with `useIntentSettlement`. See [Settlement](/sdk/hooks#settlement) in the hooks reference for the hook, its state shape and a full example.
+An order confirmation page that outlives the widget can poll the receipt itself with `useIntentSettlement`. See [Settlement](/sdk/hooks#stripe-settlement) in the hooks reference for the hook, its state shape and a full example.
 
 ## Presentation
 
@@ -144,7 +144,7 @@ const { quote } = useQuote({
 })
 ```
 
-The API surface is documented under [`QuoteIntent`](/api-reference/endpoints/quote-intent#settlement-quotes) and [`GetIntentReceipt`](/api-reference/endpoints/get-intent-receipt#settlement).
+The API surface is documented under [`QuoteIntent`](/api-reference/endpoints/quote-intent#stripe-settlement-quotes) and [`GetIntentReceipt`](/api-reference/endpoints/get-intent-receipt#stripe-settlement).
 
 ## Test mode
 

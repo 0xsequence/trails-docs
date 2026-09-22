@@ -41,7 +41,7 @@ The response includes:
 - **originTransaction** (IntentTransaction): Origin chain transaction details
 - **destinationTransactionId** (number): ID of destination transaction
 - **destinationTransaction** (IntentTransaction): Destination chain transaction details
-- **settlement** (IntentSettlement): External processor settlement, present when the intent was quoted with `settlement`. See [Settlement](#settlement)
+- **settlement** (IntentSettlement): Stripe settlement state, present when the intent was quoted with `settlement` (a Stripe checkout). See [Settlement](#stripe-settlement)
 - **updatedAt** (string): Last update timestamp
 - **createdAt** (string): Creation timestamp
 
@@ -125,28 +125,29 @@ const receipt = await pollReceipt('intent_123abc');
 console.log('Completed!', receipt);
 ```
 
-## Settlement
+## Stripe settlement
 
-Intents created from a [settlement quote](/api-reference/endpoints/quote-intent#settlement-quotes) (the widget's
-[Stripe checkout](/sdk/stripe/checkout)) carry a `settlement` object computed at read time. The intent reaches `SUCCEEDED` when the destination
+Intents created from a [settlement quote](/api-reference/endpoints/quote-intent#stripe-settlement-quotes) (the widget's
+[Stripe checkout](/sdk/stripe/checkout)) carry a `settlement` object computed at read time. Stripe is the only settlement provider today, so every
+`settlement` describes a Stripe pay-with-crypto PaymentIntent. The intent reaches `SUCCEEDED` when the destination
 transaction confirms; settlement continues afterwards until Stripe attributes the deposit, usually within one to two minutes. Pending payments refresh
 from Stripe at most every five seconds.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `provider` | `"stripe"` | Processor confirming the deposit |
-| `label`, `description` | `string` | Step copy for transaction-step UIs |
+| `provider` | `"stripe"` | Always `"stripe"` today |
+| `label`, `description` | `string` | Copy for the Stripe settle step in transaction-step UIs (e.g. "Settle") |
 | `reference` | `string` | Stripe PaymentIntent id |
-| `currency` | `string` | Lowercase ISO 4217 |
-| `amountCents` | `number` | Charge amount as declared at quote time |
-| `chainId` | `number` | Chain the deposit landed on |
+| `currency` | `string` | Stripe presentment currency, lowercase ISO 4217 (`"usd"` today) |
+| `amountCents` | `number` | Stripe charge amount in cents, as declared at quote time |
+| `chainId` | `number` | Chain the USDC deposit to Stripe landed on |
 | `status` | `string` | Raw Stripe payment status, as last observed |
 | `settled` | `boolean` | Stripe confirmed the deposit |
-| `failed` | `boolean` | The payment reached a terminal non-settled state (e.g. the PaymentIntent was canceled) and will never settle |
-| `terminal` | `boolean` | The settlement will not change again: settled, failed, or retired with an unknown outcome (`terminal` true, `settled` and `failed` both false). Key terminality on this, never on `status`, and gate fulfillment on `settled` |
+| `failed` | `boolean` | The Stripe payment reached a terminal non-settled state (e.g. the PaymentIntent was canceled) and will never settle |
+| `terminal` | `boolean` | The Stripe settlement will not change again: settled, failed, or retired with an unknown outcome (`terminal` true, `settled` and `failed` both false). Key terminality on this, never on `status`, and gate fulfillment on `settled` |
 | `externalUrl` | `string` | Stripe-hosted receipt page, once available |
 
-Verify a checkout server-side before fulfilling (the full example lives in [Verify before you fulfill](/sdk/stripe/checkout#verify-before-you-fulfill)):
+Verify a Stripe checkout server-side before fulfilling (the full example lives in [Verify before you fulfill](/sdk/stripe/checkout#verify-before-you-fulfill)):
 
 ```typescript
 import { TrailsApi } from '@0xtrails/api'
