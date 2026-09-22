@@ -9,7 +9,7 @@ Trails integrates Stripe in two directions. Both are enabled per project on the 
 | | Stripe onramp | Stripe checkout |
 |---|---|---|
 | Who pays | A user buying crypto with a card | A shopper paying with crypto they already hold |
-| Money flows | Fiat card → USDC on Base → the intent's destination | Any token on any chain → USDC deposit → USD on the merchant's Stripe account |
+| Money flows | Fiat card → USDC on Base → the intent's destination | Any token on any EVM chain → USDC deposit → USD on the merchant's Stripe account |
 | Where it shows up | A **Pay with Stripe** tile in the funding and payment method lists | The whole widget becomes the payment step of a merchant checkout |
 | What you configure | Nothing, or `onramp.stripe.environment` for the sandbox | The `stripe` prop: a price in cents and an order reference |
 | Merchant setup | Stripe enabled for the project | A Stripe merchant key mapped to the project |
@@ -19,7 +19,7 @@ Trails integrates Stripe in two directions. Both are enabled per project on the 
     Let users fund a Trails intent with a card. Available in fund, swap and pay modes.
   </Card>
   <Card title="Stripe checkout" icon="cart-shopping" href="/sdk/stripe/checkout">
-    Accept any token on any chain and settle in USD via Stripe pay-with-crypto. One widget prop, no merchant backend.
+    Accept any token on any EVM chain and settle in USD via Stripe pay-with-crypto. One widget prop, no merchant backend.
   </Card>
 </CardGroup>
 

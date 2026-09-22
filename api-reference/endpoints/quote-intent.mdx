@@ -112,7 +112,7 @@ payment.
 | `provider` | `"stripe"` | Payment processor |
 | `amountCents` | `number` | Charge amount in minor units of `currency` |
 | `currency` | `string` | Lowercase ISO 4217. Only `"usd"` is accepted today; defaults to `"usd"` |
-| `checkoutRef` | `string` | Client-generated id for one checkout session. The first quote for a `checkoutRef` creates and arms the payment; re-quotes reuse it. A changed amount, `orderRef` or `chainId` cancels and re-arms under the same ref |
+| `checkoutRef` | `string` | Client-generated id for one checkout session. The first quote for a `checkoutRef` creates and arms the payment; re-quotes reuse it. A changed amount, `orderRef`, `chainId`, or (when `chainId` is omitted) origin chain cancels and re-arms under the same ref |
 | `orderRef` | `string` | Merchant order label, recorded in the PaymentIntent metadata |
 | `chainId` | `number` | Chain for the USDC deposit. Live merchant keys: Base `8453`, Polygon `137`, Ethereum `1`. Test keys: Base Sepolia `84532` only. Omitted: the origin chain when it is a Stripe network in the key's mode, else Base |
 
@@ -144,9 +144,9 @@ The response adds `settlement` (QuoteSettlementInfo):
 | `livemode` | `boolean` | Whether the merchant key is a live key |
 | `chainId` | `number` | Chain the deposit lands on |
 
-Settlement quotes never use the passthrough path, so every settled payment has an intent whose receipt carries the
-[settlement outcome](/api-reference/endpoints/get-intent-receipt#settlement). The caller's project must have a Stripe merchant key mapped, or the
-quote fails.
+Settlement quotes are exact-output only, require an EVM origin chain, and never use the passthrough path, so every settled payment has an intent whose
+receipt carries the [settlement outcome](/api-reference/endpoints/get-intent-receipt#settlement). The request must carry a project access key whose
+project has a Stripe merchant key mapped, or the quote fails.
 
 <Warning>
 `amountCents` and `orderRef` are declared by the caller under a public access key. A settled payment proves the deposit was made for the declared

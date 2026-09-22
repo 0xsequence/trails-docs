@@ -468,9 +468,11 @@ The `useQuote` hook provides real-time quotes for token swaps, cross-chain trans
 
 Pass `walletAddress` to preview quotes before a wallet is connected. If a connected `walletClient.account.address` is available, it becomes the quote owner and takes precedence over `walletAddress`. Executing with `send` still requires a real wallet client.
 
-Pass `settlement` (`QuoteSettlementParams`) to quote a [Stripe checkout](/sdk/stripe/checkout) headlessly. The API derives the destination from the
-armed Stripe payment, so leave `to` unset; the returned `quote.settlement` carries the PaymentIntent reference. Settlement quotes never take the
-passthrough path.
+Pass `settlement` (`QuoteSettlementParams`) to quote a [Stripe checkout](/sdk/stripe/checkout) headlessly. The hook still needs `to.chain`, `to.token`
+and `to.recipient` before it quotes: pass the settlement chain and its USDC address as placeholders. The SDK strips them from the request and the API
+derives the real destination from the armed Stripe payment; the returned `quote.settlement` carries the PaymentIntent reference. Settlement quotes are
+exact-output (no `from.amount`), cannot be combined with `to.calls`, `to.calldata` or `actions`, require an EVM origin, and never take the passthrough
+path. See [Headless](/sdk/stripe/checkout#headless) for an example.
 
 #### Usage Example
 
@@ -1735,7 +1737,7 @@ type IntentSettlement = {
   status: string         // raw processor status
   settled: boolean
   failed: boolean
-  terminal: boolean      // key terminality on this, never on status
+  terminal: boolean      // key terminality on this, never on status; can be true with settled and failed both false (unknown outcome)
   externalUrl?: string   // Stripe-hosted receipt
 }
 ```

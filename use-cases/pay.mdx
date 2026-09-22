@@ -207,12 +207,12 @@ import { TrailsWidget } from '0xtrails'
 <TrailsWidget
   apiKey="YOUR_API_KEY"
   stripe={{ amountCents: 2500, orderRef: order.id }}
-  onSuccess={({ intentId, settlement }) => fulfillOrder(order.id, intentId, settlement?.reference)}
+  onSuccess={({ intentId, settlement }) => settlement?.settled && fulfillOrder(order.id, intentId, settlement.reference)}
   renderInline
 />
 ```
 
-`onSuccess` is held until Stripe confirms settlement. See the [Checkout use case](/use-cases/checkout) and the
+`onSuccess` is held while Stripe confirms settlement and also fires on a failed or timed-out payment, so check `settlement.settled`. See the [Checkout use case](/use-cases/checkout) and the
 [Stripe checkout reference](/sdk/stripe/checkout); access is arranged through [Polygon Checkout](https://polygon.technology/checkout).
 
 ### API-based fee estimation

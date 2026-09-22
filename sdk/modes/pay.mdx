@@ -183,7 +183,7 @@ Let the user pay with a credit card:
 ### Settle in USD with Stripe
 
 To receive dollars on your Stripe account instead of tokens at `to.recipient`, use `TrailsWidget` with the `stripe` prop. It forces pay mode, derives
-the destination from the armed Stripe payment, and holds `onSuccess` until Stripe confirms settlement:
+the destination from the armed Stripe payment, and holds `onSuccess` while Stripe confirms settlement:
 
 ```tsx
 import { TrailsWidget } from '0xtrails'
@@ -192,7 +192,7 @@ import { TrailsWidget } from '0xtrails'
   apiKey="YOUR_API_KEY"
   stripe={{ amountCents: 5000, orderRef: "order-4821" }}
   onPaymentCreated={({ settlement }) => console.log("stripe payment", settlement.reference)}
-  onSuccess={({ intentId, settlement }) => markOrderPaid(intentId, settlement)}
+  onSuccess={({ intentId, settlement }) => settlement?.settled && markOrderPaid(intentId, settlement)}
   renderInline
 />
 ```

@@ -17,12 +17,13 @@ so you can correlate widget events with the Trails API and Trailscan without rea
 ## Stripe checkout
 
 - New `stripe` prop on `TrailsWidget`: `{ amountCents, orderRef?, chainId?, testMode? }`. Forces pay mode and derives the destination server-side
-from the armed Stripe PaymentIntent, so it is mutually exclusive with `toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata` and `actions`.
-Requires a Stripe merchant key mapped to the project.
+from the armed Stripe PaymentIntent, so it is mutually exclusive with `toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata`, `actions` and
+`settlement`. Requires a Stripe merchant key mapped to the project and an EVM origin chain.
 - `chainId` selects where the USDC deposit settles: live keys default to Base (`8453`) and also accept Polygon (`137`) and Ethereum (`1`); test keys
 settle on Base Sepolia (`84532`) only. Unsupported chains throw at prop resolution with the supported list.
 - New `onPaymentCreated` callback fires once per armed payment reference, at quote time, with `{ sessionId, settlement: QuoteSettlementInfo }`.
-- `onSuccess` gains `settlement?: IntentSettlement` and is held until Stripe confirms the deposit (or the pending hold fails open).
+- `onSuccess` gains `settlement?: IntentSettlement` and is held while settlement is pending. It releases when Stripe confirms the deposit, the payment
+fails, or the pending hold times out; check `settlement.settled`.
 - New `merchantCheckout` prop for the checkout presentation (single processing state, payment-only receipt). Implied by `stripe`.
 - Settlement quotes never take the passthrough path, so every settled payment has an intent id a backend can verify.
 - Settlement tracking is bounded: a settlement that stays pending, a missing projection, or a settled payment without a receipt URL all fail open
@@ -39,6 +40,13 @@ the bundle's initialisers; `window.TrailsWidget` was undefined. The version is n
 - Settlement and custom-calldata checkouts lock the recipient to the destination; the recipient selector renders read-only.
 - The origin token selector applies its chain filter immediately on selection.
 - The widget now defaults to the light theme; pass `theme="auto"` to follow the OS preference.
+
+## Other changes
+
+- Robinhood Chain (id 4663) support.
+- `disablePassthrough` on `useQuote` and the widget props forces intent execution even when a direct transfer would be eligible.
+- Bluvo exchange onramp support is removed; Mesh is the exchange provider.
+- Intent history no longer throws on null token arrays in balance lookups.
 
 ## Features
 
@@ -62,5 +70,6 @@ and `INTENT_SETTLEMENT_PENDING_HOLD_MS`. The API types `IntentSettlement`, `Quot
 
 ## Breaking Changes
 
-None. The widget defaults to the light theme instead of following the OS; pass `theme="auto"` to keep the previous behaviour. The `intentId` field is additive; handlers that destructure `sessionId` keep working. If you typed a callback parameter yourself as
+None. The widget defaults to the light theme instead of following the OS; pass `theme="auto"` to keep the previous behaviour. The Bluvo exchange
+onramp is removed; integrations that referenced it fall back to Mesh. The `intentId` field is additive; handlers that destructure `sessionId` keep working. If you typed a callback parameter yourself as
 `{ sessionId: string }` rather than using `TrailsWidgetProps`, the handler still compiles because the widget passes a superset.

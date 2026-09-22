@@ -87,7 +87,6 @@ These callbacks are available on all focused components (in addition to mode-spe
 | `onStatus` | `{ sessionId, intentId, transactionStates }` | Transaction status update |
 | `onOriginConfirmation` | `{ sessionId, intentId, txHash, chainId }` | Origin-chain transaction confirmed |
 | `onDestinationConfirmation` | `{ sessionId, intentId, txHash, chainId }` | Destination-chain transaction confirmed |
-| `onPaymentCreated` | `{ sessionId, settlement }` | A quote armed an external payment (Stripe checkout). Fires once per payment reference, at quote time |
 
 #### Callback payloads
 
@@ -118,7 +117,8 @@ no payload.
 The payload types are exported as `CheckoutEventBase` (`{ sessionId, intentId }`) and `TransactionConfirmationEvent` from `0xtrails`.
 
 For [Stripe checkout](/sdk/stripe/checkout) integrations the success payload (`onSuccess` on `TrailsWidget`) also carries `settlement`, an
-`IntentSettlement` describing the confirmed Stripe payment, and the widget holds that callback until Stripe confirms the deposit.
+`IntentSettlement` describing the Stripe payment. The widget holds that callback while settlement is pending and releases it when Stripe confirms
+the deposit, the payment fails, or the pending hold times out, so check `settlement.settled` before treating the order as paid.
 
 ### Stripe checkout props
 
@@ -126,10 +126,10 @@ These props live on `TrailsWidget` (imported from `0xtrails`) rather than the fo
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `stripe` | `TrailsStripeCheckoutProps` | `{ amountCents, orderRef?, chainId?, testMode? }`. Prices the checkout in USD cents and settles it on your Stripe account. Forces pay mode; mutually exclusive with `toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata`, `actions` |
+| `stripe` | `TrailsStripeCheckoutProps` | `{ amountCents, orderRef?, chainId?, testMode? }`. Prices the checkout in USD cents and settles it on your Stripe account. Forces pay mode; mutually exclusive with `toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata`, `actions` and `settlement` |
 | `merchantCheckout` | `boolean` | Merchant-checkout presentation: one processing state while pending, receipt keeps only payment links. Implied by `stripe`; set explicitly to opt any integration in or out |
 | `settlement` | `QuoteSettlementParams` | Advanced: raw settlement quote params, when you manage the checkout reference yourself. Set automatically by `stripe` |
-| `onPaymentCreated` | `({ sessionId, settlement }) => void` | Armed payment reference, amount and chain, available at quote time |
+| `onPaymentCreated` | `({ sessionId, settlement }) => void` | A quote armed an external payment. Fires once per payment reference, at quote time, with the reference, amount and chain. `TrailsWidget` only; the focused components do not expose it |
 
 See [Stripe checkout](/sdk/stripe/checkout) for the flow, verification guidance and headless equivalents.
 

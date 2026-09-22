@@ -6,7 +6,7 @@ icon: 'cart-shopping'
 
 ## Merchant checkout with Trails
 
-Trails checkout turns "pay with crypto" into a normal Stripe charge. The shopper pays with any token they hold on any supported chain; Stripe pay-with-crypto attributes the resulting USDC deposit to a PaymentIntent on your account, and you settle in USD with a Stripe-hosted receipt.
+Trails checkout turns "pay with crypto" into a normal Stripe charge. The shopper pays with any token they hold on any supported EVM chain; Stripe pay-with-crypto attributes the resulting USDC deposit to a PaymentIntent on your account, and you settle in USD with a Stripe-hosted receipt.
 
 | Shopper pays with | You receive | Trails handles |
 |-------------------|-------------|----------------|
@@ -22,10 +22,10 @@ Compared with [Pay](/use-cases/pay), where you receive tokens at an address you 
 
 ## Use cases
 
-- Add a **Pay with crypto** option next to card and PayPal in an ecommerce checkout
-- Sell digital goods, tickets or subscriptions to crypto-holding customers worldwide
-- Let marketplaces and platforms accept stablecoins without touching custody
-- Cut card fees and chargeback exposure while keeping settlement in USD
+- **Ecommerce**: a **Pay with crypto** option next to card and PayPal, settled in USD like every other order
+- **Digital goods and tickets**: sell to crypto-holding customers worldwide with Stripe-hosted receipts
+- **Marketplaces and platforms**: accept stablecoins without taking custody of them
+- **Existing Stripe merchants**: keep order management, refunds and reporting where they already are
 
 ## Example
 
@@ -43,7 +43,9 @@ export function PayWithCrypto({ order }) {
         // Stripe PaymentIntent id is known at quote time
         recordPendingPayment(order.id, settlement.reference)
       }}
-      onSuccess={({ intentId }) => {
+      onSuccess={({ intentId, settlement }) => {
+        // Also fires on a failed payment or a timed-out hold; only fulfill on settled
+        if (!settlement?.settled) return
         // Verify server-side, then fulfill
         fetch('/api/fulfill', { method: 'POST', body: JSON.stringify({ orderId: order.id, intentId }) })
       }}
@@ -53,11 +55,13 @@ export function PayWithCrypto({ order }) {
 }
 ```
 
-`onSuccess` waits for Stripe to confirm the deposit, so it fires when the money is actually on your Stripe account, not when the on-chain transfer lands.
+`onSuccess` is held while Stripe confirms the deposit, so it fires after the money reaches your Stripe account rather than when the on-chain transfer
+lands. It also fires if the payment fails or the confirmation hold times out, with `settlement.settled` false, so check that flag before fulfilling.
 
 ### Verify server-side
 
-The price is declared by the browser, so always confirm the settled amount against your order before fulfilling:
+The price is declared by the browser, so always confirm the settled amount against your order before fulfilling. The canonical example is in
+[Verify before you fulfill](/sdk/stripe/checkout#verify-before-you-fulfill); the short form:
 
 ```ts
 import { TrailsApi } from '@0xtrails/api'

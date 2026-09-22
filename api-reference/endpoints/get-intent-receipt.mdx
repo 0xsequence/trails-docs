@@ -142,11 +142,11 @@ from Stripe at most every five seconds.
 | `chainId` | `number` | Chain the deposit landed on |
 | `status` | `string` | Raw Stripe payment status, as last observed |
 | `settled` | `boolean` | Stripe confirmed the deposit |
-| `failed` | `boolean` | Terminal non-settled state (e.g. the PaymentIntent was canceled) |
-| `terminal` | `boolean` | The settlement will not change again. Key terminality on this, never on `status` |
+| `failed` | `boolean` | The payment reached a terminal non-settled state (e.g. the PaymentIntent was canceled) and will never settle |
+| `terminal` | `boolean` | The settlement will not change again: settled, failed, or retired with an unknown outcome (`terminal` true, `settled` and `failed` both false). Key terminality on this, never on `status`, and gate fulfillment on `settled` |
 | `externalUrl` | `string` | Stripe-hosted receipt page, once available |
 
-Verify a checkout server-side before fulfilling:
+Verify a checkout server-side before fulfilling (the full example lives in [Verify before you fulfill](/sdk/stripe/checkout#verify-before-you-fulfill)):
 
 ```typescript
 import { TrailsApi } from '@0xtrails/api'
@@ -158,7 +158,7 @@ async function verifyStripeCheckout(intentId: string, expectedCents: number) {
 
   if (!s) throw new Error('Not a settlement intent');
   if (!s.terminal) return { done: false };
-  if (!s.settled) throw new Error(`Settlement failed: ${s.status}`);
+  if (!s.settled) throw new Error(s.failed ? 'Payment failed' : 'Unknown settlement outcome');
   if (s.amountCents !== expectedCents) throw new Error('Amount mismatch');
 
   return { done: true, paymentIntent: s.reference, receiptUrl: s.externalUrl };
