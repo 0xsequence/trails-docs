@@ -13,6 +13,7 @@ Trails enables cross-chain 1-click payments — users pay with whatever token th
 | USDC on Polygon | ETH on Arbitrum | Bridge + Swap |
 | USDC on Polygon | POL on Polygon | Swap |
 | USDC on Base | USDC on Base | Normal execution |
+| USD on your Stripe account | Any token, any chain | Swap + Bridge + [Stripe checkout](/sdk/stripe/checkout) |
 
 ## Use cases
 
@@ -39,8 +40,8 @@ import { Pay } from '0xtrails/widget'
     chain: "polygon",
     amount: "25",
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    updateOrderStatus(orderId, 'paid', sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    updateOrderStatus(orderId, 'paid', intentId)
   }}
 >
   <button>Pay $25</button>
@@ -61,7 +62,7 @@ Use Circle's CCTP for native USDC bridging:
     amount: "500",
   }}
   bridgeProvider="CCTP"
-  onPaymentSuccess={({ sessionId }) => processLargePayment(sessionId)}
+  onPaymentSuccess={({ intentId }) => processLargePayment(intentId)}
 >
   <button>Pay $500</button>
 </Pay>
@@ -97,8 +98,8 @@ export const CrossChainNFTPurchase = () => {
         amount: "0.00002",
         calldata: purchaseCalldata,
       }}
-      onPaymentSuccess={({ sessionId }) => {
-        console.log('NFT purchased:', sessionId)
+      onPaymentSuccess={({ intentId }) => {
+        console.log('NFT purchased:', intentId)
       }}
       onPaymentError={({ sessionId, error }) => {
         console.error('Purchase failed:', sessionId, error)
@@ -148,15 +149,15 @@ export function CheckoutButton({ order }) {
         createPaymentRecord({ orderId: order.id, sessionId, status: 'processing' })
         setStatus('processing')
       }}
-      onPaymentSuccess={async ({ sessionId }) => {
-        const verified = await verifyPayment(sessionId)
+      onPaymentSuccess={async ({ intentId }) => {
+        const verified = await verifyPayment(intentId)
         if (verified) {
           await fulfillOrder(order.id)
           setStatus('complete')
         }
       }}
-      onPaymentError={({ sessionId, error }) => {
-        logPaymentError(sessionId, error)
+      onPaymentError={({ sessionId, intentId, error }) => {
+        logPaymentError(sessionId, intentId, error)
         setStatus('failed')
       }}
     >
@@ -178,8 +179,8 @@ import { Trails } from '@0xtrails/api'
 
 const trails = new Trails({ accessKey: process.env.TRAILS_ACCESS_KEY })
 
-export async function verifyPayment(sessionId: string, expectedAmount: string) {
-  const receipt = await trails.getIntentReceipt({ intentId: sessionId })
+export async function verifyPayment(intentId: string, expectedAmount: string) {
+  const receipt = await trails.getIntentReceipt({ intentId })
 
   if (receipt.status !== 'COMPLETED') {
     return { verified: false, reason: 'Payment not completed' }
@@ -193,6 +194,26 @@ export async function verifyPayment(sessionId: string, expectedAmount: string) {
   return { verified: true, receipt }
 }
 ```
+
+### Settle in USD with Stripe
+
+If you would rather end up with dollars on a Stripe account than tokens at an address, swap the `to` destination for the `stripe` prop on
+`TrailsWidget`. The shopper still pays with any token on any chain; Stripe pay-with-crypto attributes the deposit to a PaymentIntent on your
+account and issues a hosted receipt.
+
+```tsx
+import { TrailsWidget } from '0xtrails'
+
+<TrailsWidget
+  apiKey="YOUR_API_KEY"
+  stripe={{ amountCents: 2500, orderRef: order.id }}
+  onSuccess={({ intentId, settlement }) => settlement?.settled && fulfillOrder(order.id, intentId, settlement.reference)}
+  renderInline
+/>
+```
+
+`onSuccess` is held while Stripe confirms settlement and also fires on a failed or timed-out payment, so check `settlement.settled`. See the [Checkout use case](/use-cases/checkout) and the
+[Stripe checkout reference](/sdk/stripe/checkout); access is arranged through [Polygon Checkout](https://polygon.technology/checkout).
 
 ### API-based fee estimation
 
@@ -232,5 +253,8 @@ const { intent } = await quote.json()
   </Card>
   <Card title="x402 payments" icon="globe" href="/examples/x402">
     HTTP 402 payment flows with Trails
+  </Card>
+  <Card title="Stripe checkout" icon="cart-shopping" href="/use-cases/checkout">
+    Settle crypto payments in USD on Stripe
   </Card>
 </CardGroup>

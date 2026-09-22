@@ -1,0 +1,30 @@
+---
+title: "Stripe integrations"
+description: "Two ways Trails and Stripe work together: card onramp for funding, and merchant checkout that settles crypto payments in USD"
+sidebarTitle: "Overview"
+---
+
+Trails integrates Stripe in two directions. Both are enabled per project on the Trails API side, and neither puts a Stripe key in the browser.
+
+| | Stripe onramp | Stripe checkout |
+|---|---|---|
+| Who pays | A user buying crypto with a card | A shopper paying with crypto they already hold |
+| Money flows | Fiat card → USDC on Base → the intent's destination | Any token on any EVM chain → USDC deposit → USD on the merchant's Stripe account |
+| Where it shows up | A **Pay with Stripe** tile in the funding and payment method lists | The whole widget becomes the payment step of a merchant checkout |
+| What you configure | Nothing, or `onramp.stripe.environment` for the sandbox | The `stripe` prop: a price in cents and an order reference |
+| Merchant setup | Stripe enabled for the project | A Stripe merchant key mapped to the project |
+
+<CardGroup cols={2}>
+  <Card title="Stripe onramp" icon="credit-card" href="/sdk/stripe/onramp">
+    Let users fund a Trails intent with a card. Available in fund, swap and pay modes.
+  </Card>
+  <Card title="Stripe checkout" icon="cart-shopping" href="/sdk/stripe/checkout">
+    Accept any token on any EVM chain and settle in USD via Stripe pay-with-crypto. One widget prop, no merchant backend.
+  </Card>
+</CardGroup>
+
+## Getting access
+
+Both integrations are part of [Polygon Checkout](https://polygon.technology/checkout): accept crypto payments in your existing Stripe workflow and settle in the currency you choose. Visit the page to book a demo, talk to sales, or ask about enabling Stripe for your Trails project.
+
+For integration questions, the [Trails Telegram](https://t.me/build_with_trails) is the fastest route to the team.

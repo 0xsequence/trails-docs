@@ -45,6 +45,7 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
   - **intentProtocol** (IntentProtocolVersion): Force a specific intent protocol version — `v1` or `v1_5`
   - **slippageTolerance** (number): Maximum acceptable slippage as a fraction of 1 (e.g. `0.005` for 0.5%)
   - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses for the intent
+- **settlement** (QuoteSettlementParams): Settle the quote in USD on a Stripe account instead of at a destination you specify. See [Stripe settlement quotes](#stripe-settlement-quotes)
 
 ## Response
 
@@ -52,6 +53,7 @@ The response includes:
 
 - **intent** (Intent): Complete intent object with transaction details
 - **gasFeeOptions** (GasFeeOptions): Available gas fee payment options
+- **settlement** (QuoteSettlementInfo): Present on Stripe settlement quotes only. The armed Stripe PaymentIntent this quote pays into
 
 ### Intent Object Details
 
@@ -94,6 +96,64 @@ const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIn
 const quote = await response.json();
 console.log('Quote:', quote);
 ```
+
+## Stripe settlement quotes
+
+A settlement quote asks Trails to settle the payment through Stripe instead of delivering tokens to a destination. Stripe pay-with-crypto is the only
+settlement provider today (`provider: "stripe"`); it lands the
+deposit as USDC on a Stripe-allocated address and settles USD on the merchant's Stripe account. This is what the widget's
+[`stripe` prop](/sdk/stripe/checkout) sends; access is arranged through [Polygon Checkout](https://polygon.technology/checkout).
+
+Pass `settlement` and leave **every destination field unset**. The API rejects `destinationChainId`, `destinationTokenAddress`,
+`destinationTokenAmount`, `destinationToAddress`, `destinationCallData` and friends alongside `settlement`, and derives all of them from the armed
+payment.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | `"stripe"` | Always `"stripe"` today |
+| `amountCents` | `number` | Stripe charge amount in minor units of `currency` |
+| `currency` | `string` | Stripe presentment currency, lowercase ISO 4217. Only `"usd"` is accepted today; defaults to `"usd"` |
+| `checkoutRef` | `string` | Client-generated id for one checkout session. The first quote for a `checkoutRef` creates and arms the Stripe PaymentIntent; re-quotes reuse it. A changed amount, `orderRef`, `chainId`, or (when `chainId` is omitted) origin chain cancels and re-arms under the same ref |
+| `orderRef` | `string` | Merchant order label, recorded in the Stripe PaymentIntent metadata |
+| `chainId` | `number` | Chain for the USDC deposit to Stripe. Live Stripe merchant keys: Base `8453`, Polygon `137`, Ethereum `1`. Test keys: Base Sepolia `84532` only. Omitted: the origin chain when it is a Stripe network in the key's mode, else Base |
+
+```typescript
+const settlementQuote = {
+  ownerAddress: "0x0709CF2d5D4f3D38f5948d697fE64d7FB3639Eb1",
+  originChainId: 42161, // Arbitrum
+  originTokenAddress: "0x0000000000000000000000000000000000000000", // ETH
+  tradeType: "EXACT_OUTPUT",
+  settlement: {
+    provider: "stripe",
+    amountCents: 2500, // $25.00
+    checkoutRef: "checkout-8f3a…",
+    orderRef: "order-4821",
+    chainId: 8453,
+  },
+};
+```
+
+The response adds `settlement` (QuoteSettlementInfo):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | `"stripe"` | Always `"stripe"` today |
+| `reference` | `string` | Stripe PaymentIntent id |
+| `currency` | `string` | Stripe presentment currency |
+| `amountCents` | `number` | Stripe charge amount as declared at quote time |
+| `amountUsd` | `string` | Decimal display amount of the Stripe charge |
+| `livemode` | `boolean` | Whether the Stripe merchant key is a live key |
+| `chainId` | `number` | Chain the USDC deposit to Stripe lands on |
+
+Settlement quotes are exact-output only, require an EVM origin chain, and never use the passthrough path, so every settled payment has an intent whose
+receipt carries the [settlement outcome](/api-reference/endpoints/get-intent-receipt#stripe-settlement). The request must carry a project access key whose
+project has a Stripe merchant key mapped, or the quote fails.
+
+<Warning>
+`amountCents` and `orderRef` are declared by the caller under a public access key. A settled payment proves the deposit was made for the declared
+amount, **not** that the amount matches the order. Fulfillment must verify the receipt's `settlement.amountCents` (and the order reference) against
+the merchant's own records.
+</Warning>
 
 ## Quote Expiration
 

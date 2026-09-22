@@ -468,6 +468,12 @@ The `useQuote` hook provides real-time quotes for token swaps, cross-chain trans
 
 Pass `walletAddress` to preview quotes before a wallet is connected. If a connected `walletClient.account.address` is available, it becomes the quote owner and takes precedence over `walletAddress`. Executing with `send` still requires a real wallet client.
 
+Pass `settlement` (`QuoteSettlementParams`) to quote a [Stripe checkout](/sdk/stripe/checkout) headlessly. The hook still needs `to.chain`, `to.token`
+and `to.recipient` before it quotes: pass the settlement chain and its USDC address as placeholders. The SDK strips them from the request and the API
+derives the real destination from the armed Stripe payment; the returned `quote.settlement` carries the PaymentIntent reference. Settlement quotes are
+exact-output (no `from.amount`), cannot be combined with `to.calls`, `to.calldata` or `actions`, require an EVM origin, and never take the passthrough
+path. See [Headless](/sdk/stripe/checkout#headless) for an example.
+
 #### Usage Example
 
 ```tsx
@@ -893,7 +899,7 @@ type UseExchangeRateResult = {
 ## Onramp Providers
 
 <Note>
-Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Use these to drive your own fiat on-ramp UI (e.g. payment method picker, exchange selector) outside the Trails widget. Backed by Mesh.
+Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Use these to drive your own fiat on-ramp UI (e.g. payment method picker, exchange selector) outside the Trails widget. Backed by Meld. The [Stripe onramp](/sdk/stripe/onramp) has no hook surface; it is driven entirely by the widget and the Trails API.
 </Note>
 
 ```ts
@@ -1657,6 +1663,92 @@ executeIntent({
   depositSignature,
 })
 ```
+
+## Stripe settlement
+
+<Note>
+Added with [Stripe checkout](/sdk/stripe/checkout). Settlement is the post-execution step where Stripe confirms the USDC deposit an intent made
+and the merchant's PaymentIntent succeeds. Stripe is the only settlement provider today. The Trails API owns all Stripe knowledge; these hooks only
+read the receipt's `settlement` projection.
+</Note>
+
+```ts
+import {
+  useIntentSettlement,
+  isSettlementReceiptUnavailable,
+  sanitizeSettlementReceiptUrl,
+  resolveIntentSettlementPollInterval,
+  getStripeSettlementChainIds,
+  INTENT_SETTLEMENT_POLL_MS,
+  INTENT_SETTLEMENT_PENDING_HOLD_MS,
+  type IntentSettlementState,
+  type IntentSettlement,
+  type QuoteSettlementParams,
+  type QuoteSettlementInfo,
+} from '0xtrails'
+```
+
+### useIntentSettlement
+
+Polls `GetIntentReceipt` for an intent's Stripe settlement until it is terminal. Use it on pages that outlive the widget, such as an order confirmation.
+
+```tsx
+import { getTrailsClient, useIntentSettlement, sanitizeSettlementReceiptUrl } from '0xtrails'
+
+const client = getTrailsClient({ apiKey: 'YOUR_API_KEY' })
+
+function OrderStatus({ intentId }: { intentId: string }) {
+  const state = useIntentSettlement({ intentId, client, expectSettlement: true })
+  const url = sanitizeSettlementReceiptUrl(state.settlement?.externalUrl)
+
+  if (!state.resolved) return <span>Checking…</span>
+  if (state.settlement?.settled) return <a href={url ?? '#'}>Stripe receipt</a>
+  if (state.settlement?.failed) return <span>Payment failed</span>
+  return <span>Waiting for Stripe…</span>
+}
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `intentId` | `string \| null` | Intent to watch |
+| `client` | `TrailsClient` | From `getTrailsClient` or `useTrailsClient` |
+| `enabled` | `boolean` | Default `true` |
+| `track` | `boolean` | `false` reads once instead of polling. Default `true` |
+| `expectSettlement` | `boolean` | Set when the quote carried `settlement`, so a receipt without the projection is treated as a transient gap rather than "no settle step" |
+
+#### Types
+
+```ts
+type IntentSettlementState = {
+  resolved: boolean                    // first read finished
+  settlement?: IntentSettlement        // undefined when the intent has no Stripe settle step
+  receiptUrlTimedOut: boolean          // settled, but no Stripe receipt URL within the grace window
+  awaitingExpectedSettlement: boolean  // expected projection not on the receipt yet
+  pendingTimedOut: boolean             // pending past the hold window; consumers should fail open
+}
+
+type IntentSettlement = {
+  provider: 'stripe'
+  label: string          // Stripe settle step label, e.g. "Settle"
+  description: string
+  reference: string      // Stripe PaymentIntent id
+  currency: string       // lowercase ISO 4217, "usd" today
+  amountCents: number
+  chainId: number        // chain the USDC deposit landed on
+  status: string         // raw Stripe PaymentIntent status
+  settled: boolean
+  failed: boolean
+  terminal: boolean      // key terminality on this, never on status; can be true with settled and failed both false (unknown outcome)
+  externalUrl?: string   // Stripe-hosted receipt
+}
+```
+
+### Helpers
+
+- `isSettlementReceiptUnavailable(state)` — `true` when no Stripe receipt will arrive within the bounds consumers wait on, so a UI can stop showing a spinner.
+- `sanitizeSettlementReceiptUrl(url)` — returns the URL only for `http(s)` schemes; use it before rendering `externalUrl` in an `<a href>`.
+- `resolveIntentSettlementPollInterval(settlement, settledForMs, pendingForMs)` — the poll cadence the hook uses, exported for custom pollers.
+- `getStripeSettlementChainIds(mode)` — chain ids a Stripe merchant key can settle on: `[8453, 137, 1]` for `'live'`, `[84532]` for `'test'`.
 
 ## TrailsClient
 

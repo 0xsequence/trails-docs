@@ -37,7 +37,6 @@ appMetadata={{
 | Prop | Type | Description |
 |------|------|-------------|
 | `walletConnectProjectId` | `string` | WalletConnect project ID |
-| `walletOptions` | `string[]` | Wallet connector IDs to show (e.g. `["metamask", "walletconnect"]`) |
 | `adapters` | `TrailsAdapterEntry[]` | Explicit wallet runtime adapters. Use `wagmiAdapter` from [`@0xtrails/adapter-wagmi`](/sdk/adapters/wagmi) to share an existing wagmi session, or build your own with [`evmAdapter`](/sdk/adapters/eip-1193). See [Adapters](/sdk/adapters/overview). |
 | `hideAddWallet` | `boolean` | Hide "Add wallet" option |
 | `isSmartWallet` | `boolean` | Signal that the connected wallet is a smart wallet |
@@ -74,20 +73,65 @@ dev={{
 
 These callbacks are available on all focused components (in addition to mode-specific lifecycle callbacks):
 
-| Callback | When it fires |
-|----------|---------------|
-| `onOpen` | Widget modal opens |
-| `onClose` | Widget modal closes |
-| `onOriginConfirmation` | Origin-chain transaction confirmed |
-| `onDestinationConfirmation` | Destination-chain transaction confirmed |
-| `onQuote` | Quote is received |
-| `onSignRequest` | Wallet signature requested |
-| `onSign` | Wallet signature obtained |
-| `onSignReject` | User rejected the signature |
-| `onApproveRequest` | ERC-20 approval requested |
-| `onApprove` | ERC-20 approval confirmed |
-| `onApproveReject` | User rejected the approval |
-| `onStatus` | Transaction status update |
+| Callback | Payload | When it fires |
+|----------|---------|---------------|
+| `onOpen` | — | Widget modal opens |
+| `onClose` | — | Widget modal closes |
+| `onQuote` | `{ sessionId, intentId, quote }` | Quote is received |
+| `onSignRequest` | `{ sessionId, intentId }` | Wallet signature requested |
+| `onSign` | `{ sessionId, intentId }` | Wallet signature obtained |
+| `onSignReject` | `{ sessionId, intentId, error }` | User rejected the signature |
+| `onApproveRequest` | `{ sessionId, intentId }` | ERC-20 approval requested |
+| `onApprove` | `{ sessionId, intentId, transactionHash }` | ERC-20 approval confirmed |
+| `onApproveReject` | `{ sessionId, intentId, error }` | User rejected the approval |
+| `onStatus` | `{ sessionId, intentId, transactionStates }` | Transaction status update |
+| `onOriginConfirmation` | `{ sessionId, intentId, txHash, chainId }` | Origin-chain transaction confirmed |
+| `onDestinationConfirmation` | `{ sessionId, intentId, txHash, chainId }` | Destination-chain transaction confirmed |
+
+#### Callback payloads
+
+Every callback that fires after a quote exists carries two identifiers:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sessionId` | `string` | Analytics session id for the current widget session. Stable across every callback in one session, but not known to the Trails API. |
+| `intentId` | `string \| null` | Id of the intent created for the active quote. Use it to look the payment up server-side (`GetIntentReceipt`, `GetIntentStatus`) or on Trailscan. `null` for passthrough quotes (same-chain, same-token transfers that need no intent). |
+
+The `*Start` callbacks (`onPaymentStart`, `onFundingStart`, …) fire before quoting, so they carry only `sessionId`. `onOpen` and `onClose` have
+no payload.
+
+```tsx
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{ recipient: "0xMerchant", currency: "USDC", chain: "base", amount: "25" }}
+  onQuote={({ intentId }) => console.log("intent created", intentId)}
+  onPaymentSuccess={({ intentId }) => {
+    // Verify server-side with the Trails API before fulfilling
+    fetch("/api/verify-payment", { method: "POST", body: JSON.stringify({ intentId }) })
+  }}
+>
+  <button>Pay $25</button>
+</Pay>
+```
+
+The payload types are exported as `CheckoutEventBase` (`{ sessionId, intentId }`) and `TransactionConfirmationEvent` from `0xtrails`.
+
+For [Stripe checkout](/sdk/stripe/checkout) integrations the success payload (`onSuccess` on `TrailsWidget`) also carries `settlement`, an
+`IntentSettlement` describing the Stripe payment. The widget holds that callback while settlement is pending and releases it when Stripe confirms
+the deposit, the payment fails, or the pending hold times out, so check `settlement.settled` before treating the order as paid.
+
+### Stripe checkout props
+
+These props live on `TrailsWidget` (imported from `0xtrails`) rather than the focused components, because they replace the destination.
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `stripe` | `TrailsStripeCheckoutProps` | `{ amountCents, orderRef?, chainId?, testMode? }`. Prices the checkout in USD cents and settles it on your Stripe account. Forces pay mode; mutually exclusive with `toAddress`, `toAmount`, `toChainId`, `toToken`, `toCalldata`, `actions` and `settlement` |
+| `merchantCheckout` | `boolean` | Merchant-checkout presentation: one processing state while pending, receipt keeps only payment links. Implied by `stripe`; set explicitly to opt any integration in or out |
+| `settlement` | `QuoteSettlementParams` | Advanced: raw settlement quote params, when you manage the checkout reference yourself. Set automatically by `stripe` |
+| `onPaymentCreated` | `({ sessionId, settlement }) => void` | A quote armed an external payment. Fires once per payment reference, at quote time, with the reference, amount and chain. `TrailsWidget` only; the focused components do not expose it |
+
+See [Stripe checkout](/sdk/stripe/checkout) for the flow, verification guidance and headless equivalents.
 
 ### ChainIdentifier
 
@@ -106,6 +150,9 @@ The `paymentMethod` prop on focused components accepts:
 | `"CRYPTO_TRANSFER"` | QR code / address deposit |
 | `"CREDIT_DEBIT_CARD"` | Fiat on-ramp (credit/debit card) |
 | `"EXCHANGE"` | CEX transfer (Coinbase, Binance, etc.) |
+
+The [Stripe onramp](/sdk/stripe/onramp) is its own tile rather than a `paymentMethod` value. It appears whenever Stripe is enabled for your project;
+order or hide it with `fundMethodsList` (`"stripe-onramp"`), or open it directly on `TrailsWidget` with `fundMethod="onramp-stripe"`.
 
 ### Mode-specific props
 
