@@ -132,7 +132,6 @@ The recipient selector is read-only for settlement checkouts, since the deposit 
 Everything the widget does is available to headless integrations:
 
 - `useQuote` accepts a `settlement` option (`QuoteSettlementParams`: `provider: 'stripe'`, `amountCents`, `checkoutRef`, `orderRef?`, `chainId?`) and the quote result carries `settlement`. The hook still needs a `to` with `chain`, `token` and `recipient` before it quotes; pass the settlement chain and its USDC address as placeholders (the widget uses the USDC contract address as the recipient). The SDK strips them from the request and the API derives the real destination from the armed payment. Do not pass `to.calls`, `to.calldata`, `actions` or `from.amount`: settlement quotes are exact-output and the hook throws on those.
-
 - The advanced `settlement` widget prop takes the same params directly when you manage the checkout reference lifecycle yourself.
 - `useIntentSettlement` and `getTrailsClient` cover receipt polling.
 
