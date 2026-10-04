@@ -108,6 +108,9 @@ For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper on widget
 | `sequenceNodeGatewayUrl` | `string` | No | Custom Sequence node gateway URL. |
 | `sequenceMetadataUrl` | `string` | No | Custom Sequence metadata URL. |
 | `sequenceApiUrl` | `string` | No | Custom Sequence API URL. |
+| `solanaRpcUrl` | `string` | No | Solana mainnet JSON-RPC used for SDK-initiated reads such as balances. |
+| `tronRpcUrl` | `string` | No | Base URL of a TronGrid-compatible HTTP API used for Tron reads (default: `https://api.trongrid.io`). |
+| `tronApiKey` | `string` | No | TronGrid API key, sent as the `TRON-PRO-API-KEY` header. Set it in production to avoid TronGrid rate limits. |
 | `walletConnectProjectId` | `string` | No | WalletConnect project ID for wallet connections. |
 | `slippageTolerance` | `string \| number` | No | Default slippage tolerance for swaps (e.g., `0.005` for 0.5%). |
 | `debug` | `boolean` | No | Enable debug logging (default: `false`). |
