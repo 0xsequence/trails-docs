@@ -61,6 +61,27 @@ function Checkout() {
 }
 ```
 
+## Tron RPC
+
+The SDK reads Tron balances from TronGrid at `https://api.trongrid.io`. Public TronGrid is rate-limited, so pass your own endpoint or API key in production, either on the widget or on [`TrailsProvider`](/sdk/hooks#configuration-options):
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  adapters={[tronAdapter()]}
+  tronRpcUrl="https://api.trongrid.io"
+  tronApiKey="YOUR_TRONGRID_API_KEY"
+  to={{ recipient: '0x...', token: 'USDC', chain: 'polygon', amount: '100' }}
+/>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `tronRpcUrl` | `string` | Base URL of a TronGrid-compatible HTTP API |
+| `tronApiKey` | `string` | Sent as the `TRON-PRO-API-KEY` header |
+
+Widget props take precedence over the `TrailsProvider` config.
+
 ## Compose with other adapters
 
 EVM, Solana, and Tron adapters compose — pass any combination and every wallet family works in the same widget:

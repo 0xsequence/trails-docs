@@ -224,11 +224,13 @@ To restrict which exchanges appear, pass an `exchanges` array:
   onramp={{
     mesh: {
       environment: 'production',
-      exchanges: ['coinbase', 'robinhoodDirect'],
+      exchanges: ['coinbase', 'robinhood'],
     },
   }}
 />
 ```
+
+Each entry names an exchange brand, not a single Mesh integration: `'robinhood'` keeps every Robinhood integration Mesh offers, and `'binanceUs'` is a separate brand from `'binance'`. Matching ignores case, spaces, hyphens and underscores. An entry that is not a known brand matches a Mesh integration key or integration id exactly. The picker lists exchanges in allowlist order, and an empty or omitted list keeps every exchange. Brand names are the keys of `MESH_EXCHANGE_ALIASES`, exported from `0xtrails`.
 
 For development and testing, use `environment: 'sandbox'`. A yellow banner is shown inside the widget when sandbox is active.
 
