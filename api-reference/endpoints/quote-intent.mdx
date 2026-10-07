@@ -34,7 +34,8 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 - **destinationApproveAddress** (string): Contract address to pre-approve on the destination chain before executing `destinationCallData`
 - **destinationCallData** (string): Custom calldata for contract interactions on destination chain
 - **destinationCallValue** (number): Value (in wei) to send with the destination call
-- **fundMethod** (FundMethod): Hint for the funding method — `WALLET`, `DIRECT_TRANSFER`, `ONRAMP_MESH`, or `ONRAMP_MELD`
+- **fundMethod** (FundMethod): Hint for the funding method — `WALLET`, `DIRECT_TRANSFER`, `ONRAMP_MESH`, `ONRAMP_MELD`, or `ONRAMP_STRIPE`
+- **settlement** (QuoteSettlementParams): Stripe settlement quote params — arms the quote so the processor (e.g. a Stripe PaymentIntent) settles USDC on the settlement chain
 - **onlyNativeGasFee** (boolean): When `true`, restricts gas fee options to the origin chain's native token only
 - **options** (QuoteIntentRequestOptions):
   - **bridgeProvider** (RouteProvider): Preferred bridge provider — `AUTO` (default), `RELAY`, `CCTP`, `LZ_OFT`, `SUSHI`, `ZEROX`, `LIFI`, `WETH`
@@ -42,8 +43,9 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
   - **swapProvider** (RouteProvider): Preferred same-chain swap provider — `AUTO` (default), `RELAY`, `SUSHI`, `ZEROX`
   - **swapProviderFallback** (boolean): If `true`, fall back to another provider if the preferred swap provider is unavailable
   - **preference** (RoutePreference): Route optimisation target — `RECOMMENDED` (default), `FASTEST`, `CHEAPEST`, `TRUSTLESS`
-  - **intentProtocol** (IntentProtocolVersion): Force a specific intent protocol version — `v1` or `v1_5`
+  - **intentProtocol** (IntentProtocolVersion): Force a specific intent protocol version — `v1_5`. (`v1` is deprecated: writes requesting it fail with `IntentProtocolDeprecated`.)
   - **slippageTolerance** (number): Maximum acceptable slippage as a fraction of 1 (e.g. `0.005` for 0.5%)
+  - **disablePassthrough** (boolean): When `true`, never return a passthrough-eligible quote; same-chain same-token wallet quotes run the normal intent flow
   - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses for the intent
 
 ## Response

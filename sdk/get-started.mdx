@@ -64,8 +64,8 @@ export const PaymentExample = () => {
         chain: "base",
         amount: "10",
       }}
-      onPaymentSuccess={({ sessionId }) => {
-        console.log('Payment completed:', sessionId)
+      onPaymentSuccess={({ intentId }) => {
+        console.log('Payment completed:', intentId)
       }}
     >
       <button>Pay 10 USDC</button>
@@ -87,8 +87,8 @@ export const SwapExample = () => {
       apiKey="YOUR_API_KEY"
       from={{ token: "ETH", chain: "ethereum" }}
       to={{ token: "USDC", chain: "base" }}
-      onSwapSuccess={({ sessionId }) => {
-        console.log('Swap completed:', sessionId)
+      onSwapSuccess={({ intentId }) => {
+        console.log('Swap completed:', intentId)
       }}
     >
       <button>Swap ETH to USDC</button>
@@ -113,8 +113,8 @@ export const FundExample = () => {
         token: "USDC",
         chain: "base",
       }}
-      onFundingSuccess={({ sessionId }) => {
-        console.log('Funding completed:', sessionId)
+      onFundingSuccess={({ intentId }) => {
+        console.log('Funding completed:', intentId)
       }}
     >
       <button>Add Funds</button>
@@ -135,8 +135,8 @@ export const WithdrawExample = () => {
     <Withdraw
       apiKey="YOUR_API_KEY"
       from={{ token: "USDC", chain: "base" }}
-      onWithdrawSuccess={({ sessionId }) => {
-        console.log('Withdrawal completed:', sessionId)
+      onWithdrawSuccess={({ intentId }) => {
+        console.log('Withdrawal completed:', intentId)
       }}
     >
       <button>Withdraw</button>
@@ -156,8 +156,8 @@ export const EarnExample = () => {
   return (
     <Earn
       apiKey="YOUR_API_KEY"
-      onEarnSuccess={({ sessionId }) => {
-        console.log('Deposit completed:', sessionId)
+      onEarnSuccess={({ intentId }) => {
+        console.log('Deposit completed:', intentId)
       }}
     />
   )
@@ -175,8 +175,8 @@ All focused components expose consistent lifecycle callbacks. Replace `Xxx` with
   onPaymentStart={({ sessionId }) => {
     console.log('Started:', sessionId)
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    console.log('Completed:', sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    console.log('Completed:', intentId)
   }}
   onPaymentError={({ sessionId, error }) => {
     console.error('Failed:', sessionId, error)

@@ -4,12 +4,6 @@
     "title": "Trails API",
     "version": ""
   },
-  "servers": [
-    {
-      "url": "https://trails-api.sequence.app",
-      "description": "Trails API"
-    }
-  ],
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": {
@@ -1130,6 +1124,36 @@
           }
         }
       },
+      "ErrorBluvoDeprecated": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "BluvoDeprecated"
+          },
+          "code": {
+            "type": "number",
+            "example": 3001
+          },
+          "msg": {
+            "type": "string",
+            "example": "Bluvo exchange onramp support was deprecated on Sep 18, 2026 and is no longer available. Please upgrade your Trails SDK and use the Mesh exchange onramp instead."
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 410
+          }
+        }
+      },
       "ErrorNotFound": {
         "type": "object",
         "required": [
@@ -1330,6 +1354,36 @@
           "msg": {
             "type": "string",
             "example": "Fee on transfer tokens are not supported"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number",
+            "example": 422
+          }
+        }
+      },
+      "ErrorRebasingToken": {
+        "type": "object",
+        "required": [
+          "error",
+          "code",
+          "msg",
+          "status"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "RebasingToken"
+          },
+          "code": {
+            "type": "number",
+            "example": 7004
+          },
+          "msg": {
+            "type": "string",
+            "example": "Rebasing tokens are not supported"
           },
           "cause": {
             "type": "string"
@@ -1727,6 +1781,9 @@
           },
           "trailsAddressOverrides": {
             "$ref": "#/components/schemas/TrailsAddressOverrides"
+          },
+          "disablePassthrough": {
+            "type": "boolean"
           }
         }
       },
@@ -3497,6 +3554,9 @@
             "type": "boolean"
           },
           "feeOnTransfer": {
+            "type": "boolean"
+          },
+          "rebasing": {
             "type": "boolean"
           },
           "logoUri": {
@@ -6611,6 +6671,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -6630,6 +6693,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -6798,6 +6864,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -6817,6 +6886,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -6985,6 +7057,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -7004,6 +7079,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -7172,6 +7250,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -7191,6 +7272,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -7359,6 +7443,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -7378,6 +7465,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -7546,6 +7636,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -7565,6 +7658,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -7733,6 +7829,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -7752,6 +7851,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -7921,6 +8023,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -7940,6 +8045,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -8108,6 +8216,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -8127,6 +8238,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -8295,6 +8409,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -8314,6 +8431,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -8482,6 +8602,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -8501,6 +8624,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -8669,6 +8795,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -8688,6 +8817,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -8856,6 +8988,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -8875,6 +9010,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -9043,6 +9181,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -9062,6 +9203,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -9230,6 +9374,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -9249,6 +9396,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -9417,6 +9567,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -9436,6 +9589,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -9604,6 +9760,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -9623,6 +9782,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -9791,6 +9953,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -9810,6 +9975,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -9978,6 +10146,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -9997,6 +10168,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -10165,6 +10339,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -10184,6 +10361,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -10352,6 +10532,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -10371,6 +10554,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -10540,6 +10726,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -10559,6 +10748,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -10728,6 +10920,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -10747,6 +10942,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -10916,6 +11114,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -10935,6 +11136,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -11103,6 +11307,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -11122,6 +11329,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -11290,6 +11500,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -11309,6 +11522,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -11477,6 +11693,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -11496,6 +11715,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -11665,6 +11887,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -11684,6 +11909,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -11852,6 +12080,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -11871,6 +12102,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -12039,6 +12273,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -12058,6 +12295,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -12226,6 +12466,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -12245,6 +12488,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -12414,6 +12660,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -12433,6 +12682,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -12601,6 +12853,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -12620,6 +12875,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -12788,6 +13046,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -12807,6 +13068,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -12975,6 +13239,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -12994,6 +13261,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -13162,6 +13432,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -13181,6 +13454,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -13349,6 +13625,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -13368,6 +13647,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -13536,6 +13818,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -13555,6 +13840,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -13723,6 +14011,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -13742,6 +14033,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -13910,6 +14204,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -13929,6 +14226,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -14097,6 +14397,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -14116,6 +14419,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -14284,6 +14590,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -14303,6 +14612,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"
@@ -14472,6 +14784,9 @@
                       "$ref": "#/components/schemas/ErrorIntentProtocolDeprecated"
                     },
                     {
+                      "$ref": "#/components/schemas/ErrorBluvoDeprecated"
+                    },
+                    {
                       "$ref": "#/components/schemas/ErrorNotFound"
                     },
                     {
@@ -14491,6 +14806,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/ErrorFeeOnTransferToken"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRebasingToken"
                     },
                     {
                       "$ref": "#/components/schemas/ErrorIntentsDisabled"

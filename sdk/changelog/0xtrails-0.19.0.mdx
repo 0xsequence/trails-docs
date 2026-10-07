@@ -1,0 +1,99 @@
+---
+title: "0xtrails@0.19.0"
+description: "Release notes for the 0xtrails SDK v0.19.0 — Stripe checkout, intentId on widget callbacks, card onramp landing chains"
+---
+
+_Released October 7, 2026_
+
+This release covers changes after `0xtrails@0.18.6` through `0xtrails@0.19.0`.
+
+## Highlights
+
+- **Stripe pay-with-crypto** — the `stripe` widget prop arms a Stripe checkout that settles USDC on your chosen chain. See [Stripe Onramp](/sdk/onramp/stripe).
+- **`intentId` on widget callbacks** — every lifecycle callback that fires after a quote exists now carries the intent id alongside `sessionId`,
+so you can correlate widget events with the Trails API and Trailscan without reading it off the quote object.
+- **Card onramps land on the destination chain** — Meld and Stripe card onramps buy the destination token directly when the provider supports it,
+falling back to USDC on Base otherwise.
+- **Robinhood Chain support** — chain id 4663.
+
+## Stripe Checkout
+
+Set the `stripe` prop to charge a fiat price and settle in USDC. The prop takes `TrailsStripeCheckoutProps`:
+
+- `amountCents` (required) — price in USD cents. The browser declares this value under a public key, so verify the settled amount and order
+reference server-side before fulfilling the order.
+- `orderRef` (optional) — merchant order label attached to the PaymentIntent metadata. It is also the checkout-identity key: changing it mints a
+fresh checkout reference. Prefer supplying it; when omitted, one checkout reference spans the prop's lifetime.
+- `chainId` (optional) — settlement chain. Live merchant keys accept Base (8453, default), Polygon (137) and Ethereum (1); test keys settle on
+Base Sepolia (84532) only.
+- `testMode` (optional) — set when the project's merchant key is a Stripe test-mode key.
+
+The widget tracks the settle step on the intent receipt, renders the merchant checkout presentation (also available standalone via the
+`merchantCheckout` prop), fires the new `onPaymentCreated` callback, and reports `intentId` on `onSuccess`. Use `getStripeSettlementChainIds()`
+to validate the settlement chain for your merchant key, and the `useIntentSettlement` hook to observe settlement state outside the widget.
+`useQuote` accepts a `settlement` option with the same settlement quote params.
+
+See [Stripe Onramp](/sdk/onramp/stripe) for the full integration.
+
+## intentId
+
+- `intentId: string | null` is added to the payloads of `onQuote`, `onSignRequest`, `onSign`, `onSignReject`, `onApproveRequest`, `onApprove`,
+`onApproveReject`, `onStatus`, `onOriginConfirmation`, `onDestinationConfirmation`, and to the mode-specific success and error callbacks
+(`onPaymentSuccess`/`onPaymentError`, `onFundingSuccess`/`onFundingError`, `onSwapSuccess`/`onSwapError`, `onEarnSuccess`/`onEarnError`,
+`onWithdrawSuccess`/`onWithdrawError`). The `TrailsWidget` equivalents `onSuccess` and `onError` gain it too.
+- `intentId` is the id of the intent created for the active quote. It is `null` for passthrough quotes (same-chain, same-token transfers that need
+no intent) and resets whenever a new quote cycle begins.
+- The `*Start` callbacks fire before quoting and keep their `{ sessionId }` payload. `onOpen` and `onClose` are unchanged.
+
+See [Callback payloads](/sdk/configuration#callback-payloads).
+
+## Card Onramps
+
+- Card onramps (Meld and Stripe) buy the destination token directly when the provider supports it, and fall back to USDC on Base otherwise.
+The landing token is resolved before the quote is shown, and quote origins are locked to the landing.
+- Stripe or Meld is picked automatically by country; a chooser screen appears only when both are available. The provider screen is titled
+"Pay by card".
+- Filter the provider list with `onramp.cardProviders`, an allowlist of `"stripe"` and `"meld"` values. Omit it to offer every provider the
+deployment advertises; unknown values are ignored, and a list with no known value behaves like no list. Meld quote rejections now surface the
+provider's reason instead of a generic API error.
+
+## Robinhood Chain
+
+Robinhood Chain (id **4663**) joins the supported chains. See [Supported Chains](/resources/supported-chains).
+
+## Features
+
+- `defaultDisplayCurrency` widget prop: ISO 4217 code (e.g. `"NZD"`) for the fiat currency used to display amounts. Defaults to `"USD"`;
+a currency the user picks in preferences takes precedence.
+- `disablePassthrough` on `useQuote` and the widget: same-chain, same-token wallet quotes default to a passthrough transfer that skips intent
+orchestration. Setting it forces the intent flow — the SDK sends `options.disablePassthrough` on the `QuoteIntent` request and reports the quote
+as not passthrough-eligible. Default: `false`.
+
+## Fixes
+
+- Keep polling the intent receipt after a failed wallet send instead of stopping at the error.
+- Widget screens, and the WalletConnect QR container, honor the theme CSS variables.
+- Fall back to Trails' WalletConnect runtime when host adapters have no pairing connector, and hide embedded-wallet connectors such as Privy's
+from the connect list unless the host features them.
+- Mesh integrations without account linking skip the auth-only link and create the link token at the deposit step; the Mesh funding countdown
+is anchored to the committed intent's expiry instead of a hard-coded 5 minutes.
+- Order the widget chain filter by the shared chain order, and show the history and settings header buttons on the funding method screen.
+- Guard null token arrays in intent history balances.
+- Session, request and element ids are generated from Web Crypto (`crypto.getRandomValues`) instead of `Math.random`.
+
+## New Exports
+
+- `CheckoutEventBase` (`{ sessionId: string; intentId: string | null }`) and `TransactionConfirmationEvent` from `0xtrails`.
+- `useIntentSettlement`, the `IntentSettlementState` type, and `getStripeSettlementChainIds` from `0xtrails`.
+- `TrailsStripeCheckoutProps` via the widget props.
+
+## API Bindings
+
+- `options.disablePassthrough` on `QuoteIntent` requests in `@0xtrails/api`, and the settlement types regenerated for the Stripe checkout flow.
+
+## Breaking Changes
+
+- **Bluvo onramp support is removed** (deprecated server-side on Sep 18). The Bluvo exchange option no longer appears; remove any
+`bluvo` references from your onramp configuration.
+- The `intentId` field itself is additive: handlers that destructure `sessionId` keep working, and a handler you typed yourself as
+`{ sessionId: string }` still compiles because the widget passes a superset.

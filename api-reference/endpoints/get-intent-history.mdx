@@ -56,6 +56,8 @@ Each `IntentHistory` object contains:
 - **updatedAt** (string): Last update timestamp
 - **createdAt** (string): Creation timestamp
 - **receipt** (IntentReceipt): Complete receipt with transaction details
+- **hasBalance** (boolean): Whether balance data was included for this entry
+- **balances** (IntentAddressBalance[]): Per-address/chain balances, present when requested with `includeBalances`. Each entry's `tokens` is always an array — `[]` when nothing is indexed
 
 ### IntentReceipt Details
 

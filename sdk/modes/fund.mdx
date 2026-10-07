@@ -23,7 +23,7 @@ import { Fund } from '0xtrails/widget'
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "USD", amount: 100 }}
   to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
-  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
 />
 ```
 
@@ -125,9 +125,12 @@ Control which funding methods are shown to the user:
 
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
-| `onFundingStart` | `({ sessionId }) => void` | User begins the funding flow |
-| `onFundingSuccess` | `({ sessionId }) => void` | Funding completes successfully |
-| `onFundingError` | `({ sessionId, error }) => void` | Funding encounters an error |
+| `onFundingStart` | `({ sessionId }) => void` | User begins the funding flow. Fires before quoting, so no `intentId` yet |
+| `onFundingSuccess` | `({ sessionId, intentId }) => void` | Funding completes successfully |
+| `onFundingError` | `({ sessionId, intentId, error }) => void` | Funding encounters an error |
+
+`intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
+quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
 
 ## Examples
 
@@ -141,7 +144,7 @@ import { Fund } from '0xtrails/widget'
   paymentMethod="CREDIT_DEBIT_CARD"
   from={{ currency: "EUR", amount: 100 }}
   to={{ token: "USDC", chain: "base" }}
-  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
 />
 ```
 
@@ -212,7 +215,7 @@ To open the exchange flow directly instead of showing the funding method selecto
     },
   }}
   to={{ recipient: "0xYourAddress", token: "USDC", chain: "base" }}
-  onFundingSuccess={({ sessionId }) => console.log("funded", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("funded", intentId)}
 />
 ```
 
@@ -250,6 +253,23 @@ The widget shows a pending state while the exchange processes the withdrawal. Se
 - *Popup blocked* — trigger the flow from a user gesture (button click) rather than programmatically, and encourage users to allow popups for your domain.
 - *Session expired* — the exchange session is valid for 5 minutes; a "Refresh Session" button appears if it expires.
 
+### Card onramp
+
+The **Credit or debit card** funding method opens a provider picker titled "Pay by card": Stripe, Meld, or a country-based automatic pick when only one is available. From `0xtrails@0.19.0` card purchases land on the destination chain's token when the provider supports it, falling back to USDC on Base.
+
+To restrict which card providers appear, pass `cardProviders` on the `onramp` prop:
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  onramp={{
+    cardProviders: ['stripe', 'meld'],
+  }}
+/>
+```
+
+`cardProviders` accepts `"stripe"` and `"meld"`. Omit it to offer every provider the deployment advertises; unknown values are ignored, and a list with no known value behaves like no list. See [Stripe Onramp](/sdk/onramp/stripe).
+
 ---
 
 ### Protocol deposit with dynamic calldata
@@ -284,7 +304,7 @@ const depositCalldata = encodeFunctionData({
     chain: "katana",
     calldata: depositCalldata,
   }}
-  onFundingSuccess={({ sessionId }) => console.log("deposited", sessionId)}
+  onFundingSuccess={({ intentId }) => console.log("deposited", intentId)}
 />
 ```
 

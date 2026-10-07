@@ -1,0 +1,18 @@
+---
+title: "0xtrails@0.19.1"
+description: "Release notes for the 0xtrails SDK v0.19.1 — Mesh exchange loading fix"
+---
+
+_Released October 7, 2026_
+
+This release covers changes after `0xtrails@0.19.0` through `0xtrails@0.19.1`.
+
+## Fixes
+
+- The Mesh exchange list loads against the resolved Trails API URL, so an empty hostname override no longer silently queries production while the
+widget queries another environment.
+- The Mesh exchange request uses the provider-configured API key when the widget has no `apiKey` prop, instead of sending none.
+
+## Breaking Changes
+
+None.

@@ -579,6 +579,9 @@ type UseQuoteProps = {
   mode?: 'pay' | 'fund' | 'earn' | 'swap' | 'withdraw' | null
   intentProtocolVersion?: 'v1' | 'v1.5' | null
   actions?: ActionItem[]
+  settlement?: QuoteSettlementParams | null // Stripe settlement quote params; throws if combined with actions, to.calls or to.calldata, or if from.amount is set
+  disablePassthrough?: boolean | null // force the intent flow for passthrough-eligible quotes
+  disabled?: boolean
 }
 
 type UseQuoteReturn = {
@@ -593,6 +596,7 @@ type UseQuoteReturn = {
   isRecipientContract: boolean | null
   isSenderContractOnOrigin: boolean | null
   isSenderContractOnDestination: boolean | null
+  settlement: QuoteSettlementInfo | null
 }
 
 type ActionItem =
@@ -921,6 +925,68 @@ const { data: providers } = useMeldServiceProviders({
 })
 ```
 
+## Settlement
+
+<Note>
+Added in [`0xtrails@0.19.0`](/sdk/changelog/0xtrails-0.19.0) for the Stripe checkout flow. Use these to observe a Stripe settlement outside the widget; see [Stripe Onramp](/sdk/onramp/stripe) for the integration.
+</Note>
+
+```ts
+import {
+  useIntentSettlement,
+  resolveIntentSettlementPollInterval,
+  isSettlementReceiptUnavailable,
+  sanitizeSettlementReceiptUrl,
+  INTENT_SETTLEMENT_POLL_MS,
+  INTENT_SETTLEMENT_PENDING_HOLD_MS,
+} from '0xtrails'
+```
+
+### useIntentSettlement
+
+Track an intent's settlement (e.g. a Stripe PaymentIntent settling USDC) outside the widget. The widget itself uses this to hold the success event until the processor confirms settlement.
+
+```ts
+const state: IntentSettlementState = useIntentSettlement({
+  intentId: string | null | undefined,
+  client: TrailsClient,
+  enabled?: boolean,           // default true
+  track?: boolean,             // default true
+  expectSettlement?: boolean,  // default false
+})
+
+type IntentSettlementState = {
+  resolved: boolean
+  settlement?: IntentSettlement
+  receiptUrlTimedOut: boolean
+  awaitingExpectedSettlement: boolean
+  pendingTimedOut: boolean
+}
+```
+
+### Helpers and constants
+
+- `resolveIntentSettlementPollInterval(settlement, settledForMs = 0, pendingForMs = 0)` — poll interval in ms, or `false` to stop polling.
+- `isSettlementReceiptUnavailable(state)` — whether the settlement receipt can no longer be fetched.
+- `sanitizeSettlementReceiptUrl(raw)` — sanitized receipt URL, or `null`.
+- `INTENT_SETTLEMENT_POLL_MS` — base poll interval (5000ms).
+- `INTENT_SETTLEMENT_PENDING_HOLD_MS` — how long a pending settlement is held open (300000ms).
+
+### Types
+
+`IntentSettlement`, `QuoteSettlementInfo` and `QuoteSettlementParams` are re-exported from `@0xtrails/api` via the `0xtrails` barrel.
+
+### getStripeSettlementChainIds
+
+```ts
+import { getStripeSettlementChainIds } from '0xtrails'
+
+getStripeSettlementChainIds('live') // [8453, 137, 1] — Base, Polygon, Ethereum
+getStripeSettlementChainIds('test') // [84532] — Base Sepolia
+```
+
+Validate a `stripe.chainId` against the chains your merchant key accepts before passing the prop; an unsupported `chainId` throws at render.
+
 ## Constants
 
 ```ts
@@ -1121,7 +1187,7 @@ import { SDK_VERSION, getVersion } from '0xtrails'
 import type { FundMethod } from '0xtrails'
 ```
 
-`FundMethod` is exported as a strict union: `"wallet" | "direct-transfer" | "onramp-mesh" | "onramp-meld"`.
+`FundMethod` is exported as a strict union: `"wallet" | "direct-transfer" | "onramp-mesh" | "onramp-meld" | "onramp-stripe"`.
 
 ## Encoders
 

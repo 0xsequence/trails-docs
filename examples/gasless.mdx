@@ -32,8 +32,8 @@ export function GaslessPayment() {
         chain: "polygon",
         amount: "50",
       }}
-      onPaymentSuccess={({ sessionId }) => {
-        console.log('Payment complete:', sessionId)
+      onPaymentSuccess={({ intentId }) => {
+        console.log('Payment complete:', intentId)
       }}
     >
       <button>Pay $50</button>
@@ -60,8 +60,8 @@ When the user has USDC (a permit-compatible token), the SDK:
     chain: "polygon",
     amount: "100",
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    verifyPayment(sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    verifyPayment(intentId)
   }}
 >
   <button>Pay $100 (Gas in USDC)</button>
@@ -81,8 +81,8 @@ The user only needs USDC—no ETH required for gas.
     chain: "polygon",
     amount: "75",
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    verifyPayment(sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    verifyPayment(intentId)
   }}
 >
   <button>Pay $75 (Gas in USDT)</button>
@@ -102,8 +102,8 @@ Even cross-chain payments can be gasless if the origin token supports permits:
     chain: "polygon",
     amount: "200",
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    verifyPayment(sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    verifyPayment(intentId)
   }}
 >
   <button>Pay $200</button>
@@ -164,8 +164,8 @@ You can listen to fee option events:
   onSign={() => {
     console.log('Permit signed—submitting to relayer')
   }}
-  onPaymentSuccess={({ sessionId }) => {
-    console.log('Gasless payment complete:', sessionId)
+  onPaymentSuccess={({ intentId }) => {
+    console.log('Gasless payment complete:', intentId)
   }}
 >
   <button>Pay</button>

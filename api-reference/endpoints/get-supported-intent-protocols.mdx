@@ -5,7 +5,7 @@ openapi: ../trails-api.gen.json post /rpc/Trails/GetSupportedIntentProtocols
 
 ## Overview
 
-`GetSupportedIntentProtocols` returns the intent-protocol versions the Trails API currently serves. Each version identifies a different orchestration + contracts stack; a quote produced for `v1_5` cannot be committed against `v1` and vice versa.
+`GetSupportedIntentProtocols` returns the intent-protocol versions the Trails API currently serves. Each version identifies a different orchestration + contracts stack; a quote produced for one version cannot be committed against another. Only `v1_5` is served — `v1` is deprecated (writes requesting it fail with `IntentProtocolDeprecated`), though stored `v1` intents remain readable via GetIntent/receipt/history.
 
 Use this alongside [`GetDefaultIntentProtocol`](/api-reference/endpoints/get-default-intent-protocol) and [`GetProtocolContracts`](/api-reference/endpoints/get-protocol-contracts) to negotiate the correct version at runtime instead of hardcoding it.
 
@@ -15,7 +15,7 @@ Use this alongside [`GetDefaultIntentProtocol`](/api-reference/endpoints/get-def
 
 ## Response
 
-- **versions** (`IntentProtocolVersion[]`) — supported versions in no particular order. Members: `v1`, `v1_5`.
+- **versions** (`IntentProtocolVersion[]`) — supported versions in no particular order. Members: `v1_5`.
 
 ## Example
 
