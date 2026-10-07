@@ -256,10 +256,10 @@ If you interpolate an untrusted value into an `href`, validate it yourself. The 
 
 | Variable | Applies to | Default |
 |----------|-----------|---------|
-| `--trails-border-radius-widget` | Main widget container | `32px` |
-| `--trails-border-radius-button` | Primary buttons | `24px` |
-| `--trails-border-radius-input` | Input fields | `24px` |
-| `--trails-border-radius-dropdown` | Dropdown menus | `12px` |
+| `--trails-border-radius-widget` | Main widget container | `24px` |
+| `--trails-border-radius-button` | Primary buttons | `32px` |
+| `--trails-border-radius-input` | Input fields | `32px` |
+| `--trails-border-radius-dropdown` | Dropdown menus | `32px` |
 | `--trails-border-radius-container` | Generic containers | `8px` |
 | `--trails-border-radius-list` | Token lists | `8px` |
 | `--trails-border-radius-list-button` | List item buttons | `12px` |
@@ -276,18 +276,22 @@ If you interpolate an untrusted value into an `href`, validate it yourself. The 
 
 | Variable | Default |
 |----------|---------|
-| `--trails-primary` | `rgb(59 130 246)` |
-| `--trails-primary-hover` | `rgb(37 99 235)` |
-| `--trails-primary-disabled` | `rgb(209 213 219)` |
+| `--trails-primary` | `rgb(21 93 252)` |
+| `--trails-primary-hover` | `rgb(17 75 202)` |
+| `--trails-primary-disabled` | `rgb(212 212 216)` |
 | `--trails-primary-disabled-text` | `rgb(107 114 128)` |
+| `--trails-primary-text` | `rgb(255 255 255)` |
 
 ### Background colours
 
 | Variable | Default |
 |----------|---------|
 | `--trails-bg-primary` | `rgb(255 255 255)` |
-| `--trails-bg-secondary` | `rgb(249 250 251)` |
+| `--trails-bg-secondary` | `rgb(244 244 245)` |
+| `--trails-bg-secondary-hover` | `rgb(228 228 231)` |
+| `--trails-bg-secondary-focus-border` | `rgb(244 244 245)` |
 | `--trails-bg-tertiary` | `rgb(243 244 246)` |
+| `--trails-bg-tertiary-hover` | `rgb(229 231 235)` |
 | `--trails-bg-card` | `rgb(255 255 255)` |
 | `--trails-bg-overlay` | `rgb(255 255 255)` |
 
@@ -315,7 +319,7 @@ If you interpolate an untrusted value into an `href`, validate it yourself. The 
 |----------|---------|
 | `--trails-hover-bg` | `rgb(243 244 246)` |
 | `--trails-hover-text` | `rgb(17 24 39)` |
-| `--trails-focus-ring` | `rgb(59 130 246)` |
+| `--trails-focus-ring` | `var(--trails-primary)` — the SDK reads this as a focus-ring fallback; setting it overrides every focus ring |
 
 ### Status colours
 
@@ -339,8 +343,7 @@ If you interpolate an untrusted value into an `href`, validate it yourself. The 
 | `--trails-input-border` | `rgb(209 213 219)` |
 | `--trails-input-text` | `rgb(17 24 39)` |
 | `--trails-input-placeholder` | `rgb(156 163 175)` |
-| `--trails-input-focus-border` | `rgb(59 130 246)` |
-| `--trails-input-focus-ring` | `rgb(59 130 246)` |
+| `--trails-input-focus-border` | `rgb(21 93 252)` |
 
 ### Dropdowns
 
@@ -352,7 +355,7 @@ If you interpolate an untrusted value into an `href`, validate it yourself. The 
 | `--trails-dropdown-hover-bg` | `rgb(249 250 251)` |
 | `--trails-dropdown-selected-bg` | `rgb(243 244 246)` |
 | `--trails-dropdown-selected-text` | `rgb(17 24 39)` |
-| `--trails-dropdown-focus-border` | `rgb(59 130 246)` |
+| `--trails-dropdown-focus-border` | `rgb(108 0 246)` |
 
 ### Lists
 
@@ -360,4 +363,47 @@ If you interpolate an untrusted value into an `href`, validate it yourself. The 
 |----------|---------|
 | `--trails-list-bg` | `rgb(255 255 255)` |
 | `--trails-list-border` | `rgb(229 231 235)` |
-| `--trails-list-hover-bg` | `rgb(249 250 251)` |
+| `--trails-list-hover-bg` | `rgb(250 250 250)` |
+| `--trails-list-item-bg` | `transparent` |
+| `--trails-list-item-selected-bg` | `rgb(239 246 255)` |
+
+### Icon buttons
+
+Round header buttons (back, close, account):
+
+| Variable | Default |
+|----------|---------|
+| `--trails-icon-button-bg` | `rgb(249 250 251)` |
+| `--trails-icon-button-hover-bg` | `rgb(243 244 246)` |
+| `--trails-icon-button-text` | `rgb(17 24 39)` |
+
+### Modal button
+
+The primary modal action button; the background and hover background follow the primary colours.
+
+| Variable | Default |
+|----------|---------|
+| `--trails-modal-button-bg` | `var(--trails-primary, rgb(21 93 252))` |
+| `--trails-modal-button-hover-bg` | `var(--trails-primary-hover, rgb(17 75 202))` |
+| `--trails-modal-button-text` | `rgb(255 255 255)` |
+| `--trails-modal-button-shadow` | `0 1px 2px 0 rgb(0 0 0 / 0.05)` |
+
+### Percentage buttons
+
+The quick amount-percentage buttons (25% / 50% / Max):
+
+| Variable | Default |
+|----------|---------|
+| `--trails-percentage-button-bg` | `rgb(228 228 231)` |
+| `--trails-percentage-button-hover-bg` | `rgb(212 212 216)` |
+| `--trails-percentage-button-text` | `rgb(113 113 123)` |
+
+### Links
+
+`--trails-link` and `--trails-link-hover` are deliberately not declared by the SDK: `.trails-link` falls back to `--trails-primary` /
+`--trails-primary-hover` at the use site. Set them on your page to override link colours independently of the primary colours.
+
+<Note>
+Light and dark theme defaults differ; the tables above list the light theme. Defaults are injected into `document.head` under a
+`trails-defaults` cascade layer, so page-level `:root` overrides still win.
+</Note>

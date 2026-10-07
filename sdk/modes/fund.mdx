@@ -253,6 +253,23 @@ The widget shows a pending state while the exchange processes the withdrawal. Se
 - *Popup blocked* — trigger the flow from a user gesture (button click) rather than programmatically, and encourage users to allow popups for your domain.
 - *Session expired* — the exchange session is valid for 5 minutes; a "Refresh Session" button appears if it expires.
 
+### Card onramp
+
+The **Credit or debit card** funding method opens a provider picker titled "Pay by card": Stripe, Meld, or a country-based automatic pick when only one is available. From `0xtrails@0.19.0` card purchases land on the destination chain's token when the provider supports it, falling back to USDC on Base.
+
+To restrict which card providers appear, pass `cardProviders` on the `onramp` prop:
+
+```tsx
+<Fund
+  apiKey="YOUR_API_KEY"
+  onramp={{
+    cardProviders: ['stripe', 'meld'],
+  }}
+/>
+```
+
+`cardProviders` accepts `"stripe"` and `"meld"`. Omit it to offer every provider the deployment advertises; unknown values are ignored, and a list with no known value behaves like no list. See [Stripe Onramp](/sdk/onramp/stripe).
+
 ---
 
 ### Protocol deposit with dynamic calldata

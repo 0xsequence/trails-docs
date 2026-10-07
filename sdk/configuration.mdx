@@ -13,11 +13,13 @@ All focused components accept these optional props in addition to their mode-spe
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `theme` | `"light" \| "dark" \| "auto"` | `"auto"` | Color theme; `auto` follows system preference |
+| `theme` | `"light" \| "dark" \| "auto"` | `"light"` | Color theme. Defaults to `"light"` when omitted and the user has no stored preference; pass `"auto"` to follow the OS preference |
 | `customCss` | `string \| Record<string, string>` | — | Custom CSS to inject into the widget |
 | `disableCss` | `boolean` | `false` | Disable default CSS injection |
 | `renderInline` | `boolean` | `false` | Render inline instead of as a modal |
 | `buttonText` | `string` | — | Custom CTA button text |
+| `defaultDisplayCurrency` | `string` | `"USD"` | ISO 4217 code (e.g. `"NZD"`) of the fiat currency used to display amounts. Unsupported codes fall back to USD; a currency the user picks in preferences takes precedence |
+| `merchantCheckout` | `boolean` | — | Render the merchant checkout presentation. Implied by the `stripe` and `settlement` props; set to `false` to keep the standalone presentation with a settlement |
 
 #### App metadata
 
@@ -58,6 +60,9 @@ The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.
 | `priceImpactWarningMessage` | `string` | Custom price impact warning message |
 | `priceImpactFallbackBridgeUrl` | `string` | URL to redirect when price impact is too high |
 | `intentProtocolVersion` | `IntentProtocolVersion` | Force a specific intent protocol version |
+| `disablePassthrough` | `boolean` | Always route through the intent flow, even when a quote is passthrough-eligible (same token, same chain, wallet funding). Default: `false` |
+| `settlement` | `QuoteSettlementParams` | Advanced: fully-specified settlement quote params forwarded to `QuoteIntent`. Set automatically by the `stripe` prop; only set directly when managing the checkout reference lifecycle yourself |
+| `stripe` | `TrailsStripeCheckoutProps` | Arm a Stripe checkout that settles USDC. See [Stripe Onramp](/sdk/onramp/stripe) |
 
 #### Debug / dev
 
@@ -87,6 +92,11 @@ These callbacks are available on all focused components (in addition to mode-spe
 | `onStatus` | `{ sessionId, intentId, transactionStates }` | Transaction status update |
 | `onOriginConfirmation` | `{ sessionId, intentId, txHash, chainId }` | Origin-chain transaction confirmed |
 | `onDestinationConfirmation` | `{ sessionId, intentId, txHash, chainId }` | Destination-chain transaction confirmed |
+| `onPaymentCreated` | `{ sessionId, settlement }` | A quote armed an external payment (Stripe PaymentIntent). Fires once per payment reference, before execution; carries no `intentId`. `settlement` is a `QuoteSettlementInfo` |
+
+<Note>
+When a settlement is armed (via the `stripe` or `settlement` props), `onSuccess`/`onPaymentSuccess` carries an optional `settlement` field of type `IntentSettlement`, and the widget holds the success event until the processor confirms settlement.
+</Note>
 
 #### Callback payloads
 
@@ -114,7 +124,10 @@ no payload.
 </Pay>
 ```
 
-The payload types are exported as `CheckoutEventBase` (`{ sessionId, intentId }`) and `TransactionConfirmationEvent` from `0xtrails`.
+The payload types are exported from `0xtrails`:
+
+- `CheckoutEventBase` — `{ sessionId: string; intentId: string | null }`
+- `TransactionConfirmationEvent` — `{ txHash: string; chainId: number; sessionId: string; intentId: string | null }`
 
 ### ChainIdentifier
 
@@ -131,7 +144,7 @@ The `paymentMethod` prop on focused components accepts:
 |-------|--------|
 | `"CONNECTED_WALLET"` | Connected wallet (default when omitted) |
 | `"CRYPTO_TRANSFER"` | QR code / address deposit |
-| `"CREDIT_DEBIT_CARD"` | Fiat on-ramp (credit/debit card) |
+| `"CREDIT_DEBIT_CARD"` | Fiat on-ramp (credit/debit card). Opens the card provider picker — Stripe or Meld, chosen by country, with a chooser only when both are available |
 | `"EXCHANGE"` | CEX transfer (Coinbase, Binance, etc.) |
 
 ### Mode-specific props

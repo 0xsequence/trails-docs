@@ -79,7 +79,7 @@ All focused components share these optional props:
 | `payMessage` | `string` | Custom message shown during the payment flow |
 | `appMetadata` | `AppMetadata` | App name, URL, and logo for wallet connection dialogs |
 | `dev` | `DevConfig` | Debug flags and internal URL overrides |
-| `theme` | `"light" \| "dark" \| "auto"` | Widget color theme |
+| `theme` | `"light" \| "dark" \| "auto"` | Widget color theme. Defaults to `"light"` when omitted and the user has no stored preference; pass `"auto"` to follow the OS preference |
 | `renderInline` | `boolean` | Render inline instead of as a modal |
 | `buttonText` | `string` | Custom CTA text |
 | `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
@@ -91,8 +91,35 @@ All focused components share these optional props:
 | Callback | Signature | When it fires |
 |----------|-----------|---------------|
 | `onPaymentStart` | `({ sessionId }) => void` | User initiates the payment flow. Fires before quoting, so no `intentId` yet |
-| `onPaymentSuccess` | `({ sessionId, intentId }) => void` | Payment completes successfully |
+| `onPaymentCreated` | `({ sessionId, settlement }) => void` | A quote armed an external payment (Stripe PaymentIntent). Fires once per payment reference, before execution; carries no `intentId` |
+| `onPaymentSuccess` | `({ sessionId, intentId, settlement? }) => void` | Payment completes successfully. With a settlement armed, the widget holds success until the processor confirms settlement, and `settlement` carries the `IntentSettlement` |
 | `onPaymentError` | `({ sessionId, intentId, error }) => void` | Payment encounters an error |
+
+### Stripe checkout
+
+Added in `0xtrails@0.19.0`. Set the `stripe` prop to charge a fiat price and settle in USDC instead of specifying `to.amount`/`to.token`:
+
+```tsx
+<Pay
+  apiKey="YOUR_API_KEY"
+  to={{ recipient: "0xYourMerchantAddress" }}
+  stripe={{ amountCents: 2500, orderRef: "order-123" }}
+  onPaymentCreated={({ settlement }) => console.log("payment armed", settlement)}
+  onPaymentSuccess={({ intentId, settlement }) => fulfillOrder(intentId, settlement)}
+/>
+```
+
+`stripe` takes `TrailsStripeCheckoutProps`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `amountCents` | `number` | Required. Price in USD cents (e.g. `500` for $5.00). The browser declares this value under a public key — verify the settled amount and order reference server-side before fulfilling |
+| `orderRef` | `string` | Merchant order label attached to the PaymentIntent metadata, and the checkout-identity key: changing it mints a fresh checkout reference. Prefer supplying it; when omitted, one checkout reference spans the prop's lifetime (set `stripe` to `undefined` between purchases on a long-lived mount) |
+| `chainId` | `number` | Settlement chain. Live merchant keys accept Base (8453, default), Polygon (137) and Ethereum (1); test keys settle on Base Sepolia (84532) only. An unsupported `chainId` throws at render — validate with `getStripeSettlementChainIds()` |
+| `testMode` | `boolean` | Set when the project's merchant key is a Stripe test-mode key |
+
+The `stripe` prop is mutually exclusive with `toAddress`/`toAmount`/`toChainId`/`toToken`/`toCalldata`/`actions`/`settlement`, and forces
+`mode: "pay"`. See [Stripe Onramp](/sdk/onramp/stripe) and the settlement hooks under [Hooks](/sdk/hooks#settlement).
 
 `intentId` identifies the intent behind this flow and is what you pass to the Trails API or Trailscan to look it up. It is `null` for passthrough
 quotes. See [Callback payloads](/sdk/configuration#callback-payloads).
