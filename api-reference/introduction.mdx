@@ -478,6 +478,9 @@ The API returns errors in a consistent JSON format:
 | 7000 | `IntentsSkipped` | Transaction doesn't require an intent (same chain/token) | 400 |
 | 7001 | `QuoteExpired` | Quote has expired, request a new one | 400 |
 | 7002 | `HighPriceImpact` | Quote unavailable due to high price impact | 422 |
+| 7004 | `RebasingToken` | Rebasing tokens (aTokens, stETH, AMPL, OUSD) are not supported | 422 |
+| 3000 | `IntentProtocolDeprecated` | The requested intent protocol version (`v1`) is deprecated; use `v1_5` | 422 |
+| 3001 | `BluvoDeprecated` | Bluvo onramp support was removed; use another funding method | 410 |
 | 8000 | `NotFound` | Resource not found | 400 |
 | 8008 | `UnsupportedNetwork` | Chain ID is not supported | 422 |
 | 8009 | `ClientOutdated` | SDK/client version is outdated | 422 |
