@@ -239,18 +239,22 @@ For development and testing, use `environment: 'sandbox'`. A yellow banner is sh
 
 **How the auth flow works:**
 
-1. User selects an exchange from the list.
-2. An OAuth popup opens to the exchange's login.
-3. After authentication, a transfer confirmation is shown with the amount, token, and destination.
-4. User confirms and the withdrawal is initiated from their exchange account.
-5. Once detected on-chain, Trails routes the funds to the destination.
+Mesh offers two integration shapes, and the widget picks the right one per entry based on the integration's `requiresAccountLink` flag reported by `GetMeshIntegrations`:
+
+- *Account-link integrations* (Coinbase, Binance, Robinhood, …) — the user signs into their exchange account:
+  1. User selects an exchange from the list.
+  2. An OAuth popup opens to the exchange's login.
+  3. After authentication, a transfer confirmation is shown with the amount, token, and destination.
+  4. User confirms and the withdrawal is initiated from their exchange account.
+  5. Once detected on-chain, Trails routes the funds to the destination.
+- *Hosted integrations* (Binance Connect, Robinhood Connect, Coinbase Ramp, Cash App, …) — no OAuth step; the Mesh link token is created at the deposit step and carries `transferOptions`, so the user scans a QR code or follows a deep link in the hosted provider's app and transfers immediately.
 
 The widget shows a pending state while the exchange processes the withdrawal. Session tokens are stored locally for 5 minutes so the user does not have to re-authenticate if they retry.
 
 **Troubleshooting:**
 
 - *Exchange list is empty* — confirm `apiKey` is valid; the exchange list fetch requires a valid API key.
-- *Popup blocked* — trigger the flow from a user gesture (button click) rather than programmatically, and encourage users to allow popups for your domain.
+- *Popup blocked* — trigger the flow from a user gesture (button click) rather than programmatically, and encourage users to allow popups for your domain. Hosted integrations do not open a popup.
 - *Session expired* — the exchange session is valid for 5 minutes; a "Refresh Session" button appears if it expires.
 
 ### Card onramp
