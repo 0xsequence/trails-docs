@@ -20,6 +20,7 @@ Trails integrates with multiple liquidity sources and bridge providers to find t
 - **`HYPERLANE`**: Uses Hyperlane warp routes for cross-chain messaging
 - **`OIF`**: Uses the Open Intents Framework for solver-filled cross-chain intents
 - **`GASZIP`**: Uses Gas.zip for gas-optimized routing
+- **`AGGLAYER`**: Uses the AggLayer unified bridge (Polygon AggLayer)
 - **`WETH`**: Wrap/unwrap ETH ↔ WETH on the same chain
 - **`SOMNIA_EXCHANGE`**: Uses Somnia Exchange for swaps on Somnia
 - **`SOMNIA_SWAP`**: Uses Somnia Swap for swaps on Somnia
@@ -175,6 +176,18 @@ Gas.zip is a gas-optimized routing provider that reduces the total gas cost of c
 ```tsx
 <Swap apiKey="YOUR_API_KEY" bridgeProvider="GASZIP" />
 ```
+
+### AggLayer
+
+AggLayer routes transfers over the AggLayer unified bridge (Polygon AggLayer). It currently serves the Bali pilot testnet chains — chain `82` (PP) and chain `85` (FEP), which settle to the Sepolia testnet L1 (chain id `11155111`). AggLayer routes require an explicit `bridgeProvider="AGGLAYER"` selection.
+
+```tsx
+<Swap apiKey="YOUR_API_KEY" bridgeProvider="AGGLAYER" />
+```
+
+- **ETA-driven waits**: the quote's completion estimate drives the SDK's receipt-polling window and the widget's slow-route warnings. AggLayer waits are raised to a per-direction corridor floor — 20 minutes for transfers entering from the L1, 3 hours for exits — and to 1.5× the quote's estimate when that is longer. A pre-commit banner appears when the estimate is 10 minutes or more.
+- **Slow routes**: hops originating on the FEP chain (`85`) wait for an L1 global exit root change before they can be claimed, and can take 90 minutes or more. Typical completions are shorter — roughly 10–15 minutes for `82` → `85` and about 20 minutes for `85` → `82` — but budget for the slow path.
+- **L1 data fee**: receipts on both corridors include an L1 data fee. The first claim of a token costs about 1.02M gas, a repeat ERC-20 claim about 228k, and an ETH claim about 150k.
 
 ### Somnia (SOMNIA_EXCHANGE / SOMNIA_SWAP)
 
