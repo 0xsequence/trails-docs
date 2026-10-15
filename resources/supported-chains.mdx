@@ -44,6 +44,20 @@ Trails supports **edge chains** — non-EVM ecosystems reached through edge rail
 | Solana | SVM | 101 | SOL | ✅ Supported |
 | Tron | TVM | 728126428 | TRX | ✅ Supported |
 
+## Testnet Chains
+
+Trails supports the following testnet chains. The Bali pilot networks settle to the Sepolia testnet L1 (chain ID `11155111`) and bridge via the [`AGGLAYER`](/sdk/quote-providers#agglayer) provider:
+
+| Chain | Chain ID | Type | Native Token | Status |
+|-------|----------|------|--------------|--------|
+| Sepolia | 11155111 | Ethereum testnet L1 | ETH | ✅ Supported |
+| Bali PP | 828282 | AggLayer pessimistic proof | ETH | ✅ Pilot |
+| Bali FEP | 858585 | AggLayer front-end provers (FEP) | ETH | ✅ Pilot |
+
+<Note>
+The Bali chains are AggLayer pilot networks — rollup IDs 82 and 85; the table lists their EVM chain IDs. No public block explorer exists for either chain yet. AggLayer transfers display and poll the quote's completion estimate raised to a direction floor (20 minutes from an L1 origin, 3 hours from an L2 origin) with 1.5× headroom — see [AggLayer](/sdk/quote-providers#agglayer).
+</Note>
+
 ## Stablecoin Details
 
 ### USDC Availability
@@ -113,6 +127,7 @@ Trails routes transactions through the optimal liquidity source for each transfe
 | **LayerZero Transfer** | `LZ_TRANSFER` | Bridge | LayerZero Value Transfer API; explicit selection only |
 | **Open Intents Framework** | `OIF` | Bridge | Solver-filled cross-chain intents; explicit selection only |
 | **Gas.zip** | `GASZIP` | Bridge | Gas-optimized cross-chain routing |
+| **AggLayer** | `AGGLAYER` | Bridge | AggLayer unified bridge; Bali pilot testnet chains (828282, 858585) |
 | **LI.FI** | `LIFI` | Bridge / DEX aggregator | Aggregated cross-chain and same-chain routing |
 | **0x Protocol** | `ZEROX` | DEX aggregator | Best execution routing across multiple DEXs |
 | **SushiSwap** | `SUSHI` | DEX | On-chain swap routing with V3 concentrated liquidity |
