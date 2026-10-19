@@ -183,8 +183,9 @@ AggLayer routes transfers over the AggLayer unified bridge, which serves AggLaye
 
 An explicit selection is not required: AUTO only falls back to `AGGLAYER` as a last resort when no other provider can route a corridor the AggLayer bridge serves, and a trustless route preference also selects it deliberately. Pin `bridgeProvider="AGGLAYER"` to guarantee an AggLayer route.
 
+{/* Remove this note once an 0xtrails release containing 0xsequence/trails#1297 is published. */}
 <Note>
-AggLayer support ships with the upcoming 0xtrails SDK release and is not yet available in the currently published version.
+AggLayer support is not available in `0xtrails@0.19.1` or earlier. It ships in the first release that includes [0xsequence/trails#1297](https://github.com/0xsequence/trails/pull/1297).
 </Note>
 
 ```tsx
@@ -200,7 +201,7 @@ Target the Bali chains by their EVM chain ID as shown above (828282 / 858585); t
 
 - **ETA-driven waits**: the quote's completion estimate drives the widget's slow-route warning and the SDK's receipt-polling window. Direction is decided by the quote's origin chain: an L1 origin (Sepolia) is an entry, and any L2 origin is an exit — including Bali-to-Bali hops. Entries are floored at 20 minutes; exits are floored at 3 hours: exit claims — in particular from the FEP chain, whose proofs anchor to an L1 global exit root change — can be blocked until the L1's global exit root advances (roughly hourly on a quiet testnet L1). The estimate the quote and widget display is the quote's estimate raised to that floor, and the SDK polls for the receipt until 1.5× the estimate or the floor — whichever is longer. A quote that carries no completion estimate displays and polls the direction floor itself (20 minutes from an L1 origin, 3 hours from an L2 origin). A 90-minute estimate from an L1 origin polls for 2h15m; the same estimate from an L2 origin polls for 3 hours. A pre-commit banner appears when the estimate reaches 10 minutes.
 - **Slow routes**: every Bali-to-Bali hop originates on an L2, so both directions — Bali PP → Bali FEP and Bali FEP → Bali PP — are exits: the widget displays the 3-hour floor even when the raw route estimate is shorter (roughly 10–15 minutes for Bali PP → Bali FEP and about 20 minutes for Bali FEP → Bali PP). The FEP side is where the wait comes from: an FEP-origin claim waits for its OP Succinct proof, which anchors to a new L1 info-tree leaf that only appears when the L1's global exit root changes (roughly hourly on a quiet Sepolia); PP-origin hops do not wait on that anchor. Budget for the 3-hour window the widget displays, not the raw estimate.
-- **Claim gas**: the final claim step is paid by the user in ETH. Approximate costs: about 1.02M gas for the first claim of a token, about 228k for a repeat ERC-20 claim, and about 150k for an ETH claim (multiplied by the claim chain's gas price).
+- **Claim gas**: you do not send or pay for the claim transaction yourself. Claims into an L2 (such as the Bali chains) are executed automatically by the chain operator's AggKit; claims into an ecosystem's L1 (such as Sepolia) are sent by Trails. The cost of the claim is included in the quoted fee, denominated in the route token, so there is no separate ETH payment at claim time. The fee is based on approximate claim gas: about 1.02M gas for the first claim of a token, about 228k for a repeat ERC-20 claim, and about 150k for an ETH claim (multiplied by the claim chain's gas price).
 
 ### Somnia (SOMNIA_EXCHANGE / SOMNIA_SWAP)
 

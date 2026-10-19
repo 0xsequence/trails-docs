@@ -55,7 +55,7 @@ Trails supports the following testnet chains. The Bali pilot networks settle to 
 | Bali FEP ("Bali 85" in the SDK) | 858585 | AggLayer full execution proof (FEP) | ETH | ✅ Pilot |
 
 <Note>
-The Bali chains are AggLayer pilot networks — rollup IDs 82 and 85; the table lists their EVM chain IDs. No public block explorer exists for either chain yet. AggLayer transfers display the quote's completion estimate raised to a direction floor (20 minutes from an L1 origin, 3 hours from an L2 origin) and poll for up to 1.5× the estimate, never less than the floor — see [AggLayer](/sdk/quote-providers#agglayer).
+The Bali chains are AggLayer pilot networks — rollup IDs 82 and 85; the table lists their EVM chain IDs. No public block explorer exists for either chain yet. For how AggLayer transfer times are estimated and polled, see [AggLayer](/sdk/quote-providers#agglayer).
 </Note>
 
 ## Stablecoin Details
@@ -127,7 +127,7 @@ Trails routes transactions through the optimal liquidity source for each transfe
 | **LayerZero Transfer** | `LZ_TRANSFER` | Bridge | LayerZero Value Transfer API; explicit selection only |
 | **Open Intents Framework** | `OIF` | Bridge | Solver-filled cross-chain intents; explicit selection only |
 | **Gas.zip** | `GASZIP` | Bridge | Gas-optimized cross-chain routing |
-| **AggLayer** | `AGGLAYER` | Bridge | AggLayer unified bridge; AggLayer corridors incl. the Bali pilot testnet chains (828282, 858585); explicit selection recommended (AUTO uses it only as a last resort) |
+| **AggLayer** | `AGGLAYER` | Bridge | AggLayer unified bridge; AggLayer corridors incl. the Bali pilot testnet chains (828282, 858585); see [AggLayer](/sdk/quote-providers#agglayer) for when AUTO selects it |
 | **LI.FI** | `LIFI` | Bridge / DEX aggregator | Aggregated cross-chain and same-chain routing |
 | **0x Protocol** | `ZEROX` | DEX aggregator | Best execution routing across multiple DEXs |
 | **SushiSwap** | `SUSHI` | DEX | On-chain swap routing with V3 concentrated liquidity |
