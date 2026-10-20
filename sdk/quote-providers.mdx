@@ -20,6 +20,7 @@ Trails integrates with multiple liquidity sources and bridge providers to find t
 - **`HYPERLANE`**: Uses Hyperlane warp routes for cross-chain messaging
 - **`OIF`**: Uses the Open Intents Framework for solver-filled cross-chain intents
 - **`GASZIP`**: Uses Gas.zip for gas-optimized routing
+- **`AGGLAYER`**: Uses the AggLayer unified bridge
 - **`WETH`**: Wrap/unwrap ETH ↔ WETH on the same chain
 - **`SOMNIA_EXCHANGE`**: Uses Somnia Exchange for swaps on Somnia
 - **`SOMNIA_SWAP`**: Uses Somnia Swap for swaps on Somnia
@@ -175,6 +176,32 @@ Gas.zip is a gas-optimized routing provider that reduces the total gas cost of c
 ```tsx
 <Swap apiKey="YOUR_API_KEY" bridgeProvider="GASZIP" />
 ```
+
+### AggLayer
+
+AggLayer routes transfers over the AggLayer unified bridge, which serves AggLayer-connected corridors, including Ethereum ↔ Katana mainnet. This section documents the Bali pilot testnet chains — Bali PP (EVM chain ID `828282`, AggLayer rollup ID 82) and Bali FEP (EVM chain ID `858585`, AggLayer rollup ID 85) — which settle to the Sepolia testnet L1 (chain ID `11155111`).
+
+An explicit selection is not required: AUTO only falls back to `AGGLAYER` as a last resort when no other provider can route a corridor the AggLayer bridge serves, and a trustless route preference also selects it deliberately. Pin `bridgeProvider="AGGLAYER"` to guarantee an AggLayer route.
+
+{/* Remove this note once an 0xtrails release containing 0xsequence/trails#1297 is published. */}
+<Note>
+AggLayer support is not available in `0xtrails@0.19.1` or earlier. It ships in the first release that includes [0xsequence/trails#1297](https://github.com/0xsequence/trails/pull/1297).
+</Note>
+
+```tsx
+<Swap
+  apiKey="YOUR_API_KEY"
+  bridgeProvider="AGGLAYER"
+  from={{ token: "ETH", chain: 828282 }} // Bali PP
+  to={{ token: "ETH", chain: 858585 }}   // Bali FEP
+/>
+```
+
+Target the Bali chains by their EVM chain ID as shown above (828282 / 858585); the 82 / 85 numbers are AggLayer rollup IDs, not chain IDs. Sepolia (`11155111`) works as the L1 side of an AggLayer route.
+
+- **ETA-driven waits**: the quote's completion estimate drives the widget's slow-route warning and the SDK's receipt-polling window. Direction is decided by the quote's origin chain: an L1 origin (Sepolia) is an entry, and any L2 origin is an exit — including Bali-to-Bali hops. The quote and widget display the quote's estimate raised to an expected-duration floor of 20 minutes for entries and 3 hours for exits: exit claims — in particular from the FEP chain, whose proofs anchor to an L1 global exit root change — can be blocked until the L1's global exit root advances (roughly hourly on a quiet testnet L1). The widget's "taking longer than expected" warning is due at 1.5× the estimate, never earlier than that floor. The SDK keeps polling for the receipt longer, matching the backend's own budgets: until 1.5× the estimate or 2 hours (L1 origin) / 24 hours (L2 origin), whichever is longer, never beyond a 24-hour ceiling. A quote that carries no completion estimate displays the direction floor itself (20 minutes from an L1 origin, 3 hours from an L2 origin) and polls for the 2-hour or 24-hour floor. A 90-minute estimate from an L1 origin is displayed as 90 minutes, warns at 2h15m and polls for 2h15m; the same estimate from an L2 origin is displayed as 3 hours, warns at 3 hours and polls for 24 hours. A pre-commit banner appears when the estimate reaches 10 minutes.
+- **Slow routes**: every Bali-to-Bali hop originates on an L2, so both directions — Bali PP → Bali FEP and Bali FEP → Bali PP — are exits: the widget displays the 3-hour floor even when the raw route estimate is shorter (roughly 10–15 minutes for Bali PP → Bali FEP and about 20 minutes for Bali FEP → Bali PP). The FEP side is where the wait comes from: an FEP-origin claim waits for its OP Succinct proof, which anchors to a new L1 info-tree leaf that only appears when the L1's global exit root changes (roughly hourly on a quiet Sepolia); PP-origin hops do not wait on that anchor. Budget for the 3-hour window the widget displays, not the raw estimate; the SDK keeps polling for up to 24 hours before it reports a timeout.
+- **Claim gas**: you do not send or pay for the claim transaction yourself; Trails executes every claim, whether the destination is an L2 (such as the Bali chains) or an ecosystem's L1 (such as Sepolia). The claim gas is included in the quoted fee, denominated in the route token, so there is no separate ETH payment at claim time. The fee is based on approximate claim gas: about 1.02M gas for the first claim of a token, about 228k for a repeat ERC-20 claim, and about 150k for an ETH claim (multiplied by the claim chain's gas price).
 
 ### Somnia (SOMNIA_EXCHANGE / SOMNIA_SWAP)
 
