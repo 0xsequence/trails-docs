@@ -1,0 +1,48 @@
+---
+title: "0xtrails@0.20.0"
+description: "Release notes for the 0xtrails SDK v0.20.0 — OMS publishable keys, host-branded embedded wallets, onramp selector readability"
+---
+
+_Released October 20, 2026_
+
+This release covers changes after `0xtrails@0.19.1` through `0xtrails@0.20.0`.
+
+## Highlights
+
+- **OMS publishable keys** — `apiKey` and `trailsApiKey` now accept an OMS publishable key (`pk_*`, from `dashboard.polygon.technology`) in addition to a Sequence Builder access key. The SDK detects the key kind and routes the request to the matching backend; existing Builder-key integrations are unchanged.
+- **Brand a host embedded wallet as the app's wallet** — a connection the host adapter already owns (e.g. Privy) picks up the host's `name` and `icon` from the wagmi adapter's `wallets` descriptor across every surface in the widget. A `walletName` label that still fell back to the catalog now reads from the host descriptor first.
+- **Onramp selector readability** — the onramp provider list labels its right-column amount as "Estimated amount", shows each provider's logo (joined to the Meld service providers endpoint, with a lettered placeholder when the mark is missing), and projects other providers through the live Trails quote's fee model so the post-Trails USD comparison is apples-to-apples.
+
+## OMS publishable keys
+
+The SDK picks the hostname and the auth header from the key prefix:
+
+| key | request goes to | header |
+|---|---|---|
+| Sequence Builder access key (today) | `https://trails-api.sequence.app` (or `trailsApiUrl`) | `X-Access-Key` |
+| OMS `pk_live_…` / `pk_sdbx_…` | `https://api.polygon.technology/v1` / `https://sandbox-api.polygon.technology/v1` | `Api-Key` |
+| OMS `pk_dev_…` / `pk_stg_…` / `pk_local_…` | the matching dev / stg / local OMS gateway | `Api-Key` |
+
+The OMS API gateway validates the key, mints a short-lived service token and forwards the call to `trails-api`, which verifies the token and scopes the request to the OMS project. The same rule applies to node RPC (`/v1/nodes/<chain>` on the gateway, `Api-Key`) and to indexer calls (balances, token summaries and transaction history via `/v1/IndexerGateway/*` on the gateway). A Builder key keeps today's hostnames and headers exactly.
+
+Not every environment is fronted by the gateway yet; this is a progressive rollout tracked in `trails-api#1160`. Sequence Metadata only accepts Builder keys, so an OMS key is withheld from it and that path falls back to keyless metadata.
+
+## Fixes
+
+- Use the SDK's configured RPC key for on-chain reads during quoting instead of the wallet's transport.
+- The Meld Stripe popup is no longer falsely reported as closed immediately after opening (COOP header interaction).
+- Fall back to the initial currency when the persisted fiat currency is rejected by the provider.
+- Surface per-chain indexer gateway errors instead of showing empty transaction history.
+- Fail immediately with a clear error when attempting to quote without a Trails API key.
+
+## Improvements
+
+- Run pre-quote lookups (balances, decimals, protocol discovery) concurrently, reducing time before quote requests.
+- Skip redundant intent protocol discovery calls since the SDK only supports v1.5.
+- Cache negative contract probes for 30 seconds so newly deployed accounts are detected promptly.
+- Share balance cache entries across callers by normalizing address case in cache keys.
+- Read Meld's Network Partner field names from the discovery RPCs for better compatibility.
+
+## Breaking Changes
+
+None. The OMS-key flow is additive — a Builder key, or no key, produces exactly the same hostname, header and URL as before.
