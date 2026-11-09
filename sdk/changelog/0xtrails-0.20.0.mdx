@@ -1,0 +1,58 @@
+---
+title: "0xtrails@0.20.0"
+description: "Release notes for the 0xtrails SDK v0.20.0 — one place for API credentials, Meld Network Partner field names, onramp quote parity, and faster first quotes"
+---
+
+_Released October 22, 2026_
+
+This release covers changes after `0xtrails@0.19.1` through `0xtrails@0.20.0`.
+
+## Highlights
+
+- **One place for API credentials** — API key, hostname and JWT for the Trails and onramp clients resolve through a single pair of hooks (`useTrailsApiCredentials` / `useOnrampCredentials`), with the widget prop, onramp provider config and `TrailsProvider` config as the shared precedence order. Quoting now fails loudly with an error naming `trailsApiKey` when no key resolves, instead of surfacing the API's opaque `AccessKeyNotFound` 401.
+- **Meld Network Partner field names** — the Meld discovery responses carry the Network Partner shapes (`currencyCode`, `symbol`, `contract`, `method`/`type`/`logo`, `routes`, `decimalPlaces`). The SDK reads both the new and the retired names, so it works against a trails-api that still serves either vocabulary.
+- **Onramp selector parity** — non-selected onramp provider rows are projected through the selected provider's Trails quote, so every row's dollar line is the post-Trails value and providers compare like for like. Each row shows the provider's logo next to its name.
+- **Faster first quotes** — the SDK speaks v1.5 only and skips the pre-quote protocol discovery call; account balances, native price and token decimals are fetched concurrently; the balance list and the quote path share one cache entry per account; and a negative contract probe is reused for thirty seconds.
+
+## API Credentials
+
+- `TrailsProviderConfig.trailsApiKey` is now `string | undefined`. A missing key resolves to `undefined` throughout instead of `""`. Client constructors (`TrailsApi`, `TrailsOnramp`, `getTrailsClient`, `getOnrampClient`, `getAccountTransactionHistory`, `getMeldOnrampClient`) accept an omitted key; callers that previously coerced `|| ""` can now pass `undefined`.
+- `quoteIntent` and `quoteIntentEdge` throw a named error before calling the API when no key is available. A key is still required to quote — the change is only in how its absence surfaces.
+- Credential resolution — API key, hostname, and (where applicable) JWT — flows through `useTrailsApiCredentials` for Trails API calls and `useOnrampCredentials` for onramp providers. The precedence order is unchanged: widget prop, then onramp provider config, then `TrailsProvider` config.
+
+## Meld Network Partner Field Names
+
+The Meld discovery responses — `getMeldCountryDefaults`, `getMeldFiatCurrencies`, `getMeldCryptoCurrencies`, `getMeldPaymentMethods`, `getMeldPurchaseLimits` — now carry Meld's Network Partner field names:
+
+- Country defaults: `currencyCode` and `paymentMethods`.
+- Currencies: `symbol` instead of `symbolImageUrl`, `contract` instead of `contractAddress`, plus `decimalPlaces` and `type`.
+- Payment methods: `method`/`type`/`logo` instead of `paymentMethod`/`paymentType`/`logos`.
+- Purchase limits: `min`/`max` and a `routes` list (previously a map).
+
+The fetchers read both vocabularies, so this SDK works against a trails-api that still serves the retired names as well as one that serves the Network Partner names; a missing field or a non-array payload no longer throws. The widget's fiat selector, payment-method lists, Meld landing-token matching and persisted fiat currency read the new names. `useOnRampCountryDefaults`, `useFiatOnRampCurrencies` and `useOnRampPaymentMethods` keep their return shapes, and a fiat currency persisted by an older SDK still hydrates.
+
+## Performance
+
+- Quotes skip the pre-quote `GetDefaultIntentProtocol` / `GetSupportedIntentProtocols` round trip. The SDK speaks v1.5 only, so the default is applied directly; the two discovery requests only run when an integrator sets `intentProtocol` explicitly.
+- Account balances and native price, and on-chain token decimals, run concurrently before each quote instead of serially.
+- The balance list and the quote path share one balance cache entry per account.
+- A negative contract probe for the sender or recipient is cached for thirty seconds instead of re-run on every mount.
+- Chain reads made while quoting (contract checks, on-chain token decimals) go through the SDK's own node client whenever the configured key authorises a node endpoint for the chain, instead of the connected wallet's transport. The wallet's client is still used for chains the SDK has no keyed node for.
+
+## Fixes
+
+- Onramp provider rows show the provider's logo beside its name, sourced from the cached Meld service providers list, with a lettered placeholder when no logo is available. An "Estimated amount" caption above the destination-token figure marks it as a projection from the provider's payout.
+- Non-selected onramp provider rows project through the selected provider's Trails quote with the fee buffer and flat costs (gas and Trails fee) charged once instead of scaled with the payout.
+- The Meld flow no longer reports "Onramp Window Closed" moments after the Stripe service provider's popup opens. `crypto.link.com` sends a Cross-Origin-Opener-Policy header that severs the opener's handle, so `popup.closed` reads `true` while the window is still in use. Close detection is now off for that provider and the flow relies on Meld's transaction status polling.
+- Every query key that includes an address keys it through one helper, so a checksummed and a lowercased spelling of the same EVM account share a cache entry while edge-rail addresses stay verbatim.
+
+## API Bindings
+
+- `@0xtrails/api@0.20.0` is regenerated against the trails-api release.
+- `@0xtrails/wallet@0.19.2` picks up the credential-resolution refactor.
+
+## Breaking Changes
+
+- `TrailsProviderConfig.trailsApiKey` is `string | undefined`. A `string`-typed field is a type-compatible subset, so configs that still pass a string compile. Callers that destructured `trailsApiKey` as `string` from the provider config may need to widen the type to `string | undefined` or add a non-null assertion at the use site.
+- `getMeldOnrampClient`, `getTrailsClient`, `getOnrampClient`, `getAccountTransactionHistory`, and the `TrailsApi` / `TrailsOnramp` constructors accept an omitted key. Callers that assumed a non-empty string argument can drop the `|| ""` coercion.
+- Downstream code that reads Meld discovery responses by the retired field names (`symbolImageUrl`, `contractAddress`, `paymentMethod`, `paymentType`, `logos`) should migrate to the Network Partner names; the SDK's own hooks already read both.
