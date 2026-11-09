@@ -2570,6 +2570,9 @@
           "status": {
             "$ref": "#/components/schemas/IntentStatus"
           },
+          "statusReason": {
+            "type": "string"
+          },
           "ownerAddress": {
             "type": "string"
           },

@@ -32,6 +32,7 @@ The response includes:
 - **id** (number): Internal database ID
 - **intentId** (string): Unique intent identifier
 - **status** (IntentStatus): Current status (`QUOTED`, `COMMITTED`, `EXECUTING`, `FAILED`, `SUCCEEDED`)
+- **statusReason** (string): Terminal-status explanation on the receipt (set on failed or otherwise terminal intents; empty otherwise)
 - **ownerAddress** (string): Wallet address that initiated the intent
 - **originChainId** (number): Source chain ID
 - **destinationChainId** (number): Destination chain ID
