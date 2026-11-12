@@ -183,11 +183,6 @@ AggLayer routes transfers over the AggLayer unified bridge, which serves AggLaye
 
 `AGGLAYER` is not selected by `AUTO`: the router only offers it on a corridor the bridge serves when the quote pins `bridgeProvider="AGGLAYER"`, or when the request's [route preference](/api-reference/endpoints/quote-intent) is `TRUSTLESS`, where it is scored alongside the other trustless candidates. Pin `bridgeProvider="AGGLAYER"` to guarantee an AggLayer route.
 
-{/* Remove this note once an 0xtrails release containing 0xsequence/trails#1227 is published. */}
-<Note>
-AggLayer support is not available in `0xtrails@0.20.0` or earlier. It ships in the first release that includes [0xsequence/trails#1227](https://github.com/0xsequence/trails/pull/1227).
-</Note>
-
 ```tsx
 <Swap
   apiKey="YOUR_API_KEY"
