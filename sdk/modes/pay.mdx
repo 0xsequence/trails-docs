@@ -82,7 +82,7 @@ All focused components share these optional props:
 | `theme` | `"light" \| "dark" \| "auto"` | Widget color theme. Defaults to `"light"` when omitted and the user has no stored preference; pass `"auto"` to follow the OS preference |
 | `renderInline` | `boolean` | Render inline instead of as a modal |
 | `buttonText` | `string` | Custom CTA text |
-| `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
+| `slippageTolerance` | `number \| string` | Slippage tolerance as a fraction (`0.005` is 0.5%). Overrides the user's saved setting; when omitted, the saved setting or Auto applies. See [Slippage](/sdk/configuration#slippage) |
 | `swapProvider` | `RouteProvider` | Preferred same-chain swap provider |
 | `bridgeProvider` | `RouteProvider` | Preferred bridge provider |
 

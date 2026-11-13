@@ -26,6 +26,21 @@ const response = await fetch('https://trails-api.sequence.app/rpc/Trails/QuoteIn
 **Get an API key**: Sign up and create an API key on the [Trails Dashboard](https://dashboard.trails.build/landing)
 </Note>
 
+### Key Security
+
+An access key used by the widget or any other browser code is public: anyone can read it from your page. Restrict it in the key's settings on the [Trails Dashboard](https://dashboard.trails.build/landing):
+
+- **Allowed origins**: list the exact origins that may use the key, for example `https://shop.example.com`. A request whose `Origin` header doesn't match is rejected with `InvalidOrigin` (code 1103, HTTP 403) before it counts against your limits. An empty list allows every origin.
+- **Require origin**: reject requests that send no `Origin` header. Without it, requests without an `Origin` header (curl, scripts, servers) are accepted even when allowed origins are set.
+
+Set both. Together they stop other websites from using your key from their visitors' browsers. They do **not** make a browser key secret: a script outside a browser can send any `Origin` header it likes. Treat a browser key as public, and rotate it if it is abused.
+
+Use separate keys for separate jobs: an origin-restricted key for the widget, and a different key for your server's API calls, which send no `Origin` header. You can then restrict and rotate each key on its own. Separate keys do **not** get separate limits: every key in a project shares the project's [rate limit and usage quota](#rate-limiting).
+
+<Warning>
+Admin API secret keys are for server-side use only. Never put them in a browser, a mobile app or the widget. The API rejects a secret key sent with an `Origin` header (`SecretKeyCorsDisallowed`, code 1009, HTTP 403).
+</Warning>
+
 ## Core Workflow
 
 Every interaction through Trails follows this flow:
@@ -429,7 +444,7 @@ async function waitForCompletion(intentId: string) {
         console.log('Destination TX:', intentReceipt.destinationTransaction.txnHash);
         return intentReceipt;
       } else {
-        throw new Error('Transaction failed: ' + intentReceipt.originTransaction.statusReason);
+        throw new Error(`Intent ${intentReceipt.status}: ${intentReceipt.statusReason ?? 'no reason given'}`);
       }
     }
 
@@ -449,6 +464,25 @@ Now you have an end to end API integration with Trails for seamless chain abstra
 - Server-side currency conversion & settlement
 - Fund, Swap, Earn, or Pay for any application
 - Pass in optional calldata to call any smart contract function
+
+## Intent Statuses
+
+| Status | Meaning |
+|--------|---------|
+| `QUOTED` | A quote was created. Nothing has been executed |
+| `COMMITTED` | Legacy: the intent was committed with the deprecated `CommitIntent` |
+| `EXECUTING` | Trails is executing the intent |
+| `SUCCEEDED` | Execution completed |
+| `FAILED` | Execution failed |
+| `ABORTED` | Processing stopped before completion. This can happen after a successful deposit, and is usually automatic: for example, a transaction couldn't be sent or confirmed in time, or a provider returned a final error. The owner can also abort with [`AbortIntent`](/api-reference/endpoints/abort-intent) |
+| `INVALID` | The deposit failed validation: for example, the deposit transaction wasn't found or reverted, or it sent the wrong token or too little of it |
+| `REFUNDED` | A refund transaction for the intent was confirmed onchain. The receipt's `refundTransaction` shows the chain, token and amount |
+
+`SUCCEEDED`, `FAILED`, `ABORTED`, `INVALID` and `REFUNDED` are final: `WaitIntentReceipt` returns `done: true` for each of them. When an intent doesn't succeed, the receipt's `statusReason` says why.
+
+<Warning>
+A status records what happened; it doesn't move funds. `FAILED`, `ABORTED` and `INVALID` don't mean the user's funds were returned. Funds that reached the intent wallet stay there until a refund or a recovery moves them. See [Refunds & Recovery](/examples/refunds).
+</Warning>
 
 ## Error Handling
 
@@ -470,6 +504,11 @@ The API returns errors in a consistent JSON format:
 
 | Code | Name | Description | HTTP Status |
 |------|------|-------------|-------------|
+| 1007 | `RateLimited` | Per-minute limit reached on a request sent without a project access key (the public limit, applied per IP). See [Rate Limiting](#rate-limiting) | 429 |
+| 1009 | `SecretKeyCorsDisallowed` | An admin API secret key was sent from a browser (with an `Origin` header). See [Key Security](#key-security) | 403 |
+| 1103 | `InvalidOrigin` | The request's `Origin` isn't allowed by the access key. See [Key Security](#key-security) | 403 |
+| 1200 | `QuotaExceeded` | The project's usage quota for the current billing cycle is used up. See [Rate Limiting](#rate-limiting) | 423 |
+| 1201 | `QuotaRateLimit` | The project's per-minute request limit was reached. See [Rate Limiting](#rate-limiting) | 429 |
 | 2000 | `InvalidArgument` | Request parameter is invalid or malformed | 400 |
 | 2001 | `Unexpected` | Unexpected server error | 500 |
 | 2002 | `Unavailable` | Requested resource is unavailable | 400 |
@@ -549,33 +588,53 @@ Always check quote expiration before executing. The `intent.expiresAt` timestamp
 
 ## Rate Limiting
 
-The API uses rate limiting to ensure service reliability. If you exceed limits, you'll receive HTTP 429 responses.
+Limits apply per project, not per key. Every access key in a project, and every user's browser running the widget with one of those keys, draws from the same two budgets:
 
-| Limit Type | Value | Notes |
-|------------|-------|-------|
-| Requests per second | 50 | Per API key |
-| Burst limit | 100 | Short burst allowance |
-| QuoteIntent calls | 20/min | Rate-limited separately |
+| Limit | What it counts | When exceeded |
+|-------|----------------|---------------|
+| Requests per minute | Trails API requests from all of the project's keys over a sliding one-minute window | `QuotaRateLimit` (code 1201), HTTP 429 |
+| Usage quota | Trails API requests from all of the project's keys during the current billing cycle | `QuotaExceeded` (code 1200), HTTP 423 |
+
+The values depend on your project's plan. Upgrade the project in the [Trails Dashboard](https://dashboard.trails.build/landing) or contact the Trails team to raise them.
+
+- Every Trails API method costs 1 request, `QuoteIntent` included. There is no separate `QuoteIntent` limit.
+- A request rejected by the per-minute limit isn't counted. A request that passes it counts toward the usage quota, even if the API then returns an error such as `InvalidArgument`.
+- Using several keys doesn't add capacity: they share the project's limits.
+- Requests sent without an access key fall under a public limit applied per IP address and fail with `RateLimited` (code 1007, HTTP 429). That limit is separate from your project's limits.
+
+Responses to requests made with an access key carry these headers:
+
+| Header | Meaning |
+|--------|---------|
+| `Credits-Rate-Limit` | Requests allowed per minute |
+| `Credits-Rate-Remaining` | Requests left in the current window |
+| `Credits-Rate-Reset` | Unix time when the current window resets |
+| `Retry-After` | Seconds to wait before retrying, sent when the per-minute limit is hit |
+| `Quota-Limit` | Requests included in the project's billing cycle |
+| `Quota-Remaining` | Included requests left in the current cycle |
+| `Quota-Overage` | Requests used beyond the included amount in the current cycle, if any |
 
 **Best practices:**
+- On HTTP 429 (codes 1201 and 1007), wait for `Retry-After` before retrying instead of retrying immediately
+- Don't retry `QuotaExceeded` (code 1200, HTTP 423): it lasts until the next billing cycle or a plan upgrade
 - Cache `GetChains`, `GetTokenList` responses (they change infrequently)
 - Batch balance checks where possible
-- Implement exponential backoff on 429 responses
+- Choose a limit that covers peak traffic: requests from all of your users' browsers count against it
 
 ```typescript
-async function fetchWithBackoff(url: string, options: RequestInit, maxRetries = 3) {
-  for (let i = 0; i < maxRetries; i++) {
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3) {
+  for (let attempt = 0; ; attempt++) {
     const response = await fetch(url, options);
 
-    if (response.status === 429) {
-      const retryAfter = parseInt(response.headers.get('Retry-After') || '1');
-      await delay(retryAfter * 1000 * Math.pow(2, i));
-      continue;
+    // 429: the per-minute limit was hit (1201, or 1007 without an access key).
+    // 423 (1200): the billing-cycle quota is used up; retrying won't help.
+    if (response.status !== 429 || attempt >= maxRetries) {
+      return response;
     }
 
-    return response;
+    const retryAfter = Number(response.headers.get('Retry-After')) || 60;
+    await delay(retryAfter * 1000);
   }
-  throw new Error('Max retries exceeded');
 }
 ```
 

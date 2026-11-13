@@ -31,7 +31,8 @@ The response includes:
 
 - **id** (number): Internal database ID
 - **intentId** (string): Unique intent identifier
-- **status** (IntentStatus): Current status (`QUOTED`, `COMMITTED`, `EXECUTING`, `FAILED`, `SUCCEEDED`)
+- **status** (IntentStatus): Current status (`QUOTED`, `COMMITTED`, `EXECUTING`, `SUCCEEDED`, `FAILED`, `ABORTED`, `INVALID`, `REFUNDED`). See [Intent Statuses](/api-reference/introduction#intent-statuses)
+- **statusReason** (string, optional): Why the intent reached its final status
 - **ownerAddress** (string): Wallet address that initiated the intent
 - **originChainId** (number): Source chain ID
 - **destinationChainId** (number): Destination chain ID
@@ -41,6 +42,7 @@ The response includes:
 - **originTransaction** (IntentTransaction): Origin chain transaction details
 - **destinationTransactionId** (number): ID of destination transaction
 - **destinationTransaction** (IntentTransaction): Destination chain transaction details
+- **refundTransaction** (IntentTransaction, optional): Refund transaction, when one was recorded. A pending or failed refund transaction doesn't make the intent `REFUNDED`
 - **updatedAt** (string): Last update timestamp
 - **createdAt** (string): Creation timestamp
 
@@ -109,8 +111,8 @@ async function pollReceipt(intentId: string, maxAttempts = 60) {
       return intentReceipt;
     }
     
-    if (intentReceipt.status === 'FAILED') {
-      throw new Error(intentReceipt.originTransaction.statusReason);
+    if (['FAILED', 'ABORTED', 'INVALID', 'REFUNDED'].includes(intentReceipt.status)) {
+      throw new Error(`Intent ${intentReceipt.status}: ${intentReceipt.statusReason ?? 'no reason given'}`);
     }
     
     // Wait 2 seconds before next poll
