@@ -19,6 +19,29 @@ Trails has an automatic refund mechanism built in to protect your assets in the 
 For more details on how refunds work within the Trails architecture, see the [How Trails Works](/architecture/how-it-works#refunds) documentation.
 </Info>
 
+## Statuses and Refunds
+
+An intent's status records what happened; it doesn't move funds. See [Intent Statuses](/api-reference/introduction#intent-statuses) for the full list.
+
+| Status | What it means for the user's funds |
+|--------|------------------------------------|
+| `ABORTED` | Processing stopped before completion, possibly after the deposit. It doesn't mean the funds were returned |
+| `INVALID` | The deposit failed validation. Funds that reached the intent wallet stay there until they are refunded or recovered |
+| `REFUNDED` | A refund transaction was confirmed onchain. The receipt's `refundTransaction` shows the chain, token and amount |
+
+Funds come back in one of these ways:
+
+1. **In the same transaction**: when a step fails, the intent's own fallback sweeps the remaining tokens back to the owner.
+2. **Provider refund**: when a bridge or solver can't complete a route, it refunds on its side. The receipt records it as the `refundTransaction`.
+3. **Owner recovery**: the owner signs a recovery from the [Trails Explorer](https://app.trails.build/explorer), the widget's **History** section, the [`useIntentRecover`](#manual-fund-recovery-with-useintentrecover) hook, or the [`PrepareIntentRecovery`](/api-reference/endpoints/prepare-intent-recovery) and [`BuildIntentRecoveryTransaction`](/api-reference/endpoints/build-intent-recovery-transaction) endpoints.
+4. **Trails support**: if none of these apply, contact the Trails team with the intent ID.
+
+### Fees on a Failed Payment
+
+Trails currently charges no platform fee. Quotes still include network gas and any provider fees.
+
+For a same-chain payment in the same token (for example, paying in USDC on Base to a contract that takes USDC on Base), the intent pays the execution gas fee from the deposit before it calls your contract. If that contract call fails, the rest of the deposit is swept back to the user, but the execution gas fee is not returned. The user gets back the deposit minus the execution gas fee.
+
 ## User Control & Ownership
 
 Trails is **non-custodial by design**. Only the user always retains control over their account and funds:

@@ -112,7 +112,7 @@ For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper on widget
 | `tronRpcUrl` | `string` | No | Base URL of a TronGrid-compatible HTTP API used for Tron reads (default: `https://api.trongrid.io`). |
 | `tronApiKey` | `string` | No | TronGrid API key, sent as the `TRON-PRO-API-KEY` header. Set it in production to avoid TronGrid rate limits. |
 | `walletConnectProjectId` | `string` | No | WalletConnect project ID for wallet connections. |
-| `slippageTolerance` | `string \| number` | No | Default slippage tolerance for swaps (e.g., `0.005` for 0.5%). |
+| `slippageTolerance` | `string \| number` | No | Doesn't change quotes. Set `slippageTolerance` on the widget component or pass it to `useQuote` instead. See [Slippage](/sdk/configuration#slippage). |
 | `debug` | `boolean` | No | Enable debug logging (default: `false`). |
 | `intentProtocol` | `"v1" \| "v1.5"` | No | Override intent protocol version (default: `"v1.5"`). See [Protocol v1.5](/architecture/v1-5). |
 
@@ -564,7 +564,7 @@ type UseQuoteProps = {
     calls?: (Call | Call[])[] | null
     calldata?: string | null // deprecated; prefer calls or actions
   }
-  slippageTolerance?: string | number | null
+  slippageTolerance?: string | number | null // fraction: 0.005 = 0.5%. Omitted: the user's saved setting, else Auto. See /sdk/configuration#slippage
   onStatusUpdate?: ((transactionStates: TransactionState[]) => void) | null
   swapProvider?: RouteProvider | null
   bridgeProvider?: RouteProvider | null
