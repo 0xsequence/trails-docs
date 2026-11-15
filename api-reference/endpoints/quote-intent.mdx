@@ -44,7 +44,7 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
   - **swapProviderFallback** (boolean): If `true`, fall back to another provider if the preferred swap provider is unavailable
   - **preference** (RoutePreference): Route optimisation target — `RECOMMENDED` (default), `FASTEST`, `CHEAPEST`, `TRUSTLESS`
   - **intentProtocol** (IntentProtocolVersion): Force a specific intent protocol version — `v1_5`. (`v1` is deprecated: writes requesting it fail with `IntentProtocolDeprecated`.)
-  - **slippageTolerance** (number): Maximum acceptable slippage as a fraction of 1 (e.g. `0.005` for 0.5%)
+  - **slippageTolerance** (number): Maximum acceptable slippage as a fraction of 1 (e.g. `0.005` for 0.5%, `0.1` for 10%). Accepted range: `0.0001` to `0.2`. When omitted, Auto picks it from the order's USD value: 10% under 1 USD, 3% under 10 USD, 1% under 100 USD, otherwise 0.5% (also 0.5% when the order can't be priced)
   - **disablePassthrough** (boolean): When `true`, never return a passthrough-eligible quote; same-chain same-token wallet quotes run the normal intent flow
   - **trailsAddressOverrides** (TrailsAddressOverrides): Custom Sequence wallet addresses for the intent
 

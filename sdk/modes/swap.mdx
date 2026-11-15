@@ -81,7 +81,7 @@ The `from` shape is a discriminated union on `paymentMethod`. For wallet, exchan
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
+| `slippageTolerance` | `number \| string` | Slippage tolerance as a fraction (`0.005` is 0.5%). Overrides the user's saved setting; when omitted, the saved setting or Auto applies. See [Slippage](/sdk/configuration#slippage) |
 | `swapProvider` | `RouteProvider` | Preferred same-chain swap provider |
 | `bridgeProvider` | `RouteProvider` | Preferred bridge provider |
 | `swapProviderFallback` | `boolean` | Fall back if preferred swap provider is unavailable |
@@ -267,7 +267,7 @@ type UseQuoteProps = {
     amount?: string // human-readable; EXACT_OUTPUT when set
     decimals?: number
   }
-  slippageTolerance?: string | number | null
+  slippageTolerance?: string | number | null // fraction: 0.005 = 0.5%. Omitted: the user's saved setting, else Auto
   onStatusUpdate?: (txs: TransactionState[]) => void | null
 }
 

@@ -27,14 +27,14 @@ The response includes:
 
 - **intentReceipt** (IntentReceipt): Complete receipt with transaction details
 - **done** (boolean): Indicates if the intent has reached a terminal state
-  - `true`: Intent is complete (SUCCEEDED or FAILED)
+  - `true`: Intent reached a final status (`SUCCEEDED`, `FAILED`, `ABORTED`, `INVALID` or `REFUNDED`). See [Intent Statuses](/api-reference/introduction#intent-statuses)
   - `false`: Intent is still processing (may require another call)
 
 ## Behavior
 
 This endpoint will:
 1. Check the current status of the intent
-2. If complete (`SUCCEEDED` or `FAILED`), return immediately with `done: true`
+2. If the intent reached a final status (`SUCCEEDED`, `FAILED`, `ABORTED`, `INVALID` or `REFUNDED`), return immediately with `done: true`
 3. If still processing, wait for state changes
 4. Return updates as they occur
 5. Timeout after a reasonable period if no completion
@@ -59,7 +59,7 @@ async function waitForCompletion(intentId: string) {
       console.log('Transaction succeeded!');
       return intentReceipt;
     } else {
-      throw new Error(`Transaction failed: ${intentReceipt.originTransaction.statusReason}`);
+      throw new Error(`Intent ${intentReceipt.status}: ${intentReceipt.statusReason ?? 'no reason given'}`);
     }
   } else {
     // Not done yet, call again
@@ -86,7 +86,7 @@ async function pollReceipt(intentId: string) {
   while (true) {
     const { intentReceipt } = await getIntentReceipt(intentId);
     
-    if (intentReceipt.status === 'SUCCEEDED' || intentReceipt.status === 'FAILED') {
+    if (['SUCCEEDED', 'FAILED', 'ABORTED', 'INVALID', 'REFUNDED'].includes(intentReceipt.status)) {
       return intentReceipt;
     }
     

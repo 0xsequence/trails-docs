@@ -51,7 +51,7 @@ The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `slippageTolerance` | `number \| string` | Slippage tolerance (e.g. `0.005` for 0.5%) |
+| `slippageTolerance` | `number \| string` | Slippage tolerance as a fraction: `0.005` is 0.5%. Overrides the user's saved setting; when omitted, the saved setting or Auto applies. See [Slippage](#slippage) |
 | `swapProvider` | `RouteProvider` | Preferred same-chain swap provider |
 | `swapProviderFallback` | `boolean` | Fall back if preferred swap provider is unavailable |
 | `bridgeProvider` | `RouteProvider` | Preferred bridge provider |
@@ -63,6 +63,25 @@ The `wagmiConnectors` and `decoupleWagmi` props were removed in [`0xtrails@0.16.
 | `disablePassthrough` | `boolean` | Always route through the intent flow, even when a quote is passthrough-eligible (same token, same chain, wallet funding). Default: `false` |
 | `settlement` | `QuoteSettlementParams` | Advanced: fully-specified settlement quote params forwarded to `QuoteIntent`. Set automatically by the `stripe` prop; only set directly when managing the checkout reference lifecycle yourself |
 | `stripe` | `TrailsStripeCheckoutProps` | Arm a Stripe checkout that settles USDC. See [Stripe Onramp](/sdk/onramp/stripe) |
+
+#### Slippage
+
+`slippageTolerance` is a fraction, not a percentage: `0.005` means 0.5%, and `0.1` means 10%. The API accepts values from `0.0001` (0.01%) to `0.2` (20%) and rejects quotes outside that range.
+
+The widget picks the slippage for a quote in this order:
+
+1. The `slippageTolerance` prop, when you set it.
+2. Otherwise, the value the user saved in the widget's slippage settings. It's stored in the user's browser.
+3. Otherwise, **Auto**: the API picks the slippage from the order's USD value.
+
+| Order value (USD) | Auto slippage |
+|-------------------|---------------|
+| Under 1 | 10% |
+| 1 to under 10 | 3% |
+| 10 to under 100 | 1% |
+| 100 or more | 0.5% |
+
+If the API can't price the order, Auto uses 0.5%. Auto gives small orders a high tolerance so that price movement doesn't make them fail; set `slippageTolerance` if you need a tighter bound. A very tight value can make quotes fail where Auto would succeed.
 
 #### Debug / dev
 
