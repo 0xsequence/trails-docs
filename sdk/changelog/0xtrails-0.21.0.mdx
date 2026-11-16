@@ -1,0 +1,43 @@
+---
+title: "0xtrails@0.21.0"
+description: "Release notes for the 0xtrails SDK v0.21.0 — send-safe quoting, Meld purchase limits, refund states, onramp fee rows"
+---
+
+_Released November 16, 2026_
+
+This release covers changes after `0xtrails@0.20.0` through `0xtrails@0.21.0`.
+
+## Highlights
+
+- **Send-safe quoting** — the widget stops requesting new quotes while a send is in flight, so no replacement quote is created underneath the signature you're asking the user to sign. `useQuote` gains a matching `paused` option.
+- **Meld purchase limits** — `useMeldPurchaseLimits` reads the fiat window a Meld card or bank purchase accepts before you quote; the fund form blocks amounts under the minimum.
+- **Refund states** — the receipt reports a refund as succeeded only once the refund transaction confirmed, with explicit pending and recovery-required states.
+- **Onramp fees** — Stripe and Mesh exchange fees show in quote details, and Mesh exchange transfers land on the destination chain when the exchange can send there.
+
+## Quotes and sends
+
+- Once the user presses Pay (or Fund, Swap, …) and until the wallet confirms or rejects, the form's quote no longer refetches on reconnect, remount or input changes. The quote and fee options already on screen stay visible; rejecting the signature resumes quoting. `useQuote`'s `paused` option does the same for headless use.
+- `useQuote`'s "Quote disabled" warning reports a valid amount that is still inside its debounce as waiting for updated quote params, not malformed.
+
+## Receipts and refunds
+
+- An `INVALID` intent is terminal during execution: the remaining steps fail with the receipt's reason and the send rejects with `Transaction invalid: <reason>`, instead of reporting an unconfirmed final status.
+- The receipt shows a refund as succeeded only once the refund transaction confirmed. A sent refund reads **Refund pending**; a failed one reads **Refund failed: recovery required**. Refund status changes publish on edge flows too.
+- The final status reaches the progress screen before on-chain enrichment, so a slow RPC no longer delays it.
+- Balances refetch on a schedule after a terminal intent, so the list reflects the result once the indexer catches up.
+
+## Onramp
+
+- Quote details show an **Onramp** row with **Network fee** and **Provider fee** sub-rows for Stripe and Mesh exchanges. Stripe's realized fees replace the estimate once payment is under way.
+- Mesh exchange transfers land directly on the destination chain when the exchange can send the stablecoin there, falling back to USDC on Base; a linked exchange's holdings are listed per chain.
+- `useMeldPurchaseLimits`, `limitsForPaymentMethod` and `isBelowMeldMinimum` read the fiat window before quoting. Under the minimum, the fund form disables the submit button and reads `Minimum purchase is <min> <currency>`.
+- A chain with no block explorer shows a copyable transaction hash in receipt details instead of an explorer link.
+
+## Fixes
+
+- The widget's `slippageTolerance` prop now takes effect: every mode sends it with each quote request. See [Slippage](/sdk/configuration#slippage).
+- A failed supported-chains request no longer causes a render loop in the send form.
+
+## Breaking Changes
+
+None.

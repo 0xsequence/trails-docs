@@ -1,0 +1,44 @@
+---
+title: "0xtrails@0.20.0"
+description: "Release notes for the 0xtrails SDK v0.20.0 — one credential resolver, faster quotes, onramp provider rows"
+---
+
+_Released October 22, 2026_
+
+This release covers changes after `0xtrails@0.19.1` through `0xtrails@0.20.0`.
+
+## Highlights
+
+- **One credential resolver** — API key, hostname and JWT resolve in one place, `trailsApiKey` becomes optional, and quoting without a credential fails loudly instead of surfacing a 401.
+- **Faster quotes** — the pre-quote lookups run concurrently and the intent-protocol discovery calls are gone unless you pin a protocol.
+- **Onramp provider rows** — provider logos, an "Estimated amount" caption, and every row priced through the same Trails fee model.
+
+## Credential Resolution
+
+- API key, hostname and JWT resolve in one place. The precedence is the widget's `apiKey` prop, then the onramp provider config, then `TrailsProvider` config.
+- `trailsApiKey` is optional and accepts an omitted key. Quoting fails loudly when no key or JWT resolves: `quoteIntent` and `quoteIntentEdge` throw an error naming `trailsApiKey` instead of surfacing an opaque API 401.
+
+## Performance
+
+- The lookups before a quote request (account balances, native price, on-chain token decimals) run concurrently instead of one after another.
+- The SDK no longer asks the API which intent protocol to use before quoting; the discovery requests run only when you set `intentProtocol` explicitly.
+
+## Onramp
+
+- Onramp provider rows show the provider's logo beside its name, sourced from the cached Meld service providers list, with a lettered placeholder when no logo is available. An **Estimated amount** caption above the destination-token figure marks it as a projection from the provider's payout rather than the fiat spent.
+- Non-selected provider rows are projected through the selected provider's Trails quote, so every row compares like for like.
+- Meld discovery responses carry Meld's Network Partner field names (`min`/`max`/`routes` on purchase limits, `method`/`type`/`logo` on payment methods), and the fetchers read both the old and new vocabularies, so the SDK works against a trails-api serving either set of names. `useOnRampCountryDefaults`, `useFiatOnRampCurrencies` and `useOnRampPaymentMethods` keep their return shapes.
+
+## Fixes
+
+- The Meld flow no longer reports "Onramp Window Closed" moments after the Stripe service provider's popup opens. `crypto.link.com` sends a Cross-Origin-Opener-Policy header that severs the opener's handle, so `popup.closed` reads `true` while the window is still in use. Close detection is off for that provider and the flow relies on Meld's transaction status polling.
+- A fiat currency the provider rejects falls back to the initial currency instead of leaving the selector stuck.
+- Per-chain indexer gateway errors surface instead of rendering an empty transaction history.
+
+## Wallet Adapters
+
+- A host wallet descriptor's `name` and `icon` also label connections the wagmi runtime already held, not only ones Trails connected itself. An app that brands its Privy embedded wallet as its own sees that name on the connected chip and the funding selector instead of "Privy". See [wagmi adapter](/sdk/adapters/wagmi#branding-the-embedded-wallet-as-your-own).
+
+## Breaking Changes
+
+None. `trailsApiKey` becoming optional is additive: a config that passes a key keeps working, and a keyless quote that previously failed with an API 401 now throws a named error earlier.

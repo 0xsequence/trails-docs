@@ -56,6 +56,7 @@ const adapters = [
       {
         id: 'host-wallet',
         name: 'My Wallet',
+        icon: 'https://my.app/wallet.png',
         flow: 'direct',         // or 'embedded'
         placement: 'featured',  // pin to the top of the wallet list
       },
@@ -100,6 +101,28 @@ function usePrivyTrailsAdapters() {
 ```
 
 When the user selects "Privy Embedded" in the Trails connect UI, Trails calls your `connect` callback, Privy runs its login flow, and the resulting wagmi session is picked up automatically.
+
+### Branding the embedded wallet as your own
+
+`name` and `icon` on the descriptor replace the catalog's label and logo everywhere Trails shows the wallet: the connect list, the connected chip, the funding selector and the recipient rows. They apply to a connection the wagmi runtime already held too, not only one Trails connected itself, so a signed-in user never sees the provider's name where your own belongs.
+
+```tsx
+wagmiAdapter({
+  wagmiConfig: privyWagmiConfig,
+  wallets: [
+    {
+      id: 'privy',
+      name: 'XYZ Wallet',
+      icon: 'https://xyz.app/wallet.png',
+      flow: 'embedded',
+      placement: 'featured',
+      connect: connectPrivyEmbedded,
+    },
+  ],
+})
+```
+
+Trails resolves any `@privy-io/wagmi` connector to the id `privy`, so the descriptor matches whether the user connected through Trails or was already signed in. Privy's own login modal and its "Protected by Privy" footer are configured in the Privy dashboard, outside Trails.
 
 ## Sequence Connect
 
