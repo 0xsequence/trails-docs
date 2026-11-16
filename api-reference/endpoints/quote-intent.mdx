@@ -53,7 +53,13 @@ The `QuoteIntent` endpoint allows you to request a quote for a cross-chain inten
 The response includes:
 
 - **intent** (Intent): Complete intent object with transaction details
+- **originTokenMetadata** (TokenMetadata): Resolved metadata for the origin token — `chainId`, `tokenAddress`, `name`, `symbol`, `decimals` and an optional `logoUri`
+- **destinationTokenMetadata** (TokenMetadata): Resolved metadata for the destination token, same fields
 - **gasFeeOptions** (GasFeeOptions): Available gas fee payment options
+
+<Note>
+Both metadata objects are always present on a successful quote, and `decimals` is always set, so you can format the quoted amounts without a separate `GetTokenList` lookup. A quote whose token metadata can't be resolved is rejected rather than returned with missing precision. `tokenAddress` is the token address the quote uses, not the metadata source's own identity, so a native asset keeps the address you sent.
+</Note>
 
 ### Intent Object Details
 

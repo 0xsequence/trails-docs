@@ -27,7 +27,7 @@ The `BuildIntentRecoveryTransaction` endpoint verifies a signed recovery payload
 - **value** (string): Transaction value (bigint).
 - **chainId** (number): Chain to broadcast on.
 - **intentAddress** (string)
-- **requiresDeploy** (boolean): `true` if the intent wallet must be counterfactually deployed as part of this transaction.
+- **requiresDeploy** (boolean): `true` when the transaction has to run setup before the sweep — deploying the intent wallet counterfactually, deploying the owner's smart wallet, or both.
 - **payloadHash** (string, optional)
 
 ## Example

@@ -116,6 +116,10 @@ For custom EIP-1193 wallets without wagmi, use the `evmAdapter` helper on widget
 | `debug` | `boolean` | No | Enable debug logging (default: `false`). |
 | `intentProtocol` | `"v1" \| "v1.5"` | No | Override intent protocol version (default: `"v1.5"`). See [Protocol v1.5](/architecture/v1-5). |
 
+<Note>
+`trailsApiKey` is optional — the key, hostname and JWT resolve from the widget's `apiKey` prop first, then the onramp provider config, then this config. A key has to resolve from somewhere before you quote: `quoteIntent` and `quoteIntentEdge` throw an error naming `trailsApiKey` when neither a key nor a JWT resolves.
+</Note>
+
 ## Wallet adapters
 
 <Note>
@@ -471,6 +475,8 @@ The `useQuote` hook provides real-time quotes for token swaps, cross-chain trans
 
 Pass `walletAddress` to preview quotes before a wallet is connected. If a connected `walletClient.account.address` is available, it becomes the quote owner and takes precedence over `walletAddress`. Executing with `send` still requires a real wallet client.
 
+Set `paused` while a send built from the current quote is in flight. It stops automatic quote requests — the ones on mount, on reconnect and on input changes — while still returning the `quote` and `send` already fetched for the current inputs, so no replacement quote is requested underneath the send. `disabled` also stops the requests, but it hides the quote, blanking amounts and fee options on a form that stays mounted during the send.
+
 #### Usage Example
 
 ```tsx
@@ -582,6 +588,7 @@ type UseQuoteProps = {
   settlement?: QuoteSettlementParams | null // Stripe settlement quote params; throws if combined with actions, to.calls or to.calldata, or if from.amount is set
   disablePassthrough?: boolean | null // force the intent flow for passthrough-eligible quotes
   disabled?: boolean
+  paused?: boolean // stop automatic quote requests while keeping the current quote and send
 }
 
 type UseQuoteReturn = {
@@ -904,7 +911,11 @@ Added in [`0xtrails@0.16.0`](/sdk/changelog/0xtrails-0.16.0). Use these to drive
 </Note>
 
 ```ts
-import { useMeldPaymentMethods, useMeldServiceProviders } from '0xtrails'
+import {
+  useMeldPaymentMethods,
+  useMeldServiceProviders,
+  useMeldPurchaseLimits,
+} from '0xtrails'
 ```
 
 ### useMeldPaymentMethods
@@ -924,6 +935,59 @@ const { data: providers } = useMeldServiceProviders({
   // any fields of GetMeldServiceProvidersRequest
 })
 ```
+
+### useMeldPurchaseLimits
+
+Read the smallest and largest fiat amount a Meld card or bank purchase accepts for a country, fiat currency and destination, before requesting a quote. Use it to block an amount the provider would reject instead of surfacing a provider error.
+
+```tsx
+import { useMeldPurchaseLimits, isBelowMeldMinimum } from '0xtrails'
+
+const { fiatLimits, isLoading } = useMeldPurchaseLimits({
+  countryCode: 'US',
+  fiatCurrency: 'USD',
+  destinationCurrencyCode: 'USDC_BASE',
+  paymentMethodType: 'CREDIT_DEBIT_CARD',
+})
+
+const tooSmall = isBelowMeldMinimum(Number(amount), fiatLimits)
+```
+
+`fiatLimits` is `null` while the window is loading, when Meld reports no route, and when no route offers the payment method. Treat `null` as unknown and let the quote decide.
+
+#### Options
+
+```ts
+type UseMeldPurchaseLimitsOptions = {
+  countryCode?: string | null              // two-letter ISO; nothing is fetched without one
+  fiatCurrency?: string | null             // the fiat the limits are in; nothing is fetched without one
+  destinationCurrencyCode?: string | null  // Meld destination code, e.g. "USDC_BASE"; the API defaults to USDC
+  paymentMethodType?: string | null        // narrows the window to one method, e.g. "CREDIT_DEBIT_CARD"
+  enabled?: boolean
+}
+
+type UseMeldPurchaseLimitsResult = {
+  limits: MeldCurrencyLimits | null // full response: overall window plus per-partner routes
+  fiatLimits: MeldFiatLimits | null // window for paymentMethodType, or the overall window
+  isLoading: boolean
+  error: Error | null
+}
+
+type MeldFiatLimits = {
+  currencyCode: string
+  min: number
+  max: number
+}
+```
+
+#### Helpers
+
+```ts
+import { limitsForPaymentMethod, isBelowMeldMinimum, type MeldFiatLimits } from '0xtrails'
+```
+
+- `limitsForPaymentMethod(limits, paymentMethodType?)` — the window for one payment method, matched on Meld's method name (`CREDIT_DEBIT_CARD`) or type (`CARD`), case insensitively, taking the widest window any partner offers. Without a method, the overall window across every route.
+- `isBelowMeldMinimum(amount, limits)` — true when a positive amount sits under the window's minimum. A missing window or a non-positive amount is never below minimum.
 
 ## Settlement
 

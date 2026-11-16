@@ -247,6 +247,12 @@ For development and testing, use `environment: 'sandbox'`. A yellow banner is sh
 
 The widget shows a pending state while the exchange processes the withdrawal. Session tokens are stored locally for 5 minutes so the user does not have to re-authenticate if they retry.
 
+**Where the transfer lands:**
+
+The exchange sends directly to the destination chain when it can: the destination has to be a stablecoin (USDC or USDT) the active exchanges list on that chain, at the contract Mesh reports delivering. The intent is then a same-chain relay. Anything else lands as USDC on Base and Trails bridges from there. The exchange's holdings are listed on every chain it can send them to, not only Base.
+
+The transfer waits for a priced preview before it is offered, and a preview the linked account's balance can't cover is refused rather than started. `useMeshLandingToken`, `resolveMeshLandingToken` and `MESH_FALLBACK_LANDING_TOKEN` are exported from `0xtrails` if you need the same resolution outside the widget.
+
 **Troubleshooting:**
 
 - *Exchange list is empty* — confirm `apiKey` is valid; the exchange list fetch requires a valid API key.
@@ -269,6 +275,26 @@ To restrict which card providers appear, pass `cardProviders` on the `onramp` pr
 ```
 
 `cardProviders` accepts `"stripe"` and `"meld"`. Omit it to offer every provider the deployment advertises; unknown values are ignored, and a list with no known value behaves like no list. See [Stripe Onramp](/sdk/onramp/stripe).
+
+#### Minimum purchase
+
+Meld's purchase window for the country, fiat currency, landing token and payment method is read before any quote is requested. An amount under the minimum is never quoted: the submit button is disabled and reads `Minimum purchase is <min> <currency>`. When the destination's own landing has a minimum the amount can't meet, the flow tries USDC on Base, whose window may be lower; that landing's own window still applies. A window Meld doesn't report leaves the decision to the quote. Stripe keeps its own fixed `Minimum purchase is $1.00`.
+
+To drive this outside the widget, use [`useMeldPurchaseLimits`](/sdk/hooks#usemeldpurchaselimits).
+
+#### Onramp fees
+
+Quote details show an **Onramp (`<provider>`)** row for card and exchange funding. When the provider reports the split, **Network fee** and **Provider fee** sub-rows appear under it; a component the provider reports as zero shows as `$0.00` rather than hiding both.
+
+- **Meld** fees are in the user's selected fiat currency.
+- **Stripe** shows the fee estimate on the checkout screen, then replaces it with the fees Stripe reports on the session once payment is under way, on the pending and receipt screens.
+- **Mesh** prices the transfer before the Link flow opens and shows it as the Onramp row; inside Link the previewed institution, network gas and client fees replace it.
+
+#### Provider selector
+
+Each provider row carries the provider's logo beside its name, from the cached Meld service providers list, with a lettered placeholder when no logo is listed or the image fails to load. The destination-token figure sits under an **Estimated amount** caption: it is a projection of the provider's payout, not the fiat the user spends.
+
+Rows compare like for like: providers you didn't select are projected through the selected provider's quote.
 
 ---
 

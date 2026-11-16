@@ -46,6 +46,10 @@ The response includes:
 - **updatedAt** (string): Last update timestamp
 - **createdAt** (string): Creation timestamp
 
+### Failure Reasons
+
+When an intent or one of its transactions doesn't succeed, `statusReason` names the cause instead of just reporting a failure — for example a decoded revert, a likely out-of-gas execution, an origin precondition that wasn't met (a short deposit), or a bridge that didn't deliver, naming the bridge and its own explanation. The text is built for people, not for parsing — don't match on it.
+
 ### IntentTransaction Details
 
 Each transaction object includes:
